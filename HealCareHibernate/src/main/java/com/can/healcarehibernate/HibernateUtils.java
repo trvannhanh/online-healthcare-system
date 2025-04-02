@@ -4,6 +4,14 @@
  */
 package com.can.healcarehibernate;
 
+import com.can.pojo.Appointment;
+import com.can.pojo.Doctor;
+import com.can.pojo.Heath_Records;
+import com.can.pojo.Notifications;
+import com.can.pojo.Patient;
+import com.can.pojo.Payment;
+import com.can.pojo.Rating;
+import com.can.pojo.User;
 import java.util.Properties;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -30,14 +38,14 @@ public class HibernateUtils {
         
         conf.setProperties(props);
         
-//        conf.addAnnotatedClass(Category.class);
-//        conf.addAnnotatedClass(Product.class);
-//        conf.addAnnotatedClass(SaleOrder.class);
-//        conf.addAnnotatedClass(Tag.class);
-//        conf.addAnnotatedClass(User.class);
-//        conf.addAnnotatedClass(Comment.class);
-//        conf.addAnnotatedClass(OrderDetail.class);
-//        conf.addAnnotatedClass(ProdTag.class);
+        conf.addAnnotatedClass(User.class);
+        conf.addAnnotatedClass(Doctor.class);
+        conf.addAnnotatedClass(Patient.class);
+        conf.addAnnotatedClass(Appointment.class);
+        conf.addAnnotatedClass(Heath_Records.class);
+        conf.addAnnotatedClass(Rating.class);
+        conf.addAnnotatedClass(Notifications.class);
+        conf.addAnnotatedClass(Payment.class);
         
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(conf.getProperties()).build();
         

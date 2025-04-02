@@ -6,25 +6,20 @@ package com.can.pojo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import java.util.Date;
 
 /**
  *
  * @author Giidavibe
  */
 @Entity
-@Table(name = "appointment")
-public class Appointment {
+@Table(name = "health_records")
+public class HealthRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -37,13 +32,11 @@ public class Appointment {
     @JoinColumn(name = "doctor_id", nullable = false)
     private Doctor doctor;
 
-    @Column(name = "appointment_date", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date appointmentDate;
+    @Column(name = "medical_history", columnDefinition = "TEXT")
+    private String medicalHistory;
 
-    @Column(name = "status")
-    @Enumerated(EnumType.STRING)
-    private AppointmentStatus status;
+    @Column(name = "examination_results", columnDefinition = "TEXT")
+    private String examinationResults;
 
     // Getters and Setters
 
@@ -90,34 +83,33 @@ public class Appointment {
     }
 
     /**
-     * @return the appointmentDate
+     * @return the medicalHistory
      */
-    public Date getAppointmentDate() {
-        return appointmentDate;
+    public String getMedicalHistory() {
+        return medicalHistory;
     }
 
     /**
-     * @param appointmentDate the appointmentDate to set
+     * @param medicalHistory the medicalHistory to set
      */
-    public void setAppointmentDate(Date appointmentDate) {
-        this.appointmentDate = appointmentDate;
+    public void setMedicalHistory(String medicalHistory) {
+        this.medicalHistory = medicalHistory;
     }
 
     /**
-     * @return the status
+     * @return the examinationResults
      */
-    public AppointmentStatus getStatus() {
-        return status;
+    public String getExaminationResults() {
+        return examinationResults;
     }
 
     /**
-     * @param status the status to set
+     * @param examinationResults the examinationResults to set
      */
-    public void setStatus(AppointmentStatus status) {
-        this.status = status;
+    public void setExaminationResults(String examinationResults) {
+        this.examinationResults = examinationResults;
     }
 }
 
-enum AppointmentStatus {
-    pending, confirmed, completed, cancelled
-}
+
+
