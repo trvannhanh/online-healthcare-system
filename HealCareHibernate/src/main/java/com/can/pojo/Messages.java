@@ -18,16 +18,19 @@ import java.util.Date;
  * @author Giidavibe
  */
 @Entity
-@Table(name = "notifications")
-public class Notifications {
+@Table(name = "messages")
+public class Messages {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String message;
-    private Date sentAt;
+    private Date timestamp;
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "sender_id", nullable = false)
+    private User sender;
+    @ManyToOne
+    @JoinColumn(name = "receiver_id", nullable = false)
+    private User receiver;
     // Getters and Setters
 
     /**
@@ -59,30 +62,44 @@ public class Notifications {
     }
 
     /**
-     * @return the sentAt
+     * @return the timestamp
      */
-    public Date getSentAt() {
-        return sentAt;
+    public Date getTimestamp() {
+        return timestamp;
     }
 
     /**
-     * @param sentAt the sentAt to set
+     * @param timestamp the timestamp to set
      */
-    public void setSentAt(Date sentAt) {
-        this.sentAt = sentAt;
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
     }
 
     /**
-     * @return the user
+     * @return the sender
      */
-    public User getUser() {
-        return user;
+    public User getSender() {
+        return sender;
     }
 
     /**
-     * @param user the user to set
+     * @param sender the sender to set
      */
-    public void setUser(User user) {
-        this.user = user;
+    public void setSender(User sender) {
+        this.sender = sender;
+    }
+
+    /**
+     * @return the receiver
+     */
+    public User getReceiver() {
+        return receiver;
+    }
+
+    /**
+     * @param receiver the receiver to set
+     */
+    public void setReceiver(User receiver) {
+        this.receiver = receiver;
     }
 }
