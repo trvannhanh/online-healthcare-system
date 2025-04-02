@@ -8,6 +8,6 @@ package com.can.pojo;
  *
  * @author Giidavibe
  */
-public class Test {
+public class Rating {
     
 }
