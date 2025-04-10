@@ -23,7 +23,7 @@ import java.util.Date;
 @Table(name = "patient")
 public class Patient {
     @Id
-    private int id;
+    private Integer id;
 
     @OneToOne
     @MapsId

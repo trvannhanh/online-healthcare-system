@@ -22,7 +22,7 @@ import java.util.Date;
 public class Messages {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
     private String message;
     private Date timestamp;
     @ManyToOne

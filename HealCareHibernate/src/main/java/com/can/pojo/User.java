@@ -235,10 +235,6 @@ public class User {
     }
 }
 
-enum Gender {
-    MALE, FEMALE, OTHER
-}
 
-enum Role {
-    ADMIN, DOCTOR, PATIENT
-}
+
+

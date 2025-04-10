@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 @Table(name = "doctor")
 public class Doctor {
     @Id
-    private int id;
+    private Integer id;
 
     @OneToOne
     @MapsId

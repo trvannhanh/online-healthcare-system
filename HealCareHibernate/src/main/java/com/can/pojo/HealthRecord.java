@@ -22,7 +22,7 @@ import jakarta.persistence.Table;
 public class HealthRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "patient_id", nullable = false)
