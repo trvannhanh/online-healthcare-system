@@ -6,6 +6,8 @@ package com.can.pojo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,29 +23,27 @@ import java.util.Date;
  * @author Giidavibe
  */
 @Entity
-@Table(name = "rating")
-public class Rating {
+@Table(name = "appointment")
+public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "doctor_id", nullable = false)
-    private Doctor doctor;
-
-    @ManyToOne
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
-    @Column(name = "rating")
-    private int rating;
+    @ManyToOne
+    @JoinColumn(name = "doctor_id", nullable = false)
+    private Doctor doctor;
 
-    @Column(name = "comment", columnDefinition = "TEXT")
-    private String comment;
-
-    @Column(name = "created_date", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "appointment_date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    private Date createdDate;
+    private Date appointmentDate;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private AppointmentStatus status;
 
     // Getters and Setters
 
@@ -62,20 +62,6 @@ public class Rating {
     }
 
     /**
-     * @return the doctor
-     */
-    public Doctor getDoctor() {
-        return doctor;
-    }
-
-    /**
-     * @param doctor the doctor to set
-     */
-    public void setDoctor(Doctor doctor) {
-        this.doctor = doctor;
-    }
-
-    /**
      * @return the patient
      */
     public Patient getPatient() {
@@ -90,44 +76,48 @@ public class Rating {
     }
 
     /**
-     * @return the rating
+     * @return the doctor
      */
-    public int getRating() {
-        return rating;
+    public Doctor getDoctor() {
+        return doctor;
     }
 
     /**
-     * @param rating the rating to set
+     * @param doctor the doctor to set
      */
-    public void setRating(int rating) {
-        this.rating = rating;
+    public void setDoctor(Doctor doctor) {
+        this.doctor = doctor;
     }
 
     /**
-     * @return the comment
+     * @return the appointmentDate
      */
-    public String getComment() {
-        return comment;
+    public Date getAppointmentDate() {
+        return appointmentDate;
     }
 
     /**
-     * @param comment the comment to set
+     * @param appointmentDate the appointmentDate to set
      */
-    public void setComment(String comment) {
-        this.comment = comment;
+    public void setAppointmentDate(Date appointmentDate) {
+        this.appointmentDate = appointmentDate;
     }
 
     /**
-     * @return the createdDate
+     * @return the status
      */
-    public Date getCreatedDate() {
-        return createdDate;
+    public AppointmentStatus getStatus() {
+        return status;
     }
 
     /**
-     * @param createdDate the createdDate to set
+     * @param status the status to set
      */
-    public void setCreatedDate(Date createdDate) {
-        this.createdDate = createdDate;
+    public void setStatus(AppointmentStatus status) {
+        this.status = status;
     }
+}
+
+enum AppointmentStatus {
+    pending, confirmed, completed, cancelled
 }
