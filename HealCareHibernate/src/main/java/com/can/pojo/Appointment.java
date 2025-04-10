@@ -27,7 +27,7 @@ import java.util.Date;
 public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "patient_id", nullable = false)
@@ -118,6 +118,3 @@ public class Appointment {
     }
 }
 
-enum AppointmentStatus {
-    pending, confirmed, completed, cancelled
-}
