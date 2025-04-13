@@ -131,10 +131,6 @@ public class Payment {
     }
 }
 
-enum PaymentMethod {
-    Momo, VNPay, Stripe
-}
 
-enum PaymentStatus {
-    pending, successful, failed
-}
+
+

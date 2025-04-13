@@ -118,6 +118,3 @@ public class Appointment {
     }
 }
 
-enum AppointmentStatus {
-    pending, confirmed, completed, cancelled
-}

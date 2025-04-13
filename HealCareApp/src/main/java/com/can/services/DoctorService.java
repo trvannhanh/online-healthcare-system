@@ -15,4 +15,13 @@ import java.util.Map;
 public interface DoctorService {
     List<Doctor> getDoctors(Map<String, String> params);
     List<Doctor> getAllDoctors();
+    Doctor getDoctorById(int id);
+    Doctor addDoctor(Doctor doctor);
+    Doctor updateDoctor(Doctor doctor);
+    void deleteDoctor(int id);
+    List<Doctor> getDoctorByVerificationStatus(boolean isVerified, int page);
+    void verifyDoctor(int doctorId);
+    boolean isDoctorVerified(int doctorId);
+    List<Doctor> getUnverifiedDoctors(int page);
+    void updateLicenseNumber(int doctorId, String licenseNumber);
 }
