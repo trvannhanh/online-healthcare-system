@@ -154,15 +154,12 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
     // Thêm lịch hẹn mới
     @Override
     public Appointment addAppointment(Appointment appointment) {
-        Transaction transaction = null;
         Session s = this.factory.getObject().getCurrentSession();
-        transaction = s.beginTransaction();
 
         if (appointment.getPatient() == null || appointment.getDoctor() == null) {
             throw new RuntimeException("Patient and Doctor are required for an Appointment");
         }
 
-        // Kiểm tra xem bác sĩ và bệnh nhân có tồn tại không
         Patient patient = s.get(Patient.class, appointment.getPatient().getId());
         Doctor doctor = s.get(Doctor.class, appointment.getDoctor().getId());
         if (patient == null) {
@@ -172,7 +169,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
             throw new RuntimeException("Doctor with ID " + appointment.getDoctor().getId() + " not found");
         }
 
-        // Kiểm tra xem bác sĩ có lịch hẹn trùng thời gian không
         CriteriaBuilder b = s.getCriteriaBuilder();
         CriteriaQuery<Long> q = b.createQuery(Long.class);
         Root<Appointment> root = q.from(Appointment.class);
@@ -188,7 +184,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         }
 
         s.persist(appointment);
-        transaction.commit();
         return appointment;
 
     }
