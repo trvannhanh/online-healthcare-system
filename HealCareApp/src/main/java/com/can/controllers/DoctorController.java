@@ -5,12 +5,11 @@
 package com.can.controllers;
 
 import com.can.services.DoctorService;
-import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
@@ -18,15 +17,14 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author Giidavibe
  */
 @Controller
-public class IndexController {
+public class DoctorController {
+    
     @Autowired
     private DoctorService docService;
     
-    
-    @RequestMapping("/")
-    public String index(Model model, @RequestParam Map<String, String> params){
-        model.addAttribute("doctors", this.docService.getAllDoctors());
-        model.addAttribute("doctors2", this.docService.getDoctors(params));
-        return "index";
+    @GetMapping("/doctors")
+    public String doctors(Model model, @RequestParam Map<String, String> params){
+        model.addAttribute("doctors", this.docService.getDoctors(params));
+        return "doctors";
     }
 }

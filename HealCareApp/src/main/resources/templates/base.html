@@ -21,8 +21,14 @@
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/}">Trang chủ</a>
                         </li>
-                        <li class="nav-item" th:each="d: ${doctors}">
-                            <a class="nav-link" href="#" th:text="${d.specialization}"></a>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/appointments}">Lịch Hẹn</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/doctors}">Bác Sĩ</a>  
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Bệnh Nhân</a>
                         </li>
                         
                     </ul>
