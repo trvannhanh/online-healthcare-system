@@ -260,18 +260,14 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
     // Xóa lịch hẹn
     @Override
     public void deleteAppointment(int id) {
-        Transaction transaction = null;
-        Session s = this.factory.getObject().getCurrentSession();
-        transaction = s.beginTransaction();
+        Session session = this.factory.getObject().getCurrentSession();
 
-        Appointment appointment = s.get(Appointment.class, id);
+        Appointment appointment = session.get(Appointment.class, id);
         if (appointment == null) {
             throw new RuntimeException("Appointment with ID " + id + " not found");
         }
 
-        s.remove(appointment);
-        transaction.commit();
-
+        session.remove(appointment); // Hibernate tự commit khi dùng @Transactional
     }
 
     // Lấy danh sách lịch hẹn theo trạng thái

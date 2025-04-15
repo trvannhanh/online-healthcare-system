@@ -14,16 +14,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import java.util.Date;
 
 /**
  *
  * @author Giidavibe
  */
-
 @Entity
 @Table(name = "user")
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -34,11 +38,16 @@ public class User {
     @Column(name = "last_name", nullable = false, length = 50)
     private String lastName;
 
+    @Size(min = 1, max = 45, message = "{user.username.sizeMsg}")
     @Column(name = "username", nullable = false, unique = true, length = 30)
     private String username;
 
+    @NotEmpty(message = "{user.password.sizeMsg}")
     @Column(name = "password", nullable = false, length = 255)
     private String password;
+
+    @Transient
+    private String confirmPassword;
 
     @Column(name = "created_date", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     @Temporal(TemporalType.TIMESTAMP)
@@ -51,6 +60,8 @@ public class User {
     @Column(name = "gender")
     private Gender gender;
 
+    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@(.+)$",
+            message = "{user.email.error.invalidMsg}")
     @Column(name = "email", nullable = false, unique = true, length = 50)
     private String email;
 
@@ -65,7 +76,6 @@ public class User {
     private String avatar;
 
     // Getters and Setters
-
     /**
      * @return the id
      */
@@ -234,7 +244,3 @@ public class User {
         this.avatar = avatar;
     }
 }
-
-
-
-
