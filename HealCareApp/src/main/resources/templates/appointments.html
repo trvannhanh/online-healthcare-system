@@ -45,7 +45,7 @@
                     <td th:text="${a.getAppointmentDate()}"></td>
                     <td th:text="${a.getStatus()}"></td>
                     <td>
-                        <button class="btn btn-danger">&times;</button>
+                        <button th:onclick="'deleteAppointment(\'' + @{/api/appointments} + '\', ' + ${a.id} + ')'" class="btn btn-danger">&times;</button>
                         <a href="#" class="btn btn-info">&Alpha;</a>
                     </td>
                 </tr>
@@ -53,5 +53,7 @@
             </tbody>
         </table>
     </main>
+    
+    <script th:src="@{/js/main.js}"></script>
 </body>
 </html>
