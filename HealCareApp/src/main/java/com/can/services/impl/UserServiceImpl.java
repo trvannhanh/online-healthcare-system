@@ -4,19 +4,28 @@
  */
 package com.can.services.impl;
 
+import com.can.pojo.Role;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.can.pojo.User;
 import com.can.repositories.UserRepository;
 import com.can.services.UserService;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  *
@@ -28,6 +37,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepo;
+
+    @Autowired
+    private BCryptPasswordEncoder passEncoder;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     @Override
     public User getUserById(int id) {
@@ -45,8 +60,31 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean addUser(User user) {
-        return this.userRepo.addUser(user);
+    public User addUser(Map<String, String> params, MultipartFile avatar) {
+        User u = new User();
+        u.setFirstName(params.get("firstName"));
+        u.setLastName(params.get("lastName"));
+        u.setPhoneNumber(params.get("phoneNumber"));
+        u.setEmail(params.get("email"));
+        try {
+            u.setRole(Role.valueOf(params.get("role").toUpperCase()));
+        } catch (Exception e) {
+            u.setRole(Role.PATIENT);
+        }
+        u.setUsername(params.get("username"));
+        u.setPassword(this.passEncoder.encode(params.get("password")));
+
+        if (!avatar.isEmpty()) {
+            try {
+                Map res = cloudinary.uploader().upload(avatar.getBytes(),
+                        ObjectUtils.asMap("resource_type", "auto"));
+                u.setAvatar(res.get("secure_url").toString());
+            } catch (IOException ex) {
+                Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return this.userRepo.addUser(u);
     }
 
     @Override

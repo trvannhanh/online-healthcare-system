@@ -3,9 +3,11 @@
 <html xmlns:th="http://www.thymeleaf.org">
     <head>
         <title>Quan Tri Bac Si</title>
-    <th:block th:replace="base"></th:block>
+    <th:block th:replace="base :: styles"></th:block>
 </head>
 <body>
+    <div th:replace="base :: header"></div>
+    
     <main class="container">
         <h1 class="text-center text-info mt-1">Quản Trị Bác Sĩ</h1>
         <form th:action="@{/doctors}">
@@ -50,5 +52,6 @@
             </tbody>
         </table>
     </main>
+    <div th:replace="base :: footer"></div>
 </body>
 </html>

@@ -4,6 +4,8 @@
  */
 package com.can.configs;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -32,7 +34,8 @@ public class SpringSecurityConfigs {
 
     @Autowired
     private UserDetailsService userDetailService;
-
+    
+    @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
@@ -43,12 +46,26 @@ public class SpringSecurityConfigs {
     }
 
     @Bean
+    public Cloudinary cloudinary() {
+        Cloudinary cloudinary
+                = new Cloudinary(ObjectUtils.asMap(
+                        "cloud_name", "dqpkxxzaf",
+                        "api_key", "948716666497639",
+                        "api_secret", "VxK3FJQ_0HFa4UeMXYI0nfSIGko",
+                        "secure", true));
+
+        return cloudinary;
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws
             Exception {
         http.csrf(c -> c.disable()).authorizeHttpRequests(requests -> requests
                 .requestMatchers("/", "/home").authenticated()
-                .requestMatchers("/appointments/**").hasRole("ADMIN")
-                .anyRequest().permitAll()
+                .requestMatchers("/js/**").permitAll()
+                .requestMatchers("/api/**").permitAll()
+//                .requestMatchers("/appointments/**").hasRole("ADMIN")
+//                .anyRequest().permitAll()
         )
                 .formLogin(form -> form.loginPage("/login")
                 .loginProcessingUrl("/login")

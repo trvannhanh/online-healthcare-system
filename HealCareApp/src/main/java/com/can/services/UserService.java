@@ -6,7 +6,9 @@ package com.can.services;
 
 import com.can.pojo.User;
 import java.util.List;
+import java.util.Map;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  *
@@ -16,7 +18,7 @@ public interface UserService extends UserDetailsService{
     User getUserById(int id);
     List<User> getAllUsers();
     User getUserByUsername(String username);
-    boolean addUser(User user);
+    User addUser(Map<String, String> params, MultipartFile avatar);
     boolean updateUser(User user);
     boolean deleteUser(int id);
 }
