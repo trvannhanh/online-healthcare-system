@@ -9,7 +9,7 @@ import com.can.repositories.UserRepository;
 import jakarta.persistence.NoResultException;
 import java.util.List;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -25,17 +25,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserRepositoryImpl implements UserRepository{
 
     @Autowired
-    private SessionFactory sessionFactory;
+    private LocalSessionFactoryBean sessionFactory;
 
     @Override
     public User getUserById(int id) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = sessionFactory.getObject().getCurrentSession();
         return session.get(User.class, id);
     }
 
     @Override
     public List<User> getAllUsers() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = sessionFactory.getObject().getCurrentSession();
         Query<User> query = session.createQuery("FROM User", User.class);
         return query.getResultList();
     }
@@ -43,7 +43,7 @@ public class UserRepositoryImpl implements UserRepository{
     @Override
     public User getUserByUsername(String username) {
         try {
-            Session session = sessionFactory.getCurrentSession();
+            Session session = sessionFactory.getObject().getCurrentSession();
             Query<User> query = session.createQuery("FROM User WHERE username = :uname", User.class);
             query.setParameter("uname", username);
             return query.getSingleResult();
@@ -53,21 +53,17 @@ public class UserRepositoryImpl implements UserRepository{
     }
 
     @Override
-    public boolean addUser(User user) {
-        try {
-            Session session = sessionFactory.getCurrentSession();
-            session.save(user);
-            return true;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return false;
-        }
+    public User addUser(User u) {
+        Session s = this.sessionFactory.getObject().getCurrentSession();
+        s.persist(u);
+        
+        return u;
     }
 
     @Override
     public boolean updateUser(User user) {
         try {
-            Session session = sessionFactory.getCurrentSession();
+            Session session = sessionFactory.getObject().getCurrentSession();
             session.merge(user);
             return true;
         } catch (Exception ex) {
@@ -79,7 +75,7 @@ public class UserRepositoryImpl implements UserRepository{
     @Override
     public boolean deleteUser(int id) {
         try {
-            Session session = sessionFactory.getCurrentSession();
+            Session session = sessionFactory.getObject().getCurrentSession();
             User user = session.get(User.class, id);
             if (user != null) {
                 session.delete(user);

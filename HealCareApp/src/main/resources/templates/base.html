@@ -1,5 +1,6 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
     <head>
         <title>Trang Chu</title>
     <th:block th:fragment="styles">
@@ -22,15 +23,18 @@
                             <a class="nav-link" th:href="@{/}">Trang chủ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" th:href="@{/appointments}">Lịch Hẹn</a>
+                            <a class="nav-link" th:href="@{/appointments}" sec:authorize="isAuthenticated()">Lịch Hẹn</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" th:href="@{/doctors}">Bác Sĩ</a>  
+                            <a class="nav-link" th:href="@{/doctors}" sec:authorize="isAuthenticated()">Bác Sĩ</a>  
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Bệnh Nhân</a>
+                            <a class="nav-link" href="#" sec:authorize="isAuthenticated()">Bệnh Nhân</a>
                         </li>
-                        
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" th:href="@{/logout}" sec:authorize="isAuthenticated()">Đăng xuất</a>
+                        </li>
+              
                     </ul>
                 </div>
             </div>

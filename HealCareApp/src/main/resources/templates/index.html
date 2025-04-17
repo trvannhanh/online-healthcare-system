@@ -2,11 +2,13 @@
 <html xmlns:th="http://www.thymeleaf.org">
     <head>
         <title>Trang Chu</title>
-    <th:block th:replace="base"></th:block>
+    <th:block th:replace="base :: styles"></th:block>
 </head>
 <body>
+    <div th:replace="base :: header"></div>
     <main class="container">
         
     </main>
+    <div th:replace="base :: footer"></div>
 </body>
 </html>
