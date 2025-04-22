@@ -65,7 +65,7 @@ public class SpringSecurityConfigs {
                 .requestMatchers("/js/**").permitAll()
                 .requestMatchers("/api/**").permitAll()
 //                .requestMatchers("/appointments/**").hasRole("ADMIN")
-//                .anyRequest().permitAll()
+                .anyRequest().permitAll()
         )
                 .formLogin(form -> form.loginPage("/login")
                 .loginProcessingUrl("/login")

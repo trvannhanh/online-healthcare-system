@@ -26,6 +26,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Entity
 @Table(name = "appointment")
 public class Appointment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -40,7 +41,7 @@ public class Appointment {
 
     @Column(name = "appointment_date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private Date appointmentDate;
 
     @Column(name = "status")
@@ -48,7 +49,6 @@ public class Appointment {
     private AppointmentStatus status;
 
     // Getters and Setters
-
     /**
      * @return the id
      */
@@ -119,4 +119,3 @@ public class Appointment {
         this.status = status;
     }
 }
-
