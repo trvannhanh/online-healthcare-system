@@ -178,10 +178,10 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                 b.equal(root.get("appointmentDate"), appointment.getAppointmentDate()),
                 b.notEqual(root.get("status"), AppointmentStatus.CANCELLED)
         );
-        Long count = s.createQuery(q).getSingleResult();
-        if (count > 0) {
-            throw new RuntimeException("Doctor is already booked at this time");
-        }
+//        Long count = s.createQuery(q).getSingleResult();
+//        if (count > 0) {
+//            throw new RuntimeException("Doctor is already booked at this time");
+//        }
 
         s.persist(appointment);
         return appointment;
