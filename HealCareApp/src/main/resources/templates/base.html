@@ -34,12 +34,57 @@
                         <li class="nav-item">
                             <a class="nav-link text-danger" th:href="@{/logout}" sec:authorize="isAuthenticated()">Đăng xuất</a>
                         </li>
-              
+
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
+
+    <div th:fragment="sidebar">
+        <div id="sidebar" class="bg-dark text-white vh-100 p-3" style="width: 250px;">
+            <h6 class="text-uppercase text-secondary mb-3">Healcare Administration</h6>
+            <ul class="nav flex-column">
+                <li class="nav-item d-flex justify-content-between align-items-center mb-2">
+                    <a class="nav-link" th:href="@{/doctors}" sec:authorize="isAuthenticated()">Doctor</a>  
+                    <a href="#" class="text-success text-decoration-none">+ Add</a>
+                </li>
+                <li class="nav-item d-flex justify-content-between align-items-center mb-2">
+                    <a class="nav-link" th:href="@{/doctors}" sec:authorize="isAuthenticated()">Patient</a>  
+                    <a href="#" class="text-success text-decoration-none">+ Add</a>
+                </li>
+                <li class="nav-item d-flex justify-content-between align-items-center mb-2">
+                    <a class="nav-link" th:href="@{/appointments}" sec:authorize="isAuthenticated()">Appointment</a>
+                    <a href="#" class="text-success text-decoration-none">+ Add</a>
+                </li>
+                <li class="nav-item d-flex justify-content-between align-items-center mb-2">
+                    <a class="nav-link" th:href="@{/appointments}" sec:authorize="isAuthenticated()">Health Records</a>
+                    <a href="#" class="text-success text-decoration-none">+ Add</a>
+                </li>
+                <li class="nav-item d-flex justify-content-between align-items-center mb-2">
+                    <a class="nav-link" th:href="@{/appointments}" sec:authorize="isAuthenticated()">Payment</a>
+                    <a href="#" class="text-success text-decoration-none">+ Add</a>
+                </li>
+                <li class="nav-item d-flex justify-content-between align-items-center mb-2">
+                    <a class="nav-link" th:href="@{/appointments}" sec:authorize="isAuthenticated()">Rating</a>
+                    <a href="#" class="text-success text-decoration-none">+ Add</a>
+                </li>
+                <li class="nav-item d-flex justify-content-between align-items-center mb-2">
+                    <a class="nav-link" th:href="@{/appointments}" sec:authorize="isAuthenticated()">Messages</a>
+                    <a href="#" class="text-success text-decoration-none">+ Add</a>
+                </li>
+                <li class="nav-item d-flex justify-content-between align-items-center mb-2">
+                    <a class="nav-link" th:href="@{/appointments}" sec:authorize="isAuthenticated()">Notifications</a>
+                    <a href="#" class="text-success text-decoration-none">+ Add</a>
+                </li>
+                <li class="nav-item d-flex justify-content-between align-items-center mb-2">
+                    <a class="nav-link" th:href="@{/appointments}" sec:authorize="isAuthenticated()">User</a>
+                    <a href="#" class="text-success text-decoration-none">+ Add</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
     <footer th:fragment="footer">
         <div class="mt-4 p-5 bg-primary text-white rounded">
             <h1>Jumbotron Example</h1>
