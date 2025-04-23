@@ -99,7 +99,6 @@ public class AppointmentServiceImpl implements AppointmentService {
 //        if (diffInHours < 24) {
 //            throw new RuntimeException("Cannot cancel appointment less than 24 hours before the scheduled time");
 //        }
-
         appRepo.deleteAppointment(id);
 
 //        // Gửi email thông báo hủy
@@ -147,6 +146,30 @@ public class AppointmentServiceImpl implements AppointmentService {
                 new SimpleDateFormat("yyyy-MM-dd HH:mm").format(appointment.getAppointmentDate())
         ));
         mailSender.send(message);
+    }
+
+    @Override
+    public Appointment cancelAppointment(int id) {
+        return this.appRepo.cancelAppointment(id);
+    }
+
+    @Override
+    public Appointment rescheduleAppointment(int id, String newDateStr) {
+        // Tìm lịch hẹn
+        Appointment existingAppointment = appRepo.getAppointmentById(id);
+        if (existingAppointment == null) {
+            throw new RuntimeException("Appointment not found");
+        }
+
+        // Parse ngày mới
+        Date newDate;
+        try {
+            newDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newDateStr);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Invalid date format. Expected format: yyyy-MM-dd'T'HH:mm:ss");
+        }
+
+        return this.appRepo.rescheduleAppointment(id, newDate);
     }
 
 }
