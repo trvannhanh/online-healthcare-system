@@ -7,6 +7,7 @@ package com.can.controllers;
 import com.can.pojo.Appointment;
 import com.can.services.AppointmentService;
 import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -54,6 +56,31 @@ public class ApiAppointmentController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void destroy(@PathVariable(value = "appointmentId") int id) {
         this.appService.deleteAppointment(id);
+    }
+
+    @PatchMapping("/appointments/{appointmentId}/cancel")
+    public ResponseEntity<Appointment> cancelAppointment(@PathVariable(value = "appointmentId") int id) {
+
+        Appointment newAppointment = appService.cancelAppointment(id);
+        return new ResponseEntity<>(newAppointment, HttpStatus.OK);
+//        try {
+//            appointment.setId(id.intValue());
+//            Appointment updatedAppointment = appService.updateAppointment(appointment);
+//            return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
+//        } catch (RuntimeException e) {
+//            if (e.getMessage().contains("not found")) {
+//                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+//            } else if (e.getMessage().contains("less than 24 hours")) {
+//                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+//            }
+//            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+    }
+
+    @PatchMapping("/appointments/{appointmentId}/reschedule")
+    public ResponseEntity<Appointment> rescheduleAppointment(@PathVariable(value = "appointmentId") int id, @RequestParam String newDate) {
+        Appointment newAppointment = appService.rescheduleAppointment(id, newDate);
+        return new ResponseEntity<>(newAppointment, HttpStatus.OK);
     }
 
     @PutMapping("/appointments/{id}")

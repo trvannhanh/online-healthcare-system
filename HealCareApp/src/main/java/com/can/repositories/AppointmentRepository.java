@@ -7,6 +7,7 @@ package com.can.repositories;
 import com.can.pojo.Appointment;
 import com.can.pojo.AppointmentStatus;
 import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -24,4 +25,6 @@ public interface AppointmentRepository {
     List<Appointment> getAppointmentsByStatus(AppointmentStatus status, int page);
     List<Appointment> getAppointmentsByDoctor(int doctorId, int page);
     List<Appointment> getAppointmentsByPatient(int patientId, int page);
+    Appointment cancelAppointment(int id);
+    Appointment rescheduleAppointment(int id, Date newDate);
 }
