@@ -151,7 +151,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
     }
 
-    // Thêm lịch hẹn mới
     @Override
     public Appointment addAppointment(Appointment appointment) {
         Session s = this.factory.getObject().getCurrentSession();
@@ -185,15 +184,11 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
         s.persist(appointment);
         return appointment;
-
     }
 
-    // Cập nhật lịch hẹn
     @Override
     public Appointment updateAppointment(Appointment appointment) {
-        Transaction transaction = null;
         Session s = this.factory.getObject().getCurrentSession();
-        transaction = s.beginTransaction();
 
         Appointment existingAppointment = s.get(Appointment.class, appointment.getId());
         if (existingAppointment == null) {
@@ -228,7 +223,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         } else if (existingAppointment.getDoctor() != null && appointment.getDoctor() != null) {
             Integer existingDoctorId = existingAppointment.getDoctor().getId();
             Integer newDoctorId = appointment.getDoctor().getId();
-            // So sánh ID an toàn, kiểm tra null trước
             doctorChanged = (existingDoctorId == null && newDoctorId != null)
                     || (existingDoctorId != null && newDoctorId == null)
                     || (existingDoctorId != null && newDoctorId != null && !existingDoctorId.equals(newDoctorId));
@@ -252,26 +246,20 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         }
 
         Appointment updatedAppointment = (Appointment) s.merge(appointment);
-        transaction.commit();
         return updatedAppointment;
-
     }
 
     // Xóa lịch hẹn
     @Override
     public void deleteAppointment(int id) {
-        Transaction transaction = null;
-        Session s = this.factory.getObject().getCurrentSession();
-        transaction = s.beginTransaction();
+        Session session = this.factory.getObject().getCurrentSession();
 
-        Appointment appointment = s.get(Appointment.class, id);
+        Appointment appointment = session.get(Appointment.class, id);
         if (appointment == null) {
             throw new RuntimeException("Appointment with ID " + id + " not found");
         }
 
-        s.remove(appointment);
-        transaction.commit();
-
+        session.remove(appointment); // Hibernate tự commit khi dùng @Transactional
     }
 
     // Lấy danh sách lịch hẹn theo trạng thái
@@ -340,6 +328,57 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
         return query.getResultList();
 
+    }
+
+    @Override
+    public Appointment cancelAppointment(int id) {
+        Session s = this.factory.getObject().getCurrentSession();
+
+        Appointment existingAppointment = s.get(Appointment.class, id);
+        if (existingAppointment == null) {
+            throw new RuntimeException("Appointment with ID " + id + " not found");
+        }
+
+        // Cập nhật trạng thái thành CANCELLED
+        existingAppointment.setStatus(AppointmentStatus.CANCELLED);
+        Appointment updatedAppointment = (Appointment) s.merge(existingAppointment);
+
+        return updatedAppointment;
+    }
+
+    @Override
+    public Appointment rescheduleAppointment(int id, Date newDate) {
+        Session s = this.factory.getObject().getCurrentSession();
+
+        Appointment existingAppointment = s.get(Appointment.class, id);
+        if (existingAppointment == null) {
+            throw new RuntimeException("Appointment with ID " + id + " not found");
+        }
+
+        // Kiểm tra trùng lịch với bác sĩ
+        Doctor doctor = existingAppointment.getDoctor();
+        if (doctor != null) {
+            CriteriaBuilder b = s.getCriteriaBuilder();
+            CriteriaQuery<Long> q = b.createQuery(Long.class);
+            Root<Appointment> root = q.from(Appointment.class);
+            q.select(b.count(root));
+            q.where(
+                    b.equal(root.get("doctor"), doctor),
+                    b.equal(root.get("appointmentDate"), newDate),
+                    b.notEqual(root.get("status"), AppointmentStatus.CANCELLED),
+                    b.notEqual(root.get("id"), id)
+            );
+            Long count = s.createQuery(q).getSingleResult();
+            if (count > 0) {
+                throw new RuntimeException("Doctor is already booked at this time");
+            }
+        }
+
+        // Cập nhật ngày mới
+        existingAppointment.setAppointmentDate(newDate);
+        Appointment updatedAppointment = (Appointment) s.merge(existingAppointment);
+
+        return updatedAppointment;
     }
 
 }

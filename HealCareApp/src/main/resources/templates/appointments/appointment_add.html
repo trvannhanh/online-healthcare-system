@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Thêm Lịch Hẹn</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <main>
+        <div class="d-flex bg-secondary">
+            <div th:replace="base :: sidebar" class="p-2"></div>
+            <div class="p-2 bg-light flex-grow-1">
+                <h1 class="text-center text-info mt-1">Thêm Lịch Hẹn</h1>
+                <form th:action="@{/appointments/add}" th:object="${appointment}" method="post">
+                    <div class="mb-3">
+                        <label>Chọn bệnh nhân:</label>
+                        <select th:field="*{patient}" class="form-control">
+                            <option th:each="p : ${patients}" th:value="${p.id}" th:text="${p.getUser().getLastName()}"></option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Chọn bác sĩ:</label>
+                        <select th:field="*{doctor}" class="form-control">
+                            <option th:each="d : ${doctors}" th:value="${d.id}" th:text="${d.getUser().getLastName()}"></option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Ngày khám:</label>
+                        <input class="form-control" type="datetime-local" th:field="*{appointmentDate}" required /><br/>
+                    </div>
+                    <div class="mb-3">
+                        <label>Trạng thái:</label>
+                        <select th:field="*{status}" class="form-control">
+                            <option value="PENDING">Đang chờ</option>
+                            <option value="CONFIRMED">Đã xác nhận</option>
+                            <option value="CANCELLED">Đã huỷ</option>
+                        </select><br/>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Thêm lịch hẹn</button>
+                </form>
+            </div>
+        </div>
+
+
+    </main>
+</body>
+</html>

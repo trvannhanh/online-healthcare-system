@@ -4,6 +4,10 @@
  */
 package com.can.configs;
 
+import com.can.filters.JwtFilter;
+import jakarta.servlet.Filter;
+import jakarta.servlet.MultipartConfigElement;
+import jakarta.servlet.ServletRegistration;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 /**
@@ -17,7 +21,8 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
     protected Class<?>[] getRootConfigClasses() {
         return new Class[] {
             ThymeleafConfig.class,
-            HibernateConfig.class
+            HibernateConfig.class,
+            SpringSecurityConfigs.class
         };
     }
 
@@ -31,6 +36,21 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
     @Override // chỉ định kí hiệu ánh xạ
     protected String[] getServletMappings() {
         return new String[] {"/"};
+    }
+    
+    @Override
+    protected void customizeRegistration(ServletRegistration.Dynamic registration) {
+        String location = "/";
+        long maxFileSize = 5242880; // 5MB
+        long maxRequestSize = 20971520; // 20MB
+        int fileSizeThreshold = 0;
+
+        registration.setMultipartConfig(new MultipartConfigElement(location, maxFileSize, maxRequestSize, fileSizeThreshold));
+    }
+    
+    @Override
+    protected Filter[] getServletFilters() {
+        return new Filter[] { new JwtFilter() }; // Filter sẽ áp dụng cho mọi request
     }
     
 }

@@ -26,6 +26,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Entity
 @Table(name = "appointment")
 public class Appointment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -48,7 +49,6 @@ public class Appointment {
     private AppointmentStatus status;
 
     // Getters and Setters
-
     /**
      * @return the id
      */
@@ -119,4 +119,3 @@ public class Appointment {
         this.status = status;
     }
 }
-

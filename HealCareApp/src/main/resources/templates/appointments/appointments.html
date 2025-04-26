@@ -1,0 +1,88 @@
+
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Quan Tri Lịch Hẹn</title>
+    <th:block th:replace="base :: styles"></th:block>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+
+    <main>
+        <div class="d-flex bg-secondary">
+            <div th:replace="base :: sidebar" class="p-2"></div>
+            <div class="p-2 bg-light flex-grow-1">
+                <h1 class="text-center text-info mt-1">Quản Trị Lịch Hẹn</h1>
+                <form th:action="@{/appointments}" method="get">
+                    <div class="mb-3">
+                        <label>Chọn bệnh nhân:</label>
+                        <select name="patientName" class="form-control">
+                            <option value="">-- Tất cả --</option>
+                            <option th:each="p : ${patients}" th:value="${p.getUser().getLastName()}" th:text="${p.getUser().getLastName()}"></option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Chọn bác sĩ:</label>
+                        <select name="doctorName" class="form-control">
+                            <option value="">-- Tất cả --</option>
+                            <option th:each="d : ${doctors}" th:value="${d.getUser().getLastName()}" th:text="${d.getUser().getLastName()}"></option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Ngày khám:</label>
+                        <input type="datetime-local" name="appointmentDate" class="form-control"/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Trạng thái:</label>
+                        <select name="status" class="form-control">
+                            <option value="">-- Tất cả --</option>
+                            <option value="PENDING">Đang chờ</option>
+                            <option value="CONFIRMED">Đã xác nhận</option>
+                            <option value="CANCELLED">Đã huỷ</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Lọc</button>
+                </form>
+
+                <a th:href="@{/appointments/add}" class="btn btn-success mt-1">Thêm Lịch Hẹn</a>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Id</th>
+                            <th>Bệnh Nhân</th>
+                            <th>Bác Sĩ</th>
+                            <th>Ngày Hẹn</th>
+                            <th>Trạng Thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="a: ${appointments}">
+                            <td></td>
+                            <td th:text="${a.id}"></td>
+                            <td th:text="${a.getPatient().getUser().getLastName()}"></td>
+                            <td th:text="${a.getDoctor().getUser().getLastName()}"></td>
+                            <td th:text="${a.getAppointmentDate()}"></td>
+                            <td th:text="${a.getStatus()}"></td>
+                            <td>
+                                <button th:onclick="'deleteAppointment(\'' + @{/api/appointments} + '\', ' + ${a.id} + ')'" class="btn btn-danger">&times;</button>
+                                <a href="#" class="btn btn-info">&Alpha;</a>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+    </main>
+    <div th:replace="base :: footer"></div>
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>

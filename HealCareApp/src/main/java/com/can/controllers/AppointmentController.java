@@ -38,9 +38,11 @@ public class AppointmentController {
     private PatientService patService;
 
     @GetMapping("/appointments")
-    public String doctors(Model model, @RequestParam Map<String, String> params) throws ParseException {
+    public String showAppointment(Model model, @RequestParam Map<String, String> params) throws ParseException {
         model.addAttribute("appointments", this.appService.getAppointments(params));
-        return "appointments";
+        model.addAttribute("doctors", this.docService.getAllDoctors());
+        model.addAttribute("patients", this.patService.getPatients(null));
+        return "appointments/appointments";
     }
 
     @GetMapping("/appointments/add")
@@ -48,13 +50,13 @@ public class AppointmentController {
         model.addAttribute("appointment", new Appointment());
         model.addAttribute("doctors", this.docService.getAllDoctors());
         model.addAttribute("patients", this.patService.getPatients(null));
-        return "appointment_add";
+        return "appointments/appointment_add";
     }
 
     @PostMapping("/appointments/add")
     public String addAppointment(@ModelAttribute("appointment") Appointment appointment) {
         this.appService.addAppointment(appointment); // gọi lại phương thức đã có
-        return "redirect:/"; // quay lại danh sách lịch hẹn
+        return "redirect:/appointments"; // quay lại danh sách lịch hẹn
     }
 
     @InitBinder

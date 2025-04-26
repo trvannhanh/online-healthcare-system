@@ -1,0 +1,68 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.can.controllers;
+
+import com.can.pojo.Appointment;
+import com.can.pojo.Doctor;
+import com.can.services.AppointmentService;
+import com.can.services.DoctorService;
+import java.text.ParseException;
+import java.util.List;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ *
+ * @author Giidavibe
+ */
+@RestController
+@RequestMapping("/api")
+@CrossOrigin
+public class ApiDoctorController {
+
+    @Autowired
+    private DoctorService doctorService;
+
+    // API tìm kiếm bác sĩ
+    @GetMapping("/doctors")
+    public ResponseEntity<List<Doctor>> searchDoctors(@RequestParam Map<String, String> params) {
+        try {
+            List<Doctor> doctors = doctorService.getDoctors(params);
+            if (doctors.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(doctors, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    // API lấy khung giờ trống
+    @GetMapping("/doctors/{doctorId}/available-slots")
+    public ResponseEntity<List<String>> getAvailableSlots(
+            @PathVariable("doctorId") int doctorId,
+            @RequestParam("date") String date) {
+        try {
+            List<String> availableSlots = doctorService.getAvailableTimeSlots(doctorId, date);
+            return new ResponseEntity<>(availableSlots, HttpStatus.OK);
+        } catch (ParseException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+}
