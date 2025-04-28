@@ -4,6 +4,9 @@
  */
 package com.can.pojo;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -43,6 +46,9 @@ public class Payment {
 
     @Column(name = "transaction_id", length = 100)
     private String transactionId;
+
+    @Column(name = "create_at", length = 255)
+    private LocalDate createAt;
 
     // Getters and Setters
 
@@ -128,6 +134,20 @@ public class Payment {
      */
     public void setTransactionId(String transactionId) {
         this.transactionId = transactionId;
+    }
+
+   /**
+     * @return the createAt
+     */
+    public LocalDate getCreateAt() {
+        return createAt;
+    }
+
+    /**
+     * @param createAt the createAt to set
+     */
+    public void setCreateAt(LocalDate createAt) {
+        this.createAt = createAt;
     }
 }
 
