@@ -140,26 +140,24 @@ public class PatientRepositoryImpl implements PatientRepository {
     // Thêm bệnh nhân mới
     @Override
     public Patient addPatient(Patient patient) {
-        Transaction transaction = null;
+
         Session s = this.factory.getObject().getCurrentSession();
-        transaction = s.beginTransaction();
 
-        if (patient.getUser() == null) {
-            throw new RuntimeException("User information is required for a Patient");
-        }
-
-        // Kiểm tra username đã tồn tại hay chưa
-        if (isUsernameExists(s, patient.getUser().getUsername())) {
-            throw new RuntimeException("Username '" + patient.getUser().getUsername() + "' already exists");
-        }
-
-        if (patient.getUser().getId() == 0) {
-            s.persist(patient.getUser());
-            s.flush(); // Đảm bảo User được lưu và có ID
-        }
+//        if (patient.getUser() == null) {
+//            throw new RuntimeException("User information is required for a Patient");
+//        }
+//
+//        // Kiểm tra username đã tồn tại hay chưa
+//        if (isUsernameExists(s, patient.getUser().getUsername())) {
+//            throw new RuntimeException("Username '" + patient.getUser().getUsername() + "' already exists");
+//        }
+//
+//        if (patient.getUser().getId() == 0) {
+//            s.persist(patient.getUser());
+//            s.flush(); // Đảm bảo User được lưu và có ID
+//        }
 
         s.persist(patient);
-        transaction.commit();
         return patient;
 
     }

@@ -123,9 +123,9 @@ public class DoctorRepositoryImpl implements DoctorRepository{
 
     @Override
     public Doctor addDoctor(Doctor doctor) {
-        Transaction transaction = null;
+//        Transaction transaction = null;
         Session s = this.factory.getObject().getCurrentSession();
-        transaction = s.beginTransaction();
+//        transaction = s.beginTransaction();
 
         if (doctor.getUser() == null) {
             throw new RuntimeException("Thông tin user cần thiết cho một Bác sĩ");
@@ -139,7 +139,7 @@ public class DoctorRepositoryImpl implements DoctorRepository{
         doctor.setId(doctor.getUser().getId());
 
         s.persist(doctor);
-        transaction.commit();
+//        transaction.commit();
         return doctor;
 
     }

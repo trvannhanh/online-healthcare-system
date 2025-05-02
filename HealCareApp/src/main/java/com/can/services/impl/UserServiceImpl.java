@@ -4,13 +4,19 @@
  */
 package com.can.services.impl;
 
+import com.can.pojo.Doctor;
+import com.can.pojo.Patient;
 import com.can.pojo.Role;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.can.pojo.User;
+import com.can.repositories.DoctorRepository;
+import com.can.repositories.PatientRepository;
 import com.can.repositories.UserRepository;
 import com.can.services.UserService;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +45,12 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepo;
 
     @Autowired
+    private PatientRepository patRepo;
+
+    @Autowired
+    private DoctorRepository docRepo;
+
+    @Autowired
     private BCryptPasswordEncoder passEncoder;
 
     @Autowired
@@ -61,6 +73,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User addUser(Map<String, String> params, MultipartFile avatar) {
+
+        // Kiểm tra dữ liệu đầu vào
+        validateParams(params);
+
+        // Kiểm tra avatar
+        if (avatar == null || avatar.isEmpty()) {
+            throw new IllegalArgumentException("Avatar là bắt buộc");
+        }
+        //Tạo User
         User u = new User();
         u.setFirstName(params.get("firstName"));
         u.setLastName(params.get("lastName"));
@@ -69,6 +90,7 @@ public class UserServiceImpl implements UserService {
         try {
             u.setRole(Role.valueOf(params.get("role").toUpperCase()));
         } catch (Exception e) {
+            System.out.println("Invalid role, defaulting to PATIENT" + e.getMessage());
             u.setRole(Role.PATIENT);
         }
         u.setUsername(params.get("username"));
@@ -84,7 +106,80 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        return this.userRepo.addUser(u);
+        User savedUser = this.userRepo.addUser(u);
+        System.out.println("User saved successfully: " + savedUser.getId());
+
+        //Xử lý thông tin riêng dựa trên role
+        String role = params.get("role").toUpperCase();
+        if ("PATIENT".equalsIgnoreCase(role)) {
+            Patient patient = new Patient();
+            patient.setUser(savedUser);
+            patient.setDateOfBirth(LocalDate.parse(params.get("dateOfBirth")));
+            patient.setInsuranceNumber(params.get("insuranceNumber"));
+            this.patRepo.addPatient(patient);
+            System.out.println("Patient saved successfully for user" + savedUser.getId());
+        } else if ("DOCTOR".equalsIgnoreCase(role)) {
+            Doctor doctor = new Doctor();
+            doctor.setUser(savedUser);
+            doctor.setLicenseNumber(params.get("licenseNumber"));
+            doctor.setHospital(params.get("hospital"));
+            doctor.setSpecialization(params.get("specialization"));
+            this.docRepo.addDoctor(doctor);
+        } else {
+            throw new IllegalArgumentException("Role không hợp lệ: " + role);
+        }
+
+        return savedUser;
+
+//        return this.userRepo.addUser(u);
+    }
+
+    private void validateParams(Map<String, String> params) {
+        // Kiểm tra các trường bắt buộc
+        if (!params.containsKey("username") || params.get("username").isBlank()) {
+            throw new IllegalArgumentException("Username là bắt buộc");
+        }
+        if (!params.containsKey("email") || !params.get("email").matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+            throw new IllegalArgumentException("Email không hợp lệ");
+        }
+        if (!params.containsKey("password") || params.get("password").isBlank()) {
+            throw new IllegalArgumentException("Password là bắt buộc");
+        }
+        if (!params.containsKey("role") || params.get("role").isBlank()) {
+            throw new IllegalArgumentException("Role là bắt buộc");
+        }
+
+        // Kiểm tra các trường bổ sung dựa trên role
+        String role = params.get("role");
+        if ("Patient".equalsIgnoreCase(role)) {
+            if (!params.containsKey("insuranceNumber") || params.get("insuranceNumber").isBlank()) {
+                throw new IllegalArgumentException("insuranceNumber là bắt buộc cho Patient");
+            }
+            if (!params.containsKey("dateOfBirth") || !isValidDate(params.get("dateOfBirth"))) {
+                throw new IllegalArgumentException("dateOfBirth không hợp lệ cho Patient");
+            }
+        } else if ("Doctor".equalsIgnoreCase(role)) {
+            if (!params.containsKey("specialization") || params.get("specialization").isBlank()) {
+                throw new IllegalArgumentException("specialization là bắt buộc cho Doctor");
+            }
+            if (!params.containsKey("licenseNumber") || params.get("licenseNumber").isBlank()) {
+                throw new IllegalArgumentException("licenseNumber là bắt buộc cho Doctor");
+            }
+            if (!params.containsKey("hospital") || params.get("hospital").isBlank()) {
+                throw new IllegalArgumentException("hospital là bắt buộc cho Doctor");
+            }
+        } else {
+            throw new IllegalArgumentException("Role không hợp lệ: " + role);
+        }
+    }
+
+    private boolean isValidDate(String date) {
+        try {
+            LocalDate.parse(date);
+            return true;
+        } catch (DateTimeParseException e) {
+            return false;
+        }
     }
 
     @Override
@@ -110,7 +205,7 @@ public class UserServiceImpl implements UserService {
         return new org.springframework.security.core.userdetails.User(
                 u.getUsername(), u.getPassword(), authorities);
     }
-    
+
     @Override
     public boolean authenticate(String username, String password) {
         return this.userRepo.authenticate(username, password);

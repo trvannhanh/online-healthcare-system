@@ -42,7 +42,6 @@ public class ApiUserController {
 //
 //        return new ResponseEntity<>(u, HttpStatus.CREATED);
 //    }
-
     @PostMapping(path = "/users",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
@@ -64,7 +63,7 @@ public class ApiUserController {
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Sai thông tin đăng nhập");
     }
-    
+
     @RequestMapping("/secure/profile")
     @ResponseBody
     @CrossOrigin
