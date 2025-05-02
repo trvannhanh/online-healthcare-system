@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
- * @author Giidavibe
+ * @author DELL
  */
 @Repository
 @Transactional

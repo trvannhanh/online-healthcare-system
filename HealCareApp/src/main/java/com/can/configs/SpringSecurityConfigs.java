@@ -69,8 +69,12 @@ public class SpringSecurityConfigs {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost("smtp.gmail.com");
         mailSender.setPort(587);
-        mailSender.setUsername("trvannhanh@gmail.com");
-        mailSender.setPassword("your-app-password");
+//        mailSender.setUsername("trvannhanh@gmail.com");
+//        mailSender.setPassword("your-app-password");
+        
+// Có thể dùng cái này thay thế cái trên 
+        mailSender.setUsername("nhatkhanhtran117@gmail.com");
+        mailSender.setPassword("holvedrmbrlaabyx");
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.smtp.auth", "true");

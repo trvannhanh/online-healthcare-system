@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  *
- * @author Giidavibe
+ * @author DELL
  */
 public interface PaymentRepository {
     // Lọc Payment theo các tiêu chí động (sử dụng Map)

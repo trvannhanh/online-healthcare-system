@@ -22,15 +22,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ *
+ * @author DELL
+ */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/health-records")
 public class ApiHealthRecordController {
 
     @Autowired
     private HealthRecordService healthRecordService;
 
     // Thêm mới một hồ sơ sức khỏe
-    @PostMapping("/health-record")
+    @PostMapping
     public ResponseEntity<HealthRecord> createHealthRecord(@RequestBody HealthRecord healthRecord) {
         try {
             HealthRecord newHealthRecord = healthRecordService.addHealthRecord(healthRecord);
@@ -45,14 +49,14 @@ public class ApiHealthRecordController {
     }
 
     // Xóa một hồ sơ sức khỏe theo id
-    @DeleteMapping("/health-records/{recordId}")
+    @DeleteMapping("/{recordId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void destroy(@PathVariable(value = "recordId") int id) {
         this.healthRecordService.deleteHealthRecord(id);
     }
 
     /// Cập nhật một hồ sơ sức khỏe theo id
-    @PutMapping("/health-records/{recordId}/update")
+    @PutMapping("{recordId}/update")
     public ResponseEntity<HealthRecord> updateHealthRecord(@PathVariable Long id,
             @RequestBody HealthRecord healthRecord) {
         try {
@@ -69,7 +73,7 @@ public class ApiHealthRecordController {
     }
 
     // Lấy hồ sơ sức khỏe theo ID
-    @GetMapping("/health-records/{recordId}")
+    @GetMapping("/{recordId}")
     public ResponseEntity<HealthRecord> getHealthRecordById(@PathVariable int id) {
         HealthRecord healthRecord = healthRecordService.getHealthRecordById(id);
         return healthRecord != null ? ResponseEntity.ok(healthRecord) : ResponseEntity.notFound().build();
@@ -87,7 +91,7 @@ public class ApiHealthRecordController {
     }
 
     // Lấy hồ sơ sức khỏe theo bệnh nhân (với phân trang)
-    @GetMapping("/health-records/patient/{patientId}")
+    @GetMapping("patient/{patientId}")
     public ResponseEntity<List<HealthRecord>> getHealthRecordsByPatient(@PathVariable int patientId, @RequestParam(defaultValue = "0") int page) {
         try {
             List<HealthRecord> healthRecords = healthRecordService.getHealthRecordsByPatient(patientId, page);

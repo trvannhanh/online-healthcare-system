@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 /**
  *
- * @author Giidavibe
+ * @author DELL
  */
 @Service
 public class PaymentServiceImpl implements PaymentService {

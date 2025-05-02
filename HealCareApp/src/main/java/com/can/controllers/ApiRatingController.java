@@ -10,23 +10,16 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ *
+ * @author DELL
+ */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/rating")
 public class ApiRatingController {
 
     @Autowired
     private RatingService ratingService;
-
-    // Lấy tất cả các đánh giá theo các tiêu chí (params)
-    @GetMapping
-    public ResponseEntity<List<Rating>> getAllRatings(@RequestParam Map<String, String> params) {
-        try {
-            List<Rating> ratings = ratingService.getAllRatings(params);
-            return ResponseEntity.ok(ratings);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
 
     // Lấy đánh giá theo ID
     @GetMapping("/{id}")

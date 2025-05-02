@@ -6,7 +6,7 @@ import java.util.Map;
 
 /**
  *
- * @author Giidavibe
+ * @author DELL
  */
 public interface RatingService {
     List<Rating> getAllRatings(Map<String, String> params);

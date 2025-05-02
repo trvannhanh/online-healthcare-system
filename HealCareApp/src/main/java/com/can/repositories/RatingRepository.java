@@ -4,6 +4,11 @@ import com.can.pojo.Rating;
 
 import java.util.List;
 import java.util.Map;
+
+/**
+ *
+ * @author DELL
+ */
 public interface RatingRepository {
     List<Rating> getAllRatings(Map<String, String> params);
     Rating getRatingById(Integer id);

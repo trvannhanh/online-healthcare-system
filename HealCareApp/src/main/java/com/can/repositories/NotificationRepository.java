@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Date;
 
+/**
+ *
+ * @author DELL
+ */
 public interface NotificationRepository {
 
     // Lọc thông báo theo các tiêu chí động (sử dụng Map)

@@ -8,8 +8,9 @@ import java.util.Map;
 
 /**
  *
- * @author Giidavibe
- */public interface MessageRepository {
+ * @author DELL
+ */
+public interface MessageRepository {
     Messages getMessageById(Integer id);
     List<Messages> getMessagesBySender(User sender);
     List<Messages> getMessagesByReceiver(User receiver);

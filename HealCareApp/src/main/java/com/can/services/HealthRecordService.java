@@ -5,9 +5,10 @@ import java.util.Map;
 
 import com.can.pojo.HealthRecord;
 
+
 /**
  *
- * @author Giidavibe
+ * @author DELL
  */
 public interface HealthRecordService {
     
