@@ -16,6 +16,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import java.time.LocalDateTime;
 import java.util.Date;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -42,7 +43,7 @@ public class Appointment {
     @Column(name = "appointment_date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-    private Date appointmentDate;
+    private LocalDateTime appointmentDate;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
@@ -94,14 +95,14 @@ public class Appointment {
     /**
      * @return the appointmentDate
      */
-    public Date getAppointmentDate() {
+    public LocalDateTime getAppointmentDate() {
         return appointmentDate;
     }
 
     /**
      * @param appointmentDate the appointmentDate to set
      */
-    public void setAppointmentDate(Date appointmentDate) {
+    public void setAppointmentDate(LocalDateTime appointmentDate) {
         this.appointmentDate = appointmentDate;
     }
 

@@ -5,8 +5,12 @@
 package com.can.controllers;
 
 import com.can.pojo.Appointment;
+import com.can.pojo.User;
 import com.can.services.AppointmentService;
+import java.nio.file.AccessDeniedException;
+import java.security.Principal;
 import java.text.ParseException;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -58,29 +63,51 @@ public class ApiAppointmentController {
         this.appService.deleteAppointment(id);
     }
 
-    @PatchMapping("/appointments/{appointmentId}/cancel")
-    public ResponseEntity<Appointment> cancelAppointment(@PathVariable(value = "appointmentId") int id) {
-
-        Appointment newAppointment = appService.cancelAppointment(id);
-        return new ResponseEntity<>(newAppointment, HttpStatus.OK);
-//        try {
-//            appointment.setId(id.intValue());
-//            Appointment updatedAppointment = appService.updateAppointment(appointment);
-//            return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
-//        } catch (RuntimeException e) {
-//            if (e.getMessage().contains("not found")) {
-//                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-//            } else if (e.getMessage().contains("less than 24 hours")) {
-//                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-//            }
-//            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
+//    @PatchMapping("/appointments/{appointmentId}/cancel")
+//    public ResponseEntity<Appointment> cancelAppointment(@PathVariable(value = "appointmentId") int id) {
+//
+//        Appointment newAppointment = appService.cancelAppointment(id);
+//        return new ResponseEntity<>(newAppointment, HttpStatus.OK);
+////        try {
+////            appointment.setId(id.intValue());
+////            Appointment updatedAppointment = appService.updateAppointment(appointment);
+////            return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
+////        } catch (RuntimeException e) {
+////            if (e.getMessage().contains("not found")) {
+////                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+////            } else if (e.getMessage().contains("less than 24 hours")) {
+////                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+////            }
+////            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+////        }
+//    }
+    
+    
+    @PatchMapping("/secure/appointments/{id}/cancel")
+    @CrossOrigin
+    public ResponseEntity<?> cancelAppointment(@PathVariable("id") int id, Principal principal) {
+        try {
+            Appointment updatedAppointment = appService.cancelAppointment(id, principal.getName());
+            return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
+        } catch (IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @PatchMapping("/appointments/{appointmentId}/reschedule")
-    public ResponseEntity<Appointment> rescheduleAppointment(@PathVariable(value = "appointmentId") int id, @RequestParam String newDate) {
-        Appointment newAppointment = appService.rescheduleAppointment(id, newDate);
-        return new ResponseEntity<>(newAppointment, HttpStatus.OK);
+    @PatchMapping("/secure/appointments/{id}/reschedule")
+    @CrossOrigin
+    public ResponseEntity<?> rescheduleAppointment(@PathVariable("id") int id ,@RequestBody Map<String, String> body, Principal principal) {
+        try {
+            String newDateStr = body.get("newDateTime");
+            Appointment updatedAppointment = appService.rescheduleAppointment(id, newDateStr, principal.getName());
+            return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
+        } catch (IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PutMapping("/appointments/{id}")
@@ -96,6 +123,21 @@ public class ApiAppointmentController {
                 return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
             }
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    
+
+    @PutMapping("/secure/appointments/{id}/confirm")
+    @CrossOrigin
+    public ResponseEntity<?> confirmAppointment(@PathVariable("id") int id, Principal principal) {
+        try {
+            Appointment updatedAppointment = appService.confirmAppointment(id, principal.getName());
+            return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
+        } catch (IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

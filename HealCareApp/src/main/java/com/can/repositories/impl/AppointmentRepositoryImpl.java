@@ -16,7 +16,10 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import java.security.Principal;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,7 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AppointmentRepositoryImpl implements AppointmentRepository {
 
     @Autowired
-
     private LocalSessionFactoryBean factory;
 
     private static final int PAGE_SIZE = 10;
@@ -338,6 +340,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         if (existingAppointment == null) {
             throw new RuntimeException("Appointment with ID " + id + " not found");
         }
+        
 
         // Cập nhật trạng thái thành CANCELLED
         existingAppointment.setStatus(AppointmentStatus.CANCELLED);
@@ -346,8 +349,9 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         return updatedAppointment;
     }
 
+
     @Override
-    public Appointment rescheduleAppointment(int id, Date newDate) {
+    public Appointment rescheduleAppointment(int id, LocalDateTime newDate) {
         Session s = this.factory.getObject().getCurrentSession();
 
         Appointment existingAppointment = s.get(Appointment.class, id);
@@ -373,9 +377,27 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                 throw new RuntimeException("Doctor is already booked at this time");
             }
         }
+        
+        
 
         // Cập nhật ngày mới
         existingAppointment.setAppointmentDate(newDate);
+        Appointment updatedAppointment = (Appointment) s.merge(existingAppointment);
+
+        return updatedAppointment;
+    }
+    
+    @Override
+    public Appointment confirmAppointment(int id) {
+        Session s = this.factory.getObject().getCurrentSession();
+
+        Appointment existingAppointment = s.get(Appointment.class, id);
+        if (existingAppointment == null) {
+            throw new RuntimeException("Appointment with ID " + id + " not found");
+        }
+
+        // Cập nhật Trạng Thái
+        existingAppointment.setStatus(AppointmentStatus.CONFIRMED);
         Appointment updatedAppointment = (Appointment) s.merge(existingAppointment);
 
         return updatedAppointment;

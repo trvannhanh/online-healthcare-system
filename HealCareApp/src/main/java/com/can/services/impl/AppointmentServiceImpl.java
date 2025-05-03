@@ -6,13 +6,20 @@ package com.can.services.impl;
 
 import com.can.pojo.Appointment;
 import com.can.pojo.AppointmentStatus;
+import com.can.pojo.User;
 import com.can.repositories.AppointmentRepository;
+import com.can.repositories.UserRepository;
 import com.can.services.AppointmentService;
+import com.can.services.UserService;
+import java.nio.file.AccessDeniedException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -28,6 +35,9 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Autowired
     private AppointmentRepository appRepo;
     private JavaMailSender mailSender;
+    
+    @Autowired
+    private UserRepository uServ;
 
     @Override
     public List<Appointment> getAppointments(Map<String, String> params) throws ParseException {
@@ -149,27 +159,120 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public Appointment cancelAppointment(int id) {
-        return this.appRepo.cancelAppointment(id);
-    }
-
-    @Override
-    public Appointment rescheduleAppointment(int id, String newDateStr) {
+    public Appointment cancelAppointment(int id, String username) {
+        
         // Tìm lịch hẹn
         Appointment existingAppointment = appRepo.getAppointmentById(id);
         if (existingAppointment == null) {
             throw new RuntimeException("Appointment not found");
         }
+        
+        User u = this.uServ.getUserByUsername(username);
+        String role = u.getRole().toString().toUpperCase();
+        
+        if(!"PATIENT".equalsIgnoreCase(role) && !"DOCTOR".equalsIgnoreCase(role)){
+            try {
+                throw new AccessDeniedException("Bạn không có quyền hủy lịch hẹn này1");
+            } catch (AccessDeniedException ex) {
+                Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        if(!(u.getId() == existingAppointment.getDoctor().getId()) ){
+            try {
+                throw new AccessDeniedException("Bạn không có quyền hủy lịch hẹn này2");
+            } catch (AccessDeniedException ex) {
+                Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        String status = existingAppointment.getStatus().toString().toUpperCase();
+        
+        
+        
+        
+        if(!"PENDING".equals(status)){
+            throw new IllegalStateException("Chỉ lịch hẹn chờ xác nhận mới có thể được hủy");
+        }
+        
+        return this.appRepo.cancelAppointment(id);
+    }
 
-        // Parse ngày mới
-        Date newDate;
-        try {
-            newDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newDateStr);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Invalid date format. Expected format: yyyy-MM-dd'T'HH:mm:ss");
+    @Override
+    public Appointment rescheduleAppointment(int id, String newDateStr, String username) {
+        // Tìm lịch hẹn
+        Appointment existingAppointment = appRepo.getAppointmentById(id);
+        if (existingAppointment == null) {
+            throw new RuntimeException("Appointment not found");
+        }
+        
+        User u = this.uServ.getUserByUsername(username);
+        String role = u.getRole().toString().toUpperCase();
+        
+        if(!"DOCTOR".equalsIgnoreCase(role) && !"PATIENT".equalsIgnoreCase(role)){
+            try {
+                throw new AccessDeniedException("Bạn không có quyền hủy lịch hẹn này1");
+            } catch (AccessDeniedException ex) {
+                Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        if(!(u.getId() == existingAppointment.getDoctor().getId()) ){
+            try {
+                throw new AccessDeniedException("Bạn không có quyền sửa lịch hẹn này");
+            } catch (AccessDeniedException ex) {
+                Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        String status = existingAppointment.getStatus().toString().toUpperCase();
+        
+        if(!"PENDING".equals(status)){
+            throw new IllegalStateException("Chỉ lịch hẹn chờ xác nhận mới có thể được xác nhận");
         }
 
-        return this.appRepo.rescheduleAppointment(id, newDate);
+        // Parse ngày mới
+        LocalDateTime newDateTime;
+        newDateTime = LocalDateTime.parse(newDateStr);
+
+        return this.appRepo.rescheduleAppointment(id, newDateTime);
+    }
+    
+    @Override
+    public Appointment confirmAppointment(int id, String username) {
+        
+        // Tìm lịch hẹn
+        Appointment existingAppointment = appRepo.getAppointmentById(id);
+        if (existingAppointment == null) {
+            throw new RuntimeException("Appointment not found");
+        }
+        
+        User u = this.uServ.getUserByUsername(username);
+        String role = u.getRole().toString().toUpperCase();
+        
+        if(!"DOCTOR".equalsIgnoreCase(role)){
+            try {
+                throw new AccessDeniedException("Bạn không có quyền hủy lịch hẹn này1");
+            } catch (AccessDeniedException ex) {
+                Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        if(!(u.getId() == existingAppointment.getDoctor().getId()) ){
+            try {
+                throw new AccessDeniedException("Bạn không có quyền xác nhận lịch hẹn này");
+            } catch (AccessDeniedException ex) {
+                Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        String status = existingAppointment.getStatus().toString().toUpperCase();
+        
+        if(!"PENDING".equals(status)){
+            throw new IllegalStateException("Chỉ lịch hẹn chờ xác nhận mới có thể được xác nhận");
+        }
+        
+        return this.appRepo.confirmAppointment(id);
     }
 
 }
