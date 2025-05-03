@@ -16,16 +16,19 @@ import com.can.services.PaymentService;
 import java.util.List;
 import java.util.Map;
 
-
+/**
+ *
+ * @author DELL
+ */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/payment")
 public class ApiPaymentController {
 
     @Autowired
     private PaymentService paymentService;
 
     // Lấy danh sách Payment theo tiêu chí động
-    @GetMapping("/payments")
+    @GetMapping
     public ResponseEntity<List<Payment>> getPaymentsByCriteria(@RequestParam Map<String, String> params) {
         try {
             List<Payment> payments = paymentService.getPaymentsByCriteria(params);
@@ -36,21 +39,21 @@ public class ApiPaymentController {
     }
 
     // Lấy Payment theo id
-    @GetMapping("/payments/{paymentId}")
+    @GetMapping("{paymentId}")
     public ResponseEntity<Payment> getPaymentById(@PathVariable Integer paymentId) {
         Payment payment = paymentService.getPaymentById(paymentId);
         return payment != null ? ResponseEntity.ok(payment) : ResponseEntity.notFound().build();
     }
 
     // Lấy Payment theo appointmentId
-    @GetMapping("/payments/appointment/{appointmentId}")
+    @GetMapping("appointment/{appointmentId}")
     public ResponseEntity<Payment> getPaymentByAppointmentId(@PathVariable Integer appointmentId) {
         Payment payment = paymentService.getPaymentByAppointment_Id(appointmentId);
         return payment != null ? ResponseEntity.ok(payment) : ResponseEntity.notFound().build();
     }
 
     // Lọc Payment theo trạng thái thanh toán
-    @GetMapping("/payments/status")
+    @GetMapping("/filter/status")
     public ResponseEntity<List<Payment>> getPaymentsByStatus(@RequestParam PaymentStatus status) {
         try {
             List<Payment> payments = paymentService.getPaymentByPaymentStatus(status);
@@ -61,7 +64,7 @@ public class ApiPaymentController {
     }
 
     // Lọc Payment theo phương thức thanh toán
-    @GetMapping("/payments/method")
+    @GetMapping("/filter/method")
     public ResponseEntity<List<Payment>> getPaymentsByMethod(@RequestParam PaymentMethod method) {
         try {
             List<Payment> payments = paymentService.findByPaymentMethod(method);
@@ -72,14 +75,14 @@ public class ApiPaymentController {
     }
 
     // Lấy Payment theo transactionId
-    @GetMapping("/payments/transaction/{transactionId}")
+    @GetMapping("/transaction/{transactionId}")
     public ResponseEntity<Payment> getPaymentByTransactionId(@PathVariable String transactionId) {
         Payment payment = paymentService.getPaymentByTransactionId(transactionId);
         return payment != null ? ResponseEntity.ok(payment) : ResponseEntity.notFound().build();
     }
 
     // Lọc Payment theo amount lớn hơn
-    @GetMapping("/payments/amount/greater")
+    @GetMapping("/filter/amount-greater")
     public ResponseEntity<List<Payment>> getPaymentsByAmountGreater(@RequestParam double amount) {
         try {
             List<Payment> payments = paymentService.getPaymentByAmountGreaterThan(amount);
@@ -90,7 +93,7 @@ public class ApiPaymentController {
     }
 
     // Lọc Payment theo amount nhỏ hơn
-    @GetMapping("/payments/amount/less")
+    @GetMapping("/filter/amount-less")
     public ResponseEntity<List<Payment>> getPaymentsByAmountLess(@RequestParam double amount) {
         try {
             List<Payment> payments = paymentService.getPaymentByAmountLessThan(amount);
@@ -101,7 +104,7 @@ public class ApiPaymentController {
     }
 
     // Lọc Payment theo ngày thanh toán (dùng chuỗi ngày)
-    @GetMapping("/payments/date")
+    @GetMapping("/filter/date")
     public ResponseEntity<List<Payment>> getPaymentsByPaymentDate(@RequestParam String createAt) {
         try {
             List<Payment> payments = paymentService.getPaymentByPaymentDate(createAt);

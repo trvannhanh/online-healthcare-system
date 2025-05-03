@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 /**
  *
- * @author Giidavibe
+ * @author DELL
  */
 @Service
 public class MessageServiceImpl implements MessageService{

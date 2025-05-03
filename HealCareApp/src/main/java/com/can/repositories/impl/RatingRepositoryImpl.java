@@ -22,7 +22,7 @@ import org.hibernate.Session;
 
 /**
  *
- * @author Giidavibe
+ * @author DELL
  */
 @Repository
 @Transactional

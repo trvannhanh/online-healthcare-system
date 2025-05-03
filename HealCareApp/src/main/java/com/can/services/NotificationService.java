@@ -8,7 +8,7 @@ import com.can.pojo.Notifications;
 
 /**
  *
- * @author Giidavibe
+ * @author DELL
  */
 public interface NotificationService {
     List<Notifications> getNotificationsByCriteria(Map<String, String> params);

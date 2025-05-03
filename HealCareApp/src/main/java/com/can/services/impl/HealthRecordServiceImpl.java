@@ -9,8 +9,9 @@ import org.springframework.stereotype.Service;
 
 /**
  *
- * @author Giidavibe
+ * @author DELL
  */
+@Service
 public class HealthRecordServiceImpl implements HealthRecordService {
     @Autowired
     private HealthRecordRepository healthRecordRepository;

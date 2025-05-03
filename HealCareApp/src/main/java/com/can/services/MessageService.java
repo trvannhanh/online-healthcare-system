@@ -9,7 +9,7 @@ import com.can.pojo.User;
 
 /**
  *
- * @author Giidavibe
+ * @author DELL
  */
 public interface MessageService {
     Messages getMessageById(Integer id);
