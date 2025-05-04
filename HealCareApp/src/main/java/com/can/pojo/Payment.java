@@ -47,8 +47,8 @@ public class Payment {
     @Column(name = "transaction_id", length = 100)
     private String transactionId;
 
-    @Column(name = "create_at", length = 255)
-    private LocalDate createAt;
+    @Column(name = "created_at", length = 255)
+    private LocalDate createdAt;
 
     // Getters and Setters
 
@@ -140,14 +140,14 @@ public class Payment {
      * @return the createAt
      */
     public LocalDate getCreateAt() {
-        return createAt;
+        return createdAt;
     }
 
     /**
      * @param createAt the createAt to set
      */
     public void setCreateAt(LocalDate createAt) {
-        this.createAt = createAt;
+        this.createdAt = createAt;
     }
 }
 

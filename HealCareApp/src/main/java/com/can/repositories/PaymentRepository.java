@@ -37,4 +37,9 @@ public interface PaymentRepository {
 
     //Lọc theo ngày thanh toán 
     List<Payment> getPaymentByPaymentDate(String createAt);
+    
+    Payment createPaymentForAppointment(int appointmentId, double amount);
+    
+    void updatePayment(Payment payment);
+    
 }
