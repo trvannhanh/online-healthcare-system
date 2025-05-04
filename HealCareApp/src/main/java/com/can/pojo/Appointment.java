@@ -48,6 +48,11 @@ public class Appointment {
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
+    
+    @Column(name = "created_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime createdAt;
 
     // Getters and Setters
     /**
@@ -118,5 +123,19 @@ public class Appointment {
      */
     public void setStatus(AppointmentStatus status) {
         this.status = status;
+    }
+
+    /**
+     * @return the createdAt
+     */
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    /**
+     * @param createdAt the createdAt to set
+     */
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
