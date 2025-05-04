@@ -20,4 +20,7 @@ public interface UserRepository {
     boolean deleteUser(int id);
     boolean authenticate(String username, String password);
     
+    boolean isEmailExist(String email);
+    String getEmailByUserId(int userId);
+    List<String> getAllEmails();
 }
