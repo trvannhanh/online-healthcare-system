@@ -40,4 +40,6 @@ public interface NotificationRepository {
     
     // Cập nhật nội dung thông báo
     void updateNotificationMessage(int notificationId, String message);
+    
+
 } 

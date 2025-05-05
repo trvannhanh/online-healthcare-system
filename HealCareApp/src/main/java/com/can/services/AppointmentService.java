@@ -27,4 +27,6 @@ public interface AppointmentService {
     List<Appointment> getAppointmentsByPatient(int patientId, int page);
     Appointment cancelAppointment(int id);
     Appointment rescheduleAppointment(int id, String newDateStr);
+    int countDistinctPatientsByDoctorAndDateRange(int doctorId, String fromDateStr, String toDateStr) throws ParseException;
+    int countDistinctPatientsByDateRange(String fromDateStr, String toDateStr) throws ParseException;
 }

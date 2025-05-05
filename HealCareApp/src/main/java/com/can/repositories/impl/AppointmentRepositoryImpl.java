@@ -17,8 +17,10 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.Session;
@@ -77,18 +79,32 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                 predicates.add(b.equal(b.function("DATE", Date.class, root.get("appointmentDate")), date));
             }
 
+            // Lọc theo doctorId
+            String doctorId = params.get("doctorId");
+            if (doctorId != null && !doctorId.isEmpty()) {
+                predicates.add(b.equal(doctorJoin.get("id"), Long.parseLong(doctorId)));
+            }
+
+            // Lọc theo khoảng thời gian
+            String fromDateStr = params.get("fromDate");
+            String toDateStr = params.get("toDate");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            if (fromDateStr != null && toDateStr != null) {
+                Date fromDate = sdf.parse(fromDateStr);
+                Date toDate = sdf.parse(toDateStr);
+                predicates.add(b.between(root.get("appointmentDate"), fromDate, toDate));
+            }
+
             // Lọc theo tên bác sĩ
             String doctorName = params.get("doctorName");
             if (doctorName != null && !doctorName.isEmpty()) {
                 String searchPattern = String.format("%%%s%%", doctorName.toLowerCase());
                 Predicate firstNamePredicate = b.like(
                         b.lower(doctorUserJoin.get("firstName")),
-                        searchPattern
-                );
+                        searchPattern);
                 Predicate lastNamePredicate = b.like(
                         b.lower(doctorUserJoin.get("lastName")),
-                        searchPattern
-                );
+                        searchPattern);
                 predicates.add(b.or(firstNamePredicate, lastNamePredicate));
             }
 
@@ -98,12 +114,10 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                 String searchPattern = String.format("%%%s%%", patientName.toLowerCase());
                 Predicate firstNamePredicate = b.like(
                         b.lower(patientUserJoin.get("firstName")),
-                        searchPattern
-                );
+                        searchPattern);
                 Predicate lastNamePredicate = b.like(
                         b.lower(patientUserJoin.get("lastName")),
-                        searchPattern
-                );
+                        searchPattern);
                 predicates.add(b.or(firstNamePredicate, lastNamePredicate));
             }
         }
@@ -175,8 +189,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         q.where(
                 b.equal(root.get("doctor"), doctor),
                 b.equal(root.get("appointmentDate"), appointment.getAppointmentDate()),
-                b.notEqual(root.get("status"), AppointmentStatus.CANCELLED)
-        );
+                b.notEqual(root.get("status"), AppointmentStatus.CANCELLED));
         Long count = s.createQuery(q).getSingleResult();
         if (count > 0) {
             throw new RuntimeException("Doctor is already booked at this time");
@@ -209,10 +222,12 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
             throw new RuntimeException("Doctor with ID " + appointment.getDoctor().getId() + " not found");
         }
 
-        // Kiểm tra xem bác sĩ có lịch hẹn trùng thời gian không (nếu thay đổi thời gian hoặc bác sĩ)
-        boolean dateChanged = (existingAppointment.getAppointmentDate() == null && appointment.getAppointmentDate() != null)
+        // Kiểm tra xem bác sĩ có lịch hẹn trùng thời gian không (nếu thay đổi thời gian
+        // hoặc bác sĩ)
+        boolean dateChanged = (existingAppointment.getAppointmentDate() == null
+                && appointment.getAppointmentDate() != null)
                 || (existingAppointment.getAppointmentDate() != null && appointment.getAppointmentDate() != null
-                && !existingAppointment.getAppointmentDate().equals(appointment.getAppointmentDate()));
+                        && !existingAppointment.getAppointmentDate().equals(appointment.getAppointmentDate()));
 
         // Kiểm tra thay đổi bác sĩ
         boolean doctorChanged = false;
@@ -237,8 +252,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                     b.equal(root.get("doctor"), doctor),
                     b.equal(root.get("appointmentDate"), appointment.getAppointmentDate()),
                     b.notEqual(root.get("status"), AppointmentStatus.CANCELLED),
-                    b.notEqual(root.get("id"), appointment.getId())
-            );
+                    b.notEqual(root.get("id"), appointment.getId()));
             Long count = s.createQuery(q).getSingleResult();
             if (count > 0) {
                 throw new RuntimeException("Doctor is already booked at this time");
@@ -366,8 +380,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                     b.equal(root.get("doctor"), doctor),
                     b.equal(root.get("appointmentDate"), newDate),
                     b.notEqual(root.get("status"), AppointmentStatus.CANCELLED),
-                    b.notEqual(root.get("id"), id)
-            );
+                    b.notEqual(root.get("id"), id));
             Long count = s.createQuery(q).getSingleResult();
             if (count > 0) {
                 throw new RuntimeException("Doctor is already booked at this time");
@@ -380,5 +393,38 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
         return updatedAppointment;
     }
+
+    public int countDistinctPatientsByDoctorAndDateRange(int doctorId, String fromDateStr, String toDateStr)
+            throws ParseException {
+        Map<String, String> params = new HashMap<>();
+        params.put("doctorId", String.valueOf(doctorId));
+        params.put("fromDate", fromDateStr);
+        params.put("toDate", toDateStr);
+        params.put("status", "COMPLETED"); // Đảm bảo chỉ đếm những lần đã khám
+
+        List<Appointment> appointments = this.getAppointments(params);
+
+        return (int) appointments.stream()
+            .map(a -> a.getPatient())
+            .map(p -> p.getId())
+            .distinct()
+            .count();
+    }
+
+    public int countDistinctPatientsByDateRange(String fromDateStr, String toDateStr) throws ParseException {
+        Map<String, String> params = new HashMap<>();
+        params.put("fromDate", fromDateStr);
+        params.put("toDate", toDateStr);
+        params.put("status", "COMPLETED"); // Chỉ đếm những lần khám đã hoàn thành
+    
+        List<Appointment> appointments = this.getAppointments(params);
+    
+        return (int) appointments.stream()
+                .map(Appointment::getPatient)
+                .map(Patient::getId)
+                .distinct()
+                .count();
+    }
+    
 
 }

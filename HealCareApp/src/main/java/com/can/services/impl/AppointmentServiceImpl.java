@@ -172,4 +172,27 @@ public class AppointmentServiceImpl implements AppointmentService {
         return this.appRepo.rescheduleAppointment(id, newDate);
     }
 
+    @Override
+    public int countDistinctPatientsByDoctorAndDateRange(int doctorId, String fromDateStr, String toDateStr) throws ParseException {
+        // Parse ngày bắt đầu và kết thúc
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        dateFormat.setLenient(false);  // Đảm bảo không chấp nhận định dạng không hợp lệ
+        Date fromDate = dateFormat.parse(fromDateStr);
+        Date toDate = dateFormat.parse(toDateStr);
+
+        return this.appRepo.countDistinctPatientsByDoctorAndDateRange(doctorId, fromDateStr, toDateStr);
+    }
+    
+    @Override
+    public int countDistinctPatientsByDateRange(String fromDateStr, String toDateStr) throws ParseException {
+        // Parse ngày bắt đầu và kết thúc
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        dateFormat.setLenient(false);  // Đảm bảo không chấp nhận định dạng không hợp lệ
+        Date fromDate = dateFormat.parse(fromDateStr);
+        Date toDate = dateFormat.parse(toDateStr);
+
+        return this.appRepo.countDistinctPatientsByDateRange(fromDateStr, toDateStr);
+    }
+    
+
 }
