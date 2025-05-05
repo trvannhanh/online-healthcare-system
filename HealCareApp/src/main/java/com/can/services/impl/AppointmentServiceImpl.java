@@ -15,6 +15,7 @@ import java.nio.file.AccessDeniedException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -193,7 +194,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         // Kiểm tra thời gian tạo lịch hẹn
-        LocalDateTime createdAt = existingAppointment.();
+        LocalDateTime createdAt = existingAppointment.getCreatedAt();
         LocalDateTime now = LocalDateTime.now();
         long hoursSinceCreation = ChronoUnit.HOURS.between(createdAt, now);
 
@@ -235,6 +236,15 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         if (!"PENDING".equals(status)) {
             throw new IllegalStateException("Chỉ lịch hẹn chờ xác nhận mới có thể được xác nhận");
+        }
+        
+        // Kiểm tra thời gian tạo lịch hẹn
+        LocalDateTime createdAt = existingAppointment.getCreatedAt();
+        LocalDateTime now = LocalDateTime.now();
+        long hoursSinceCreation = ChronoUnit.HOURS.between(createdAt, now);
+
+        if (hoursSinceCreation > 24) {
+            throw new IllegalStateException("Không thể đổi lịch hẹn sau 24 giờ kể từ khi tạo");
         }
 
         // Parse ngày mới
