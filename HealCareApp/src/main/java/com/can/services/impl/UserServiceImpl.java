@@ -5,13 +5,17 @@
 package com.can.services.impl;
 
 import com.can.pojo.Doctor;
+import com.can.pojo.Hospital;
 import com.can.pojo.Patient;
 import com.can.pojo.Role;
+import com.can.pojo.Specialization;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.can.pojo.User;
 import com.can.repositories.DoctorRepository;
+import com.can.repositories.HospitalRepository;
 import com.can.repositories.PatientRepository;
+import com.can.repositories.SpecializationRepository;
 import com.can.repositories.UserRepository;
 import com.can.services.UserService;
 import java.io.IOException;
@@ -49,6 +53,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private DoctorRepository docRepo;
+
+    @Autowired
+    private SpecializationRepository specializationRepo;
+
+    @Autowired
+    private HospitalRepository hospitalRepo;
 
     @Autowired
     private BCryptPasswordEncoder passEncoder;
@@ -122,8 +132,24 @@ public class UserServiceImpl implements UserService {
             Doctor doctor = new Doctor();
             doctor.setUser(savedUser);
             doctor.setLicenseNumber(params.get("licenseNumber"));
-            doctor.setHospital(params.get("hospital"));
-            doctor.setSpecialization(params.get("specialization"));
+            // Xử lý Hospital
+            String hospitalName = params.get("hospital");
+            Hospital hospital = hospitalRepo.getHospitalByName(hospitalName);
+            if (hospital == null) {
+                hospital = new Hospital();
+                hospital.setName(hospitalName);
+                hospital = hospitalRepo.addHospital(hospital);
+            }
+            doctor.setHospital(hospital);
+            
+            String specializationName = params.get("specialization");
+            Specialization specialization = specializationRepo.getSpecializationByName(specializationName);
+            if (specialization == null) {
+                specialization = new Specialization();
+                specialization.setName(specializationName);
+                specialization = specializationRepo.addSpecialization(specialization);
+            }
+            doctor.setSpecialization(specialization);
             this.docRepo.addDoctor(doctor);
         } else {
             throw new IllegalArgumentException("Role không hợp lệ: " + role);

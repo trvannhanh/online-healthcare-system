@@ -25,8 +25,9 @@ public interface AppointmentService {
     List<Appointment> getAppointmentsByStatus(AppointmentStatus status, int page);
     List<Appointment> getAppointmentsByDoctor(int doctorId, int page);
     List<Appointment> getAppointmentsByPatient(int patientId, int page);
-    Appointment cancelAppointment(int id);
-    Appointment rescheduleAppointment(int id, String newDateStr);
+    Appointment cancelAppointment(int id, String username);
+    Appointment rescheduleAppointment(int id, String newDateStr, String username);
+    Appointment confirmAppointment(int id, String username);
     int countDistinctPatientsByDoctorAndDateRange(int doctorId, String fromDateStr, String toDateStr) throws ParseException;
     int countDistinctPatientsByDateRange(String fromDateStr, String toDateStr) throws ParseException;
 }

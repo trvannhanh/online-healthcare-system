@@ -8,6 +8,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -27,11 +28,13 @@ public class Doctor {
     @JoinColumn(name = "id")
     private User user;
 
-    @Column(name = "specialization", length = 100)
-    private String specialization;
+    @ManyToOne
+    @JoinColumn(name = "specialization")
+    private Specialization specialization;
 
-    @Column(name = "hospital", length = 255)
-    private String hospital;
+    @ManyToOne
+    @JoinColumn(name = "hospital")
+    private Hospital hospital;
 
     @Column(name = "license_number", unique = true, length = 20)
     private String licenseNumber;
@@ -76,34 +79,6 @@ public class Doctor {
      */
     public void setUser(User user) {
         this.user = user;
-    }
-
-    /**
-     * @return the specialization
-     */
-    public String getSpecialization() {
-        return specialization;
-    }
-
-    /**
-     * @param specialization the specialization to set
-     */
-    public void setSpecialization(String specialization) {
-        this.specialization = specialization;
-    }
-
-    /**
-     * @return the hospital
-     */
-    public String getHospital() {
-        return hospital;
-    }
-
-    /**
-     * @param hospital the hospital to set
-     */
-    public void setHospital(String hospital) {
-        this.hospital = hospital;
     }
 
     /**
@@ -174,5 +149,33 @@ public class Doctor {
      */
     public void setRating(float rating) {
         this.rating = rating;
+    }
+
+    /**
+     * @return the specialization
+     */
+    public Specialization getSpecialization() {
+        return specialization;
+    }
+
+    /**
+     * @param specialization the specialization to set
+     */
+    public void setSpecialization(Specialization specialization) {
+        this.specialization = specialization;
+    }
+
+    /**
+     * @return the hospital
+     */
+    public Hospital getHospital() {
+        return hospital;
+    }
+
+    /**
+     * @param hospital the hospital to set
+     */
+    public void setHospital(Hospital hospital) {
+        this.hospital = hospital;
     }
 }

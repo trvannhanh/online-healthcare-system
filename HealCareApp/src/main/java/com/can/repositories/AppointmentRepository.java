@@ -6,7 +6,10 @@ package com.can.repositories;
 
 import com.can.pojo.Appointment;
 import com.can.pojo.AppointmentStatus;
+import java.security.Principal;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +29,8 @@ public interface AppointmentRepository {
     List<Appointment> getAppointmentsByDoctor(int doctorId, int page);
     List<Appointment> getAppointmentsByPatient(int patientId, int page);
     Appointment cancelAppointment(int id);
-    Appointment rescheduleAppointment(int id, Date newDate);
+    Appointment rescheduleAppointment(int id, LocalDateTime newDate);
+    Appointment confirmAppointment(int id);
     int countDistinctPatientsByDoctorAndDateRange(int doctorId, String fromDateStr, String toDateStr) throws ParseException;
     int countDistinctPatientsByDateRange(String fromDateStr, String toDateStr) throws ParseException;
 }

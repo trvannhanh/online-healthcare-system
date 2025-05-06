@@ -9,5 +9,5 @@ package com.can.pojo;
  * @author Giidavibe
  */
 public enum PaymentStatus {
-    pending, successful, failed
+    PENDING, SUCCESSFUL, FAILED
 }

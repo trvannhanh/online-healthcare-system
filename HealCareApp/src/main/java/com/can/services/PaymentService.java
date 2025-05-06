@@ -10,6 +10,7 @@ import java.util.Map;
 import com.can.pojo.Payment;
 import com.can.pojo.PaymentMethod;
 import com.can.pojo.PaymentStatus;
+import java.security.Principal;
 
 /**
  *
@@ -42,4 +43,12 @@ public interface PaymentService {
 
     // Lọc Payment theo ngày thanh toán
     List<Payment> getPaymentByPaymentDate(String createAt);
+    
+    Payment createPaymentForAppointment(int appointmentId, double amount, String username);
+    
+    String processPayment(int paymentId, PaymentMethod paymentMethod, Principal principal) throws Exception;
+    
+    void handlePaymentCallback(String paymentMethod, Map<String, String> params);
+    
+    
 }

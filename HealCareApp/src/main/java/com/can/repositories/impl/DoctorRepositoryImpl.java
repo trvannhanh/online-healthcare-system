@@ -5,12 +5,15 @@
 package com.can.repositories.impl;
 
 import com.can.pojo.Doctor;
+import com.can.pojo.Hospital;
+import com.can.pojo.Specialization;
 import com.can.pojo.User;
 import com.can.repositories.DoctorRepository;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
@@ -19,10 +22,9 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate5.LocalSessionFactoryBean;  
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
 
 /**
  *
@@ -30,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Repository
 @Transactional
-public class DoctorRepositoryImpl implements DoctorRepository{
+public class DoctorRepositoryImpl implements DoctorRepository {
 
     @Autowired
     private LocalSessionFactoryBean factory;
@@ -45,6 +47,9 @@ public class DoctorRepositoryImpl implements DoctorRepository{
         Root<Doctor> root = q.from(Doctor.class);
 
         Join<Doctor, User> userJoin = root.join("user");
+
+        Join<Doctor, Specialization> specializationJoin = root.join("specialization", JoinType.LEFT);
+        Join<Doctor, Hospital> hospitalJoin = root.join("hospital", JoinType.LEFT);
 
         if (params != null) {
             List<Predicate> predicates = new ArrayList<>();
@@ -68,7 +73,7 @@ public class DoctorRepositoryImpl implements DoctorRepository{
             String specialization = params.get("specialization");
             if (specialization != null && !specialization.isEmpty()) {
                 predicates.add(b.equal(
-                        b.lower(root.get("specialization")),
+                        b.lower(specializationJoin.get("name")),
                         specialization.toLowerCase()
                 ));
             }
@@ -77,7 +82,7 @@ public class DoctorRepositoryImpl implements DoctorRepository{
             String hospital = params.get("hospital");
             if (hospital != null && !hospital.isEmpty()) {
                 predicates.add(b.equal(
-                        b.lower(root.get("hospital")),
+                        b.lower(hospitalJoin.get("name")),
                         hospital.toLowerCase()
                 ));
             }
