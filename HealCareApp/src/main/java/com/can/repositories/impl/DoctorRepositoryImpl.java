@@ -12,6 +12,7 @@ import com.can.repositories.DoctorRepository;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -57,16 +58,17 @@ public class DoctorRepositoryImpl implements DoctorRepository {
             //Lọc theo tên bác sĩ
             String doctorName = params.get("doctorName");
             if (doctorName != null && !doctorName.isEmpty()) {
-                String searchPattern = String.format("%%%s%%", doctorName.toLowerCase());
-                Predicate firstNamePredicate = b.like(
+                String[] nameParts = doctorName.trim().toLowerCase().split("\\s+");
+
+                // Tìm theo full name kết hợp (firstName + " " + lastName)
+                Expression<String> fullName = b.concat(
                         b.lower(userJoin.get("firstName")),
-                        searchPattern
+                        b.literal(" ")
                 );
-                Predicate lastNamePredicate = b.like(
-                        b.lower(userJoin.get("lastName")),
-                        searchPattern
-                );
-                predicates.add(b.or(firstNamePredicate, lastNamePredicate));
+                fullName = b.concat(fullName, b.lower(userJoin.get("lastName")));
+
+                String fullNamePattern = "%" + doctorName.toLowerCase() + "%";
+                predicates.add(b.like(fullName, fullNamePattern));
             }
 
             //Lọc theo chuyên khoa
