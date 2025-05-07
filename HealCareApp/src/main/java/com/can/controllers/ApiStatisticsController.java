@@ -36,17 +36,18 @@ public class ApiStatisticsController {
     @Autowired
     private AppointmentService appointmentService;
 
+    //Thống kê số lượng bệnh nhân theo bác sĩ và khoảng thời gian (Tháng/Quý)
     @GetMapping("/statistics/patients-count")
-    public ResponseEntity<?> countPatientsByDoctorAndTime(@RequestParam Map<String, String> params) {
+    public ResponseEntity<?> countPatientsByDoctor(
+            @RequestParam Integer doctorId,
+            @RequestParam String fromDate,
+            @RequestParam String toDate) {
         try {
-            List<Appointment> appointments = appointmentService.getAppointments(params);
-
-            Set<Integer> uniquePatientIds = appointments.stream().map(app -> app.getPatient().getId())
-                    .collect(Collectors.toSet());
-
-            return ResponseEntity.ok(uniquePatientIds.size());
+            int count = appointmentService.countDistinctPatientsByDoctorAndDateRange(doctorId, fromDate, toDate);
+            return ResponseEntity.ok(count);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
     }
+
 }

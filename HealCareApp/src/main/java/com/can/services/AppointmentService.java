@@ -30,4 +30,6 @@ public interface AppointmentService {
     Appointment confirmAppointment(int id, String username);
     int countDistinctPatientsByDoctorAndDateRange(int doctorId, String fromDateStr, String toDateStr) throws ParseException;
     int countDistinctPatientsByDateRange(String fromDateStr, String toDateStr) throws ParseException;
+    int countDistinctPatientsByQuarter(int year, int quarter) throws ParseException;
+    int countDistinctPatientsByMonth(int year, int month) throws ParseException;
 }
