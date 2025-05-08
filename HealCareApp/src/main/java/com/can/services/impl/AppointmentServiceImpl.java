@@ -16,6 +16,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -300,61 +301,40 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public int countDistinctPatientsByDoctorAndDateRange(int doctorId, String fromDateStr, String toDateStr)
+    public List<Appointment> getAppointmentsCompleteByDateRange(Date fromDateStr, Date toDateStr)
             throws ParseException {
-        // Parse ngày bắt đầu và kết thúc
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        dateFormat.setLenient(false); // Đảm bảo không chấp nhận định dạng không hợp lệ
-        Date fromDate = dateFormat.parse(fromDateStr);
-        Date toDate = dateFormat.parse(toDateStr);
+        return this.appRepo.getAppointmentsCompleteByDateRange(fromDateStr, toDateStr);
+    }
 
+    @Override
+    public int countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr)
+            throws ParseException {
         return this.appRepo.countDistinctPatientsByDoctorAndDateRange(doctorId, fromDateStr, toDateStr);
     }
 
     @Override
-    public int countDistinctPatientsByDateRange(String fromDateStr, String toDateStr) throws ParseException {
-        // Parse ngày bắt đầu và kết thúc
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        dateFormat.setLenient(false); // Đảm bảo không chấp nhận định dạng không hợp lệ
-        Date fromDate = dateFormat.parse(fromDateStr);
-        Date toDate = dateFormat.parse(toDateStr);
+    public int countDistinctPatientsByDoctorAndMonth(int doctorId, int year, int month) throws ParseException {
+        return this.appRepo.countDistinctPatientsByDoctorAndMonth(doctorId, year, month);
+    }
 
+    @Override
+    public int countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException {
+
+        return this.appRepo.countDistinctPatientsByDoctorAndQuarter(doctorId, year, quarter);
+    }
+
+    @Override
+    public int countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException {
         return this.appRepo.countDistinctPatientsByDateRange(fromDateStr, toDateStr);
     }
 
     @Override
     public int countDistinctPatientsByQuarter(int year, int quarter) throws ParseException {
-        LocalDate start;
-        LocalDate end;
-
-        switch (quarter) {
-            case 1 -> {
-                start = LocalDate.of(year, 1, 1);
-                end = LocalDate.of(year, 3, 31);
-            }
-            case 2 -> {
-                start = LocalDate.of(year, 4, 1);
-                end = LocalDate.of(year, 6, 30);
-            }
-            case 3 -> {
-                start = LocalDate.of(year, 7, 1);
-                end = LocalDate.of(year, 9, 30);
-            }
-            case 4 -> {
-                start = LocalDate.of(year, 10, 1);
-                end = LocalDate.of(year, 12, 31);
-            }
-            default -> throw new IllegalArgumentException("Invalid quarter: " + quarter);
-        }
-
-        return countDistinctPatientsByDateRange(start.toString(), end.toString());
+        return this.appRepo.countDistinctPatientsByQuarter(year, quarter);
     }
 
     @Override
     public int countDistinctPatientsByMonth(int year, int month) throws ParseException {
-        LocalDate start = LocalDate.of(year, month, 1);
-        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
-        return countDistinctPatientsByDateRange(start.toString(), end.toString());
+        return this.appRepo.countDistinctPatientsByMonth(year, month);
     }
-
 }
