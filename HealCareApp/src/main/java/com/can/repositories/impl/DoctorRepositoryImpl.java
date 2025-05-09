@@ -60,15 +60,17 @@ public class DoctorRepositoryImpl implements DoctorRepository {
             if (doctorName != null && !doctorName.isEmpty()) {
                 String[] nameParts = doctorName.trim().toLowerCase().split("\\s+");
 
-                // Tìm theo full name kết hợp (firstName + " " + lastName)
-                Expression<String> fullName = b.concat(
-                        b.lower(userJoin.get("firstName")),
-                        b.literal(" ")
-                );
-                fullName = b.concat(fullName, b.lower(userJoin.get("lastName")));
+                List<Predicate> namePredicates = new ArrayList<>();
 
-                String fullNamePattern = "%" + doctorName.toLowerCase() + "%";
-                predicates.add(b.like(fullName, fullNamePattern));
+                for (String part : nameParts) {
+                    String pattern = "%" + part + "%";
+                    namePredicates.add(b.or(
+                            b.like(b.lower(userJoin.get("firstName")), pattern),
+                            b.like(b.lower(userJoin.get("lastName")), pattern)
+                    ));
+                }
+
+                predicates.add(b.and(namePredicates.toArray(Predicate[]::new)));
             }
 
             //Lọc theo chuyên khoa
