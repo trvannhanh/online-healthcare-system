@@ -1,7 +1,9 @@
 package com.can.services.impl;
 
 import java.text.SimpleDateFormat;
-import java.util.HashMap;   
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
@@ -32,24 +34,23 @@ public class EmailServiceImpl implements EmailService {
     @Autowired
     private PatientRepository patientRepository;
 
-
     @Override
     public void sendEmail(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
         message.setSubject(subject);
         message.setText(body);
-        
+
         // Gửi email
         javaMailSender.send(message);
     }
 
     @Override
     public void sendAppointmentConfirmationEmail(Appointment appointment) {
-        //Kiểm tra trạng thái lịch hẹn
+        // Kiểm tra trạng thái lịch hẹn
         // Nếu không phải là lịch hẹn chưa xác nhận thì không gửi email
         if (appointment.getStatus() != AppointmentStatus.PENDING) {
-            return; 
+            return;
         }
         Patient patient = appointment.getPatient();
         User user = patient.getUser();
@@ -62,29 +63,29 @@ public class EmailServiceImpl implements EmailService {
         String formattedDate = new SimpleDateFormat("dd/MM/yyyy HH:mm").format(appointment.getAppointmentDate());
 
         String content = String.format(
-            "Xin chào %s,\n\n" +
-            "Bạn đã đặt lịch hẹn với bác sĩ %s vào %s ngày %s.\n" +
-            "Vui lòng xác nhận lại lịch hẹn.\n\n" +
-            "Trân trọng,\n",
-            user.getFullName(),
-            doctorName,
-            formattedDate
-        );
+                "Xin chào %s,\n\n" +
+                        "Bạn đã đặt lịch hẹn với bác sĩ %s vào %s ngày %s.\n" +
+                        "Vui lòng xác nhận lại lịch hẹn.\n\n" +
+                        "Trân trọng,\n",
+                user.getFullName(),
+                doctorName,
+                formattedDate);
 
         sendEmail(to, subject, content);
     }
 
     @Override
     public void sendAppointmentNotificationEmail(Appointment appointment) {
-        //Kiểm tra trạng thái lịch hẹn
+        // Kiểm tra trạng thái lịch hẹn
         // Nếu không phải là lịch hẹn đã xác nhận thì không gửi email
         if (appointment.getStatus() != AppointmentStatus.CONFIRMED) {
-            return; 
+            return;
         }
         // Tính số ngày còn lại
         Date now = new Date();
-        Date appointmentDate = appointment.getAppointmentDate();
-
+        LocalDateTime localDateTime = appointment.getAppointmentDate();
+        ZoneId zoneId = ZoneId.systemDefault();
+        Date appointmentDate = Date.from(localDateTime.atZone(zoneId).toInstant());
         long diffInMillis = appointmentDate.getTime() - now.getTime();
         long diffInDays = diffInMillis / (1000 * 60 * 60 * 24);
 
@@ -100,15 +101,14 @@ public class EmailServiceImpl implements EmailService {
         String formattedDate = new SimpleDateFormat("dd/MM/yyyy HH:mm").format(appointment.getAppointmentDate());
 
         String content = String.format(
-            "Xin chào %s,\n\n" +
-            "Bạn có một lịch hẹn khám bệnh vào %s ngày %s.\n" +
-            "Vui lòng kiểm tra lại lịch trình của bạn.\n\n" +
-            "Trân trọng,\n",
-            user.getFullName(),
-            appointment.getPatient().getUser().getFullName(),
-            formattedDate
-        );
-        //Gửi email
+                "Xin chào %s,\n\n" +
+                        "Bạn có một lịch hẹn khám bệnh vào %s ngày %s.\n" +
+                        "Vui lòng kiểm tra lại lịch trình của bạn.\n\n" +
+                        "Trân trọng,\n",
+                user.getFullName(),
+                appointment.getPatient().getUser().getFullName(),
+                formattedDate);
+        // Gửi email
         sendEmail(to, subject, content);
     }
 
@@ -122,17 +122,16 @@ public class EmailServiceImpl implements EmailService {
             User user = patient.getUser();
             String to = user.getEmail();
             String subject = "Ưu đãi đặc biệt từ phòng khám XYZ";
-    
+
             // Cấu trúc nội dung email
             String content = String.format(
-                "Chào %s,\n\n" +
-                "Chúng tôi xin thông báo về ưu đãi đặc biệt mà bạn có thể tham gia ngay hôm nay!\n\n" +
-                "%s\n\n" +
-                "Trân trọng. \n",
-                user.getFullName(),
-                promoContent
-            );
-    
+                    "Chào %s,\n\n" +
+                            "Chúng tôi xin thông báo về ưu đãi đặc biệt mà bạn có thể tham gia ngay hôm nay!\n\n" +
+                            "%s\n\n" +
+                            "Trân trọng. \n",
+                    user.getFullName(),
+                    promoContent);
+
             // Gửi email
             sendEmail(to, subject, content);
         }

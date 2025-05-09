@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 8.0.41, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.40, for Win64 (x86_64)
 --
--- Host: localhost    Database: healcaredb
+-- Host: localhost    Database: healthcaredb
 -- ------------------------------------------------------
--- Server version	8.0.41
+-- Server version	8.0.40
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -291,6 +291,33 @@ INSERT INTO `rating` VALUES (1,3,1,5,'Bác sĩ rất tận tình và chuyên ngh
 UNLOCK TABLES;
 
 --
+-- Table structure for table `response`
+--
+
+DROP TABLE IF EXISTS `response`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `response` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `rating_id` int NOT NULL,
+  `content` text NOT NULL,
+  `created_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_rating_response` (`rating_id`),
+  CONSTRAINT `fk_rating_response` FOREIGN KEY (`rating_id`) REFERENCES `rating` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `response`
+--
+
+LOCK TABLES `response` WRITE;
+/*!40000 ALTER TABLE `response` DISABLE KEYS */;
+/*!40000 ALTER TABLE `response` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `specialization`
 --
 
@@ -362,4 +389,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-05-05 23:52:58
+-- Dump completed on 2025-05-06 23:51:03

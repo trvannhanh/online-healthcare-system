@@ -5,8 +5,14 @@
 package com.can.controllers;
 
 import com.can.pojo.Appointment;
-import com.can.pojo.User;
+import com.can.pojo.AppointmentStatus;
+import com.can.pojo.Notifications;
 import com.can.services.AppointmentService;
+import com.can.services.NotificationService;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import com.can.pojo.User;
 import java.nio.file.AccessDeniedException;
 import java.security.Principal;
 import java.text.ParseException;
@@ -31,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.view.RedirectView;
 
 /**
  *
@@ -43,10 +50,21 @@ public class ApiAppointmentController {
     @Autowired
     private AppointmentService appService;
 
+    @Autowired
+    private NotificationService notiService;
+
     @PostMapping("/appointments")
     public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {
         try {
             Appointment newAppointment = appService.addAppointment(appointment);
+            Notifications notification = new Notifications();
+            notification.setMessage("Bạn có lịch hẹn mới với bệnh nhân: " 
+                                    + newAppointment.getPatient().getUser().getFullName()
+                                    + " vào lúc " 
+                                    + new SimpleDateFormat("HH:mm dd/MM/yyyy").format(newAppointment.getAppointmentDate()));
+            notification.setUser(newAppointment.getDoctor().getUser()); // Người nhận thông báo là bác sĩ
+            notification.setSentAt(new Date()); // Thời gian gửi thông báo
+            notiService.addNotification(notification);
             return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
@@ -139,6 +157,18 @@ public class ApiAppointmentController {
         } catch (Exception e) {
             return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @GetMapping("/appointments/confirm")
+    public RedirectView confirmAppointmentAndRedirect(@RequestParam("id") int appointmentId) {
+        Appointment appointment = appService.getAppointmentById(appointmentId);
+
+        if (appointment != null && appointment.getStatus() == AppointmentStatus.PENDING) {
+            appointment.setStatus(AppointmentStatus.CONFIRMED);
+            appService.updateAppointment(appointment);
+        }
+
+        return new RedirectView("/appointment/appointment-confirmation-success.html");
     }
 
 //    @GetMapping

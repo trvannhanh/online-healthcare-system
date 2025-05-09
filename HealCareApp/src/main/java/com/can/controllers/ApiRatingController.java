@@ -39,17 +39,6 @@ public class ApiRatingController {
         }
     }
 
-    // Lấy tất cả các đánh giá của bệnh nhân theo ID
-    @GetMapping("/patient/{patientId}")
-    public ResponseEntity<List<Rating>> getRatingsByPatientId(@PathVariable Integer patientId) {
-        try {
-            List<Rating> ratings = ratingService.getRatingsByPatientId(patientId);
-            return ResponseEntity.ok(ratings);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
     // Thêm một đánh giá mới
     @PostMapping
     public ResponseEntity<Rating> addRating(@RequestBody Rating rating) {
@@ -87,6 +76,17 @@ public class ApiRatingController {
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // Tính trung bình đánh giá của bác sĩ theo ID
+    @GetMapping("/average/{doctorId}")
+    public ResponseEntity<Double> getAverageRatingByDoctorId(@PathVariable Integer doctorId) {
+        try {
+            double averageRating = ratingService.getAverageRatingByDoctorId(doctorId);
+            return ResponseEntity.ok(averageRating);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 }
