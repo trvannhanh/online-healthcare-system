@@ -17,7 +17,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api")
-public class ApiMessageController {
+public class MessageController {
 
     @Autowired
     private MessageService messageService;

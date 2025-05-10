@@ -34,7 +34,7 @@ import com.can.services.AppointmentService;
 
 @RestController
 @RequestMapping("/api/statistics")
-public class ApiStatisticsController {
+public class StatisticsController {
     @Autowired
     private AppointmentService appointmentService;
 
