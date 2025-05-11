@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Nav, Navbar, NavDropdown, Row, Spinner } from 'react-bootstrap';
-import Apis, { endpoint } from '../configs/Apis';
+import Apis, { endpoints } from '../configs/Apis';
 import { useSearchParams } from 'react-router-dom';
 
 const Home = () => {
@@ -16,10 +16,11 @@ const Home = () => {
         try{
             setLoading(true);
 
-            let url = `${endpoint['doctors']}?page=${page}`
+            let url = `${endpoints['doctors']}?page=${page}`
 
             let hospId = q.get('hospital');
             let specId = q.get('specialization');
+            let doctorName = q.get('doctorName');
             if(hospId) {
                 url = `${url}&hospital=${hospId}`;
             }
@@ -27,10 +28,9 @@ const Home = () => {
             if(specId) {
                 url = `${url}&specialization=${specId}`;
             }
-
-            let kw = q.get('kw');
-            if(kw){
-                url = `${url}&doctorName=${kw}`;
+            
+            if(doctorName){
+                url = `${url}&doctorName=${doctorName}`;
             }
 
             let res = await Apis.get(url);
@@ -42,9 +42,6 @@ const Home = () => {
                 else
                     setDoctors([...doctors, ...res.data])
             }
-
-
-            setDoctors(res.data);
         } catch (ex) {
             console.error(ex);
         } finally {
@@ -58,9 +55,8 @@ const Home = () => {
     }, [page, q]);
 
     useEffect(() => {
-        if (page > 0)
-            setPage(1);
-            setDoctors([]);
+        setPage(1);
+        setDoctors([]);
     }, [q]);
 
     const loadMore = () => {

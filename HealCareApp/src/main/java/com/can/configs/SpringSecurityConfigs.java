@@ -86,7 +86,9 @@ public class SpringSecurityConfigs {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws
             Exception {
-        http.csrf(c -> c.disable()).authorizeHttpRequests(requests -> requests
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) 
+                .csrf(c -> c.disable()).authorizeHttpRequests(requests -> requests
                 .requestMatchers("/", "/home").authenticated()
                 .requestMatchers("/api/**").permitAll()
                 .requestMatchers("/api/payment/**").permitAll()

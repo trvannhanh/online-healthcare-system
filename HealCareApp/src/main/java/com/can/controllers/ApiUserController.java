@@ -51,6 +51,7 @@ public class ApiUserController {
     }
 
     @PostMapping("/login")
+    @CrossOrigin
     public ResponseEntity<?> login(@RequestBody User u) {
 
         if (this.userService.authenticate(u.getUsername(), u.getPassword())) {
