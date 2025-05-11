@@ -1,356 +1,208 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Button, Col, Form, Container, Row } from "react-bootstrap";
-import Apis, { endpoints} from "../configs/Apis";
+import { Alert, Button, Col, Form, Container, Row, ProgressBar } from "react-bootstrap";
+import Apis, { endpoints } from "../configs/Apis";
 import MySpinner from "./layout/MySpinner";
 import { useNavigate } from "react-router-dom";
 
 const Register = () => {
-    const info = [{
-        label: "Họ",
-        field: "firstName",
-        type: "text"
-    }, {
-        label: "Tên",
-        field: "lastName",
-        type: "text"
-    }, {
-        label: "Email",
-        field: "email",
-        type: "email"
-    }, {
-        label: "Điện thoại",
-        field: "phoneNumber",
-        type: "tel"
-    }, {
-        label: "Tên đăng nhập",
-        field: "username",
-        type: "text"
-    }, {
-        label: "Mật khẩu",
-        field: "password",
-        type: "password"
-    }, {
-        label: "Xác nhận mật khẩu",
-        field: "confirm",
-        type: "password"
-    }];
-
     const avatar = useRef();
-
-    const [user, setUser] = useState({role: "PATIENT"});
+    const nav = useNavigate();
+    const [user, setUser] = useState({ role: "PATIENT" });
     const [msg, setMsg] = useState();
     const [loading, setLoading] = useState(false);
+    const [step, setStep] = useState(1);
+
     const [hospitals, setHospitals] = useState([]);
     const [specializations, setSpecializations] = useState([]);
-    const nav = useNavigate();
-
-    const loadHospitals = async () => {
-        try {
-            let res = await Apis.get(endpoints["hospitals"]);
-            setHospitals(res.data);
-        } catch (ex) {
-            console.error(ex);
-        }
-    };
-
-    const loadSpecializations = async () => {
-        try {
-            let res = await Apis.get(endpoints["specialization"]);
-            setSpecializations(res.data);
-        } catch (ex) {
-            console.error(ex);
-        }
-    };
 
     useEffect(() => {
-        loadHospitals();
-        loadSpecializations();
+        const loadData = async () => {
+            try {
+                const resHospitals = await Apis.get(endpoints["hospitals"]);
+                setHospitals(resHospitals.data);
+
+                const resSpecial = await Apis.get(endpoints["specialization"]);
+                setSpecializations(resSpecial.data);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        loadData();
     }, []);
+
+    const setState = (value, field) => setUser({ ...user, [field]: value });
 
     const validate = () => {
         if (!user.password || user.password !== user.confirm) {
             setMsg("Mật khẩu không khớp!");
             return false;
         }
-
-        // Kiểm tra các trường bắt buộc dựa trên role
-        if (user.role === "PATIENT") {
-            if (!user.insuranceNumber || !user.dateOfBirth) {
-                setMsg("Vui lòng nhập đầy đủ Số Bảo Hiểm và Ngày Sinh!");
-                return false;
-            }
-        } else if (user.role === "DOCTOR") {
-            if (!user.licenseNumber || !user.hospital || !user.specialization) {
-                setMsg("Vui lòng nhập đầy đủ Số Giấy Phép, Bệnh Viện và Chuyên Khoa!");
-                return false;
-            }
+        if (user.role === "PATIENT" && (!user.insuranceNumber || !user.dateOfBirth)) {
+            setMsg("Vui lòng nhập đầy đủ Số Bảo Hiểm và Ngày Sinh!");
+            return false;
         }
-
+        if (user.role === "DOCTOR" && (!user.licenseNumber || !user.hospital || !user.specialization)) {
+            setMsg("Vui lòng nhập đầy đủ thông tin bác sĩ!");
+            return false;
+        }
         return true;
-    }
+    };
+
+    const nextStep = () => {
+        if (step === 1 && (!user.firstName || !user.lastName || !user.email || !user.username || !user.password || !user.confirm)) {
+            setMsg("Vui lòng điền đầy đủ thông tin cơ bản.");
+            return;
+        }
+        if (step === 2 && !validate()) return;
+        setMsg(null);
+        setStep(step + 1);
+    };
+
+    const prevStep = () => setStep(step - 1);
 
     const register = async (e) => {
         e.preventDefault();
-
-        if (validate()) {
-            let form = new FormData();
-            for (let key in user) 
-                if (key !== 'confirm') {
-                    form.append(key, user[key]);
-                }
-
-            if (avatar) {
-                form.append('avatar', avatar.current.files[0]);
-            }
-
-            try {
-                setLoading(true);
-                let res = await Apis.post(endpoints['register'], form, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
-
-                if (res.status === 201)
-                    nav('/login');
-            } catch (ex) {
-                console.error(ex);
-            } finally {
-                setLoading(false);
-            }
+        let form = new FormData();
+        for (let key in user)
+            if (key !== "confirm") form.append(key, user[key]);
+        if (avatar.current && avatar.current.files[0]) {
+            form.append("avatar", avatar.current.files[0]);
         }
-    }
+        try {
+            setLoading(true);
+            let res = await Apis.post(endpoints["register"], form, {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            });
+            if (res.status === 201) nav("/login");
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-
+    const progress = step * 33;
 
     return (
-        <div className="bg-light min-vh-100 d-flex align-items-center justify-content-center">
-            <Container>
-                <Row className="justify-content-center">
-                    <Col md={8} lg={6}>
-                        <Form
-                            onSubmit={register}
-                            className="p-3 rounded shadow-sm bg-white"
-                        >
-                            <h2 className="text-center mb-3 text-primary fw-bold fs-4">
-                                ĐĂNG KÝ NGƯỜI DÙNG
-                            </h2>
+        <Container className="mt-5">
+            <Row className="justify-content-center">
+                <Col md={8} lg={6}>
+                    <div className="shadow rounded p-4 bg-white">
+                        <h4 className="text-center text-primary mb-3">ĐĂNG KÝ</h4>
+                        <ProgressBar now={progress} label={`Bước ${step}/3`} className="mb-3" />
 
-                            {msg && (
-                                <Alert
-                                    variant="danger"
-                                    className="mb-3 text-center py-2"
-                                >
-                                    {msg}
-                                </Alert>
+                        {msg && <Alert variant="danger">{msg}</Alert>}
+
+                        <Form onSubmit={register}>
+                            {step === 1 && (
+                                <>
+                                    <Form.Group className="mb-2">
+                                        <Form.Label>Họ</Form.Label>
+                                        <Form.Control value={user.firstName || ""} onChange={e => setState(e.target.value, "firstName")} required />
+                                    </Form.Group>
+                                    <Form.Group className="mb-2">
+                                        <Form.Label>Tên</Form.Label>
+                                        <Form.Control value={user.lastName || ""} onChange={e => setState(e.target.value, "lastName")} required />
+                                    </Form.Group>
+                                    <Form.Group className="mb-2">
+                                        <Form.Label>Email</Form.Label>
+                                        <Form.Control type="email" value={user.email || ""} onChange={e => setState(e.target.value, "email")} required />
+                                    </Form.Group>
+                                    <Form.Group className="mb-2">
+                                        <Form.Label>Tên đăng nhập</Form.Label>
+                                        <Form.Control value={user.username || ""} onChange={e => setState(e.target.value, "username")} required />
+                                    </Form.Group>
+                                    <Form.Group className="mb-2">
+                                        <Form.Label>Mật khẩu</Form.Label>
+                                        <Form.Control type="password" value={user.password || ""} onChange={e => setState(e.target.value, "password")} required />
+                                    </Form.Group>
+                                    <Form.Group className="mb-2">
+                                        <Form.Label>Xác nhận mật khẩu</Form.Label>
+                                        <Form.Control type="password" value={user.confirm || ""} onChange={e => setState(e.target.value, "confirm")} required />
+                                    </Form.Group>
+                                </>
                             )}
 
-                            <Row>
-                                {/* Các trường cơ bản */}
-                                {info.map((i, index) => (
-                                    <Col md={6} key={i.field}>
-                                        <Form.Group className="mb-2" controlId={i.field}>
-                                            <Form.Label className="text-dark fw-medium small">
-                                                {i.label}
-                                            </Form.Label>
-                                            <Form.Control
-                                                size="sm"
-                                                value={user[i.field] || ""}
-                                                onChange={(e) =>
-                                                    setUser({ ...user, [i.field]: e.target.value })
-                                                }
-                                                type={i.type}
-                                                placeholder={i.label}
-                                                required
-                                                className="border-secondary"
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                ))}
-
-                                {/* Trường chọn Role */}
-                                <Col md={6}>
-                                    <Form.Group className="mb-2" controlId="role">
-                                        <Form.Label className="text-dark fw-medium small">
-                                            Vai Trò
-                                        </Form.Label>
-                                        <Form.Select
-                                            size="sm"
-                                            value={user.role}
-                                            onChange={(e) =>
-                                                setUser({ ...user, role: e.target.value })
-                                            }
-                                            className="border-secondary"
-                                        >
-                                            <option value="PATIENT">Bệnh Nhân</option>
+                            {step === 2 && (
+                                <>
+                                    <Form.Group className="mb-2">
+                                        <Form.Label>Vai trò</Form.Label>
+                                        <Form.Select value={user.role} onChange={e => setState(e.target.value, "role")}>
+                                            <option value="PATIENT">Bệnh nhân</option>
                                             <option value="DOCTOR">Bác sĩ</option>
                                         </Form.Select>
                                     </Form.Group>
-                                </Col>
 
-                                {/* Các trường bổ sung cho Bệnh Nhân */}
-                                {user.role === "PATIENT" && (
-                                    <>
-                                        <Col md={6}>
-                                            <Form.Group className="mb-2" controlId="insuranceNumber">
-                                                <Form.Label className="text-dark fw-medium small">
-                                                    Số Bảo Hiểm
-                                                </Form.Label>
-                                                <Form.Control
-                                                    size="sm"
-                                                    value={user.insuranceNumber || ""}
-                                                    onChange={(e) =>
-                                                        setUser({
-                                                            ...user,
-                                                            insuranceNumber: e.target.value,
-                                                        })
-                                                    }
-                                                    type="text"
-                                                    placeholder="Số Bảo Hiểm"
-                                                    required
-                                                    className="border-secondary"
-                                                />
+                                    {user.role === "PATIENT" && (
+                                        <>
+                                            <Form.Group className="mb-2">
+                                                <Form.Label>Số Bảo Hiểm</Form.Label>
+                                                <Form.Control value={user.insuranceNumber || ""} onChange={e => setState(e.target.value, "insuranceNumber")} />
                                             </Form.Group>
-                                        </Col>
-                                        <Col md={6}>
-                                            <Form.Group className="mb-2" controlId="dateOfBirth">
-                                                <Form.Label className="text-dark fw-medium small">
-                                                    Ngày Sinh
-                                                </Form.Label>
-                                                <Form.Control
-                                                    size="sm"
-                                                    value={user.dateOfBirth || ""}
-                                                    onChange={(e) =>
-                                                        setUser({
-                                                            ...user,
-                                                            dateOfBirth: e.target.value,
-                                                        })
-                                                    }
-                                                    type="date"
-                                                    required
-                                                    className="border-secondary"
-                                                />
+                                            <Form.Group className="mb-2">
+                                                <Form.Label>Ngày sinh</Form.Label>
+                                                <Form.Control type="date" value={user.dateOfBirth || ""} onChange={e => setState(e.target.value, "dateOfBirth")} />
                                             </Form.Group>
-                                        </Col>
-                                    </>
-                                )}
+                                        </>
+                                    )}
 
-                                {/* Các trường bổ sung cho Bác sĩ */}
-                                {user.role === "DOCTOR" && (
-                                    <>
-                                        <Col md={6}>
-                                            <Form.Group className="mb-2" controlId="licenseNumber">
-                                                <Form.Label className="text-dark fw-medium small">
-                                                    Số Giấy Phép
-                                                </Form.Label>
-                                                <Form.Control
-                                                    size="sm"
-                                                    value={user.licenseNumber || ""}
-                                                    onChange={(e) =>
-                                                        setUser({
-                                                            ...user,
-                                                            licenseNumber: e.target.value,
-                                                        })
-                                                    }
-                                                    type="text"
-                                                    placeholder="Số Giấy Phép"
-                                                    required
-                                                    className="border-secondary"
-                                                />
+                                    {user.role === "DOCTOR" && (
+                                        <>
+                                            <Form.Group className="mb-2">
+                                                <Form.Label>Số giấy phép</Form.Label>
+                                                <Form.Control value={user.licenseNumber || ""} onChange={e => setState(e.target.value, "licenseNumber")} />
                                             </Form.Group>
-                                        </Col>
-                                        <Col md={6}>
-                                            <Form.Group className="mb-2" controlId="hospital">
-                                                <Form.Label className="text-dark fw-medium small">
-                                                    Bệnh Viện Công Tác
-                                                </Form.Label>
-                                                <Form.Select
-                                                    size="sm"
-                                                    value={user.hospital || ""}
-                                                    onChange={(e) =>
-                                                        setUser({
-                                                            ...user,
-                                                            hospital: e.target.value,
-                                                        })
-                                                    }
-                                                    required
-                                                    className="border-secondary"
-                                                >
-                                                    <option value="">Chọn Bệnh Viện</option>
-                                                    {hospitals.map((h) => (
-                                                        <option key={h.id} value={h.name}>
-                                                            {h.name}
-                                                        </option>
-                                                    ))}
+                                            <Form.Group className="mb-2">
+                                                <Form.Label>Bệnh viện</Form.Label>
+                                                <Form.Select value={user.hospital || ""} onChange={e => setState(e.target.value, "hospital")}>
+                                                    <option value="">-- Chọn --</option>
+                                                    {hospitals.map(h => <option key={h.id} value={h.name}>{h.name}</option>)}
                                                 </Form.Select>
                                             </Form.Group>
-                                        </Col>
-                                        <Col md={6}>
-                                            <Form.Group className="mb-2" controlId="specialization">
-                                                <Form.Label className="text-dark fw-medium small">
-                                                    Chuyên Khoa
-                                                </Form.Label>
-                                                <Form.Select
-                                                    size="sm"
-                                                    value={user.specialization || ""}
-                                                    onChange={(e) =>
-                                                        setUser({
-                                                            ...user,
-                                                            specialization: e.target.value,
-                                                        })
-                                                    }
-                                                    required
-                                                    className="border-secondary"
-                                                >
-                                                    <option value="">Chọn Chuyên Khoa</option>
-                                                    {specializations.map((s) => (
-                                                        <option key={s.id} value={s.name}>
-                                                            {s.name}
-                                                        </option>
-                                                    ))}
+                                            <Form.Group className="mb-2">
+                                                <Form.Label>Chuyên khoa</Form.Label>
+                                                <Form.Select value={user.specialization || ""} onChange={e => setState(e.target.value, "specialization")}>
+                                                    <option value="">-- Chọn --</option>
+                                                    {specializations.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
                                                 </Form.Select>
                                             </Form.Group>
-                                        </Col>
-                                    </>
-                                )}
+                                        </>
+                                    )}
+                                </>
+                            )}
 
-                                {/* Trường upload avatar */}
-                                <Col md={6}>
-                                    <Form.Group className="mb-2" controlId="avatar">
-                                        <Form.Label className="text-dark fw-medium small">
-                                            Ảnh Đại Diện
-                                        </Form.Label>
-                                        <Form.Control
-                                            size="sm"
-                                            ref={avatar}
-                                            type="file"
-                                            required
-                                            className="border-secondary"
-                                        />
+                            {step === 3 && (
+                                <>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Ảnh đại diện</Form.Label>
+                                        <Form.Control ref={avatar} type="file" required />
                                     </Form.Group>
-                                </Col>
-                            </Row>
+                                </>
+                            )}
 
-                            {/* Nút Đăng ký */}
-                            <div className="text-center mt-3">
-                                {loading ? (
-                                    <MySpinner />
-                                ) : (
-                                    <Button
-                                        type="submit"
-                                        variant="primary"
-                                        className="w-50"
-                                    >
-                                        Đăng Ký
+                            <div className="d-flex justify-content-between mt-3">
+                                {step > 1 && (
+                                    <Button variant="secondary" onClick={prevStep}>
+                                        Quay lại
                                     </Button>
+                                )}
+                                {step < 3 && (
+                                    <Button variant="primary" onClick={nextStep}>
+                                        Tiếp tục
+                                    </Button>
+                                )}
+                                {step === 3 && (
+                                    loading ? <MySpinner /> : <Button type="submit" variant="success">Đăng ký</Button>
                                 )}
                             </div>
                         </Form>
-                    </Col>
-                </Row>
-            </Container>
-        </div>
+                    </div>
+                </Col>
+            </Row>
+        </Container>
     );
-}
+};
 
 export default Register;

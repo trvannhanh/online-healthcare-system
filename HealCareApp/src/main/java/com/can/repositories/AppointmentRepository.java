@@ -29,7 +29,7 @@ public interface AppointmentRepository {
     List<Appointment> getAppointmentsByDoctor(int doctorId, int page);
     List<Appointment> getAppointmentsByPatient(int patientId, int page);
     Appointment cancelAppointment(int id);
-    Appointment rescheduleAppointment(int id, LocalDateTime newDate);
+    Appointment rescheduleAppointment(int id, Date newDate);
     Appointment confirmAppointment(int id);
     List<Appointment> getAppointmentsCompleteByDateRange(Date fromDateStr, Date toDateStr) throws ParseException;
     int countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr) throws ParseException;
