@@ -11,10 +11,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import java.time.LocalDate;
 import java.util.Date;
+
 
 /**
  *
@@ -32,8 +30,7 @@ public class Patient {
     private User user;
 
     @Column(name = "date_of_birth")
-    @Temporal(TemporalType.DATE)
-    private LocalDate dateOfBirth;
+    private Date dateOfBirth;
 
     @Column(name = "insurance_number", length = 20)
     private String insuranceNumber;
@@ -71,14 +68,14 @@ public class Patient {
     /**
      * @return the dateOfBirth
      */
-    public LocalDate getDateOfBirth() {
+    public Date getDateOfBirth() {
         return dateOfBirth;
     }
 
     /**
      * @param dateOfBirth the dateOfBirth to set
      */
-    public void setDateOfBirth(LocalDate dateOfBirth) {
+    public void setDateOfBirth(Date dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 

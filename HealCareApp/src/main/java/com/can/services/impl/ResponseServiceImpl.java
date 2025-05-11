@@ -62,4 +62,10 @@ public class ResponseServiceImpl implements ResponseService {
         // Implementation here
         return this.responseRepo.isResponseExist(responseId);
     }
+
+    @Override
+    public Response getResponsesByRating(Integer ratingId) {
+        // Implementation here
+        return this.responseRepo.getResponsesByRating(ratingId);
+    }
 }

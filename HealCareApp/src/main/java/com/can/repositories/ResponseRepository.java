@@ -14,5 +14,6 @@ public interface ResponseRepository {
     Response addResponse(Response response);
     Response updateResponse(Response response);
     void deleteResponse(Integer responseId);
-    boolean isResponseExist(int responseId);
+    boolean isResponseExist(Integer responseId);
+    Response getResponsesByRating(Integer ratingId);
 } 

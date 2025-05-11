@@ -1,6 +1,8 @@
 package com.can.controllers;
 
 import com.can.pojo.Rating;
+import com.can.pojo.Response;
+import com.can.services.ResponseService;
 import com.can.services.RatingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,17 +22,19 @@ public class ApiRatingController {
 
     @Autowired
     private RatingService ratingService;
+    @Autowired
+    private ResponseService responseService;
 
     // Lấy đánh giá theo ID
     @GetMapping("/{id}")
-    public ResponseEntity<Rating> getRatingById(@PathVariable Integer id) {
+    public ResponseEntity<Rating> getRatingById(@PathVariable("id") Integer id) {
         Rating rating = ratingService.getRatingById(id);
         return rating != null ? ResponseEntity.ok(rating) : ResponseEntity.notFound().build();
     }
 
-    // Lấy tất cả các đánh giá của bác sĩ theo ID
+    // Lấy tất cả các đánh giá về bác sĩ theo ID
     @GetMapping("/doctor/{doctorId}")
-    public ResponseEntity<List<Rating>> getRatingsByDoctorId(@PathVariable Integer doctorId) {
+    public ResponseEntity<List<Rating>> getRatingsByDoctorId(@PathVariable("doctorId") Integer doctorId) {
         try {
             List<Rating> ratings = ratingService.getRatingsByDoctorId(doctorId);
             return ResponseEntity.ok(ratings);
@@ -66,11 +70,17 @@ public class ApiRatingController {
     }
 
     // Xóa đánh giá theo ID
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRating(@PathVariable Integer id) {
+    @DeleteMapping("{id}")
+    public ResponseEntity<Void> deleteRating(@PathVariable("id") Integer id) {
         try {
             if (!ratingService.isRatingExist(id)) {
                 return ResponseEntity.notFound().build();
+            }
+            
+            //Lấy và xóa phản hồi liên quan đến đánh giá
+            Response response = responseService.getResponsesByRating(id);
+            if (response != null) {
+                responseService.deleteResponse(response.getId());
             }
             ratingService.deleteRating(id);
             return ResponseEntity.noContent().build();
@@ -79,12 +89,12 @@ public class ApiRatingController {
         }
     }
 
-    // Tính trung bình đánh giá của bác sĩ theo ID
-    @GetMapping("/average/{doctorId}")
-    public ResponseEntity<Double> getAverageRatingByDoctorId(@PathVariable Integer doctorId) {
+    // Tính trung bình đánh giá cho nhiều bác sĩ
+    @GetMapping("/average")
+    public ResponseEntity<Map<Integer, Double>> getAverageRatingsForDoctors(@RequestParam(required = false) List<Integer> doctorIds) {
         try {
-            double averageRating = ratingService.getAverageRatingByDoctorId(doctorId);
-            return ResponseEntity.ok(averageRating);
+            Map<Integer, Double> averageRatings = ratingService.getAverageRatingsForDoctors(doctorIds);
+            return ResponseEntity.ok(averageRatings);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

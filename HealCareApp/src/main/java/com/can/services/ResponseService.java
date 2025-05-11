@@ -16,4 +16,5 @@ public interface ResponseService {
     Response updateResponse(Response response);
     void deleteResponse(Integer responseId);
     boolean isResponseExist(int responseId);
+    Response getResponsesByRating(Integer ratingId);  
 }
