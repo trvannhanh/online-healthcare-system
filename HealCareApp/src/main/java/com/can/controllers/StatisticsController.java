@@ -33,47 +33,31 @@ import org.springframework.web.servlet.view.RedirectView;
 import com.can.services.AppointmentService;
 
 @RestController
-@RequestMapping("/api/statistics")
-public class ApiStatisticsController {
+@RequestMapping("/statistics")
+public class StatisticsController {
     @Autowired
     private AppointmentService appointmentService;
 
-    //Thống kê số lượng bệnh nhân theo bác sĩ và khoảng thời gian
-    @GetMapping("/doctor/patients-count")
-    public ResponseEntity<?> countPatientsByDoctor(
-            @RequestParam Integer doctorId,
-            @RequestParam Date fromDate,
-            @RequestParam Date toDate) {
-        try {
-            int count = appointmentService.countDistinctPatientsByDoctorAndDateRange(doctorId, fromDate, toDate);
-            return ResponseEntity.ok(count);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
-        }
-    }
-
-    //Thống kê số lượng bệnh nhân theo bác sĩ và tháng
-    @GetMapping("/doctor/patients-count-by-month")
-    public ResponseEntity<?> countPatientsByDoctorAndMonth(
-            @RequestParam Integer doctorId,
-            @RequestParam Integer year,
-            @RequestParam Integer month) {
-        try {
-            int count = appointmentService.countDistinctPatientsByDoctorAndMonth(doctorId, year, month);
-            return ResponseEntity.ok(count);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
-        }
-    }
-
-    //Thống kê số lượng bệnh nhân theo bác sĩ và quý
-    @GetMapping("/doctor/patients-count-by-quarter")
-    public ResponseEntity<?> countPatientsByDoctorAndQuarter(
-            @RequestParam Integer doctorId,
+    //Thống kê số lượng bệnh nhân theo quý
+    @GetMapping("/patients-count-by-quarter")
+    public ResponseEntity<?> countPatientsByQuarter(
             @RequestParam Integer year,
             @RequestParam Integer quarter) {
         try {
-            int count = appointmentService.countDistinctPatientsByDoctorAndQuarter(doctorId, year, quarter);
+            int count = appointmentService.countDistinctPatientsByQuarter(year, quarter);
+            return ResponseEntity.ok(count);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
+
+    //Thống kê số lượng bệnh nhân theo tháng
+    @GetMapping("/patients-count-by-month")
+    public ResponseEntity<?> countPatientsByMonth(
+            @RequestParam Integer year,
+            @RequestParam Integer month) {
+        try {
+            int count = appointmentService.countDistinctPatientsByMonth(year, month);
             return ResponseEntity.ok(count);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());

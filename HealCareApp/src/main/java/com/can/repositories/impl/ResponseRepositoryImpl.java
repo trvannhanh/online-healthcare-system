@@ -112,9 +112,25 @@ public class ResponseRepositoryImpl implements ResponseRepository {
     }
 
     @Override
-    public boolean isResponseExist(int responseId) {
+    public boolean isResponseExist(Integer responseId) {
         Session session = this.factory.getObject().getCurrentSession();
         return session.get(Response.class, responseId) != null;
+    }
+
+    @Override
+    public Response getResponsesByRating(Integer ratingId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Response> query = builder.createQuery(Response.class);
+        Root<Response> root = query.from(Response.class);
+
+        query.where(builder.equal(root.get("rating").get("id"), ratingId));
+        Query q = session.createQuery(query);
+        try {
+            return (Response) q.getSingleResult();
+        } catch (Exception e) {
+            return null; // Trả về null nếu không tìm thấy Response
+        }
     }
     
 }

@@ -31,11 +31,8 @@ public class Response {
     @JoinColumn(name = "rating_id", nullable = false)
     private Rating rating;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "content" , nullable = false, columnDefinition = "TEXT")
     private String content;
-
-    @Column(name = "created_date", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime createdDate;
 
     // Getters and Setters
 
@@ -79,19 +76,5 @@ public class Response {
      */
     public void setContent(String content) {
         this.content = content;
-    }
-
-    /**
-     * @return the createdDate
-     */
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    /**
-     * @param createdDate the createdDate to set
-     */
-    public void setCreatedDate(LocalDateTime createdDate) {
-        this.createdDate = createdDate;
     }
 }

@@ -9,6 +9,7 @@ import com.can.services.RatingService;
 
 import java.util.List;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -69,8 +70,6 @@ public class RatingServiceImpl implements RatingService {
 
         rating.setDoctor(doctor);
         rating.setPatient(patient);
-        rating.setCreatedDate(new Date());
-
         return ratingRepository.addRating(rating);
     }
 
@@ -93,16 +92,15 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
-    public double getAverageRatingByDoctorId(Integer doctorId) {
-        // Implementation code here
-        List<Rating> ratings = this.ratingRepository.getRatingsByDoctorId(doctorId);
-        if (ratings.isEmpty()) {
-            return 0.0;
+    public Map<Integer, Double> getAverageRatingsForDoctors(List<Integer> doctorIds) {
+        Map<Integer, Double> averageRatings = new HashMap<>();
+        for (Integer doctorId : doctorIds) {
+            List<Rating> ratings = ratingRepository.getRatingsByDoctorId(doctorId);
+            double average = ratings.isEmpty() ? 0.0
+                    : ratings.stream().mapToDouble(Rating::getRating).average().orElse(0.0);
+            averageRatings.put(doctorId, average);
         }
-        double totalRating = 0.0;
-        for (Rating rating : ratings) {
-            totalRating += rating.getRating();
-        }
-        return totalRating / ratings.size();
+        return averageRatings;
     }
+
 }

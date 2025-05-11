@@ -23,14 +23,14 @@ public class ApiResponseController {
 
     // Lấy phản hồi theo ID
     @GetMapping("/{id}")
-    public ResponseEntity<Response> getResponseById(@PathVariable Integer id) {
+    public ResponseEntity<Response> getResponseById(@PathVariable("id") Integer id) {
         Response response = responseService.getResponseById(id);
         return response != null ? ResponseEntity.ok(response) : ResponseEntity.notFound().build();
     }
 
     // Lấy tất cả phản hồi của bác sĩ theo ID
     @GetMapping("/doctor/{doctorId}")
-    public ResponseEntity<List<Response>> getResponsesByDoctorId(@PathVariable Integer doctorId) {
+    public ResponseEntity<List<Response>> getResponsesByDoctorId(@PathVariable("doctorId") Integer doctorId) {
         try {
             List<Response> responses = responseService.getResponsesByDoctorId(doctorId);
             return ResponseEntity.ok(responses);
@@ -45,14 +45,18 @@ public class ApiResponseController {
         try {
             Response newResponse = responseService.addResponse(response);
             return new ResponseEntity<>(newResponse, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // Cập nhật phản hồi
     @PutMapping("/{id}")
-    public ResponseEntity<Response> updateResponse(@PathVariable Integer id, @RequestBody Response response) {
+    public ResponseEntity<Response> updateResponse(@PathVariable("id") Integer id, @RequestBody Response response) {
         try {
             if (!responseService.isResponseExist(id)) {
                 return ResponseEntity.notFound().build();
@@ -67,7 +71,7 @@ public class ApiResponseController {
 
     // Xóa phản hồi
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteResponse(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteResponse(@PathVariable("id") Integer id) {
         try {
             if (!responseService.isResponseExist(id)) {
                 return ResponseEntity.notFound().build();

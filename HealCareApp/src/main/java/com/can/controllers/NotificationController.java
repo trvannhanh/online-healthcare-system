@@ -19,7 +19,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/notifications")
-public class ApiNotificationController {
+public class NotificationController {
 
     @Autowired
     private NotificationService notificationService;
