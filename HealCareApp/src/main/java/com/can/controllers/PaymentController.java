@@ -28,7 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @RestController
 @RequestMapping("/api")
-public class ApiPaymentController {
+public class PaymentController {
 
     @Autowired
     private PaymentService paymentService;

@@ -19,12 +19,14 @@ import com.can.repositories.SpecializationRepository;
 import com.can.repositories.UserRepository;
 import com.can.services.UserService;
 import java.io.IOException;
-import java.time.LocalDate;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.format.DateTimeParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,7 +126,7 @@ public class UserServiceImpl implements UserService {
         if ("PATIENT".equalsIgnoreCase(role)) {
             Patient patient = new Patient();
             patient.setUser(savedUser);
-            patient.setDateOfBirth(LocalDate.parse(params.get("dateOfBirth")));
+            patient.setDateOfBirth(new Date(params.get("dateOfBirth")));
             patient.setInsuranceNumber(params.get("insuranceNumber"));
             this.patRepo.addPatient(patient);
             System.out.println("Patient saved successfully for user" + savedUser.getId());
@@ -201,9 +203,11 @@ public class UserServiceImpl implements UserService {
 
     private boolean isValidDate(String date) {
         try {
-            LocalDate.parse(date);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            sdf.setLenient(false);
+            sdf.parse(date);
             return true;
-        } catch (DateTimeParseException e) {
+        } catch (ParseException e) {
             return false;
         }
     }

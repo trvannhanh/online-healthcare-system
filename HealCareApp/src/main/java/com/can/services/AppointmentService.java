@@ -28,4 +28,11 @@ public interface AppointmentService {
     Appointment cancelAppointment(int id, String username);
     Appointment rescheduleAppointment(int id, Date newDate, String username);
     Appointment confirmAppointment(int id, String username);
+    List<Appointment> getAppointmentsCompleteByDateRange(Date fromDateStr, Date toDateStr) throws ParseException;
+    int countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException;
+    int countDistinctPatientsByQuarter(int year, int quarter) throws ParseException;
+    int countDistinctPatientsByMonth(int year, int month) throws ParseException;
+    int countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr) throws ParseException;
+    int countDistinctPatientsByDoctorAndMonth(int doctorId, int year, int month) throws ParseException;
+    int countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException;
 }
