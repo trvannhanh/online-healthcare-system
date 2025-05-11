@@ -10,6 +10,7 @@ import com.can.services.AppointmentService;
 import java.nio.file.AccessDeniedException;
 import java.security.Principal;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -63,24 +64,6 @@ public class ApiAppointmentController {
         this.appService.deleteAppointment(id);
     }
 
-//    @PatchMapping("/appointments/{appointmentId}/cancel")
-//    public ResponseEntity<Appointment> cancelAppointment(@PathVariable(value = "appointmentId") int id) {
-//
-//        Appointment newAppointment = appService.cancelAppointment(id);
-//        return new ResponseEntity<>(newAppointment, HttpStatus.OK);
-////        try {
-////            appointment.setId(id.intValue());
-////            Appointment updatedAppointment = appService.updateAppointment(appointment);
-////            return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
-////        } catch (RuntimeException e) {
-////            if (e.getMessage().contains("not found")) {
-////                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-////            } else if (e.getMessage().contains("less than 24 hours")) {
-////                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-////            }
-////            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-////        }
-//    }
     
     
     @PatchMapping("/secure/appointments/{id}/cancel")
@@ -98,10 +81,11 @@ public class ApiAppointmentController {
 
     @PatchMapping("/secure/appointments/{id}/reschedule")
     @CrossOrigin
-    public ResponseEntity<?> rescheduleAppointment(@PathVariable("id") int id ,@RequestBody Map<String, String> body, Principal principal) {
+    public ResponseEntity<?> rescheduleAppointment(@PathVariable("id") int id, @RequestBody Map<String, String> body, Principal principal) {
         try {
             String newDateStr = body.get("newDateTime");
-            Appointment updatedAppointment = appService.rescheduleAppointment(id, newDateStr, principal.getName());
+            Date newDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newDateStr);
+            Appointment updatedAppointment = appService.rescheduleAppointment(id, newDate, principal.getName());
             return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
         } catch (IllegalStateException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -141,55 +125,4 @@ public class ApiAppointmentController {
         }
     }
 
-//    @GetMapping
-//    public ResponseEntity<List<Appointment>> getAppointments(@RequestParam Map<String, String> params) {
-//        try {
-//            List<Appointment> appointments = appService.getAppointments(params);
-//            return ResponseEntity.ok(appointments);
-//        } catch (ParseException e) {
-//            return ResponseEntity.badRequest().build();
-//        }
-//    }
-//
-//    // Lấy tất cả lịch hẹn
-//    @GetMapping("/all")
-//    public ResponseEntity<List<Appointment>> getAllAppointments() {
-//        try {
-//            List<Appointment> appointments = appService.getAllAppointments();
-//            return ResponseEntity.ok(appointments);
-//        } catch (ParseException e) {
-//            return ResponseEntity.badRequest().build();
-//        }
-//    }
-//
-//    // Lấy lịch hẹn theo ID
-//    @GetMapping("/{id}")
-//    public ResponseEntity<Appointment> getAppointmentById(@PathVariable int id) {
-//        Appointment appointment = appService.getAppointmentById(id);
-//        return appointment != null ? ResponseEntity.ok(appointment) : ResponseEntity.notFound().build();
-//    }
-//
-//    // Thêm lịch hẹn mới
-//    @PostMapping
-//    public ResponseEntity<Appointment> addAppointment(@RequestBody Appointment appointment) {
-//        try {
-//            Appointment added = appService.addAppointment(appointment);
-//            return ResponseEntity.ok(added);
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.badRequest().body(null);
-//        }
-//    }
-//    
-//    
-//    // Cập nhật lịch hẹn
-//    @PutMapping("/{id}")
-//    public ResponseEntity<Appointment> updateAppointment(@PathVariable int id, @RequestBody Appointment appointment) {
-//        try {
-//            appointment.setId(id);
-//            Appointment updated = appService.updateAppointment(appointment);
-//            return ResponseEntity.ok(updated);
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.badRequest().body(null);
-//        }
-//    }
 }

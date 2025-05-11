@@ -42,8 +42,7 @@ public class Appointment {
 
     @Column(name = "appointment_date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-    private LocalDateTime appointmentDate;
+    private Date appointmentDate;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
@@ -51,8 +50,7 @@ public class Appointment {
     
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-    private LocalDateTime createdAt;
+    private Date createdAt;
 
     // Getters and Setters
     /**
@@ -100,14 +98,14 @@ public class Appointment {
     /**
      * @return the appointmentDate
      */
-    public LocalDateTime getAppointmentDate() {
+    public Date getAppointmentDate() {
         return appointmentDate;
     }
 
     /**
      * @param appointmentDate the appointmentDate to set
      */
-    public void setAppointmentDate(LocalDateTime appointmentDate) {
+    public void setAppointmentDate(Date appointmentDate) {
         this.appointmentDate = appointmentDate;
     }
 
@@ -128,14 +126,14 @@ public class Appointment {
     /**
      * @return the createdAt
      */
-    public LocalDateTime getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
     /**
      * @param createdAt the createdAt to set
      */
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 }

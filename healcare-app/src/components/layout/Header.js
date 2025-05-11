@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { Button, Col, Container, Form, InputGroup, Nav, Navbar, NavDropdown, Row } from "react-bootstrap";
-import Apis, { endpoints } from "../../configs/Apis";
+import Apis, { authApis, endpoints } from "../../configs/Apis";
 import { Link, useNavigate } from "react-router-dom";
-import { FaSearch, FaHospital, FaStethoscope } from "react-icons/fa"; // Thêm icon từ react-icons
+import { FaSearch, FaHospital, FaStethoscope, FaUser } from "react-icons/fa"; // Thêm icon từ react-icons
+import { useMyDispatcher, useMyUser } from "../../configs/MyContexts";
+import cookie from 'react-cookies'
 
 const Header = () => {
     const [hospitals, setHospitals] = useState([]);
     const [specialization, setSpecialization] = useState([]);
     const [doctorName, setDoctorName] = useState("");
     const nav = useNavigate();
+    const { user } = useMyUser(); // Lấy thông tin người dùng từ context
+    const dispatch = useMyDispatcher(); // Dùng để dispatch logout
 
     const loadHospitals = async () => {
         let res = await Apis.get(endpoints["hospitals"]);
@@ -25,127 +29,93 @@ const Header = () => {
         nav(`/?doctorName=${doctorName}`);
     };
 
+    const logout = () => {
+        cookie.remove("token"); // Xóa token khỏi cookie
+        dispatch({ type: "logout" }); // Cập nhật context
+        nav("/login"); // Điều hướng về trang login
+    };
+
+    //  // Kiểm tra token và khôi phục trạng thái đăng nhập khi tải trang
+    // useEffect(() => {
+    //     const token = cookie.load("token");
+    //     if (token && !user) {
+    //         authApis()
+    //             .get(endpoints["current-user"])
+    //             .then((res) => {
+    //                 dispatch({ type: "login", payload: res.data });
+    //             })
+    //             .catch((err) => {
+    //                 console.error("Failed to fetch current user:", err);
+    //                 cookie.remove("token"); // Xóa token nếu không hợp lệ
+    //             });
+    //     }
+    // }, [user, dispatch]);
+
+
     useEffect(() => {
         loadHospitals();
         loadSpecialization();
     }, []);
 
     return (
-        <Navbar
-            expand="lg"
-            bg="light"
-            variant="light"
-            sticky="top"
-            className="shadow-sm"
-            style={{ backgroundColor: "#f8f9fa" }}
-        >
+        <Navbar expand="lg" sticky="top" className="shadow py-3" style={{ backgroundColor: '#ffffff', borderBottom: '2px solid #e3f2fd' }}>
             <Container>
-                {/* Logo và Brand */}
+                {/* Logo */}
                 <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
-                    <FaHospital size={30} className="me-2" style={{ color: "#007bff" }} />
-                    <span className="fw-bold" style={{ color: "#007bff", fontSize: "1.5rem" }}>
-                        HealCare
+                    <FaHospital size={36} className="me-2 text-primary" />
+                    <span className="fw-bold" style={{ fontSize: "1.8rem", color: "#0d6efd", letterSpacing: '1px' }}>
+                        Heal<span style={{ color: "#198754" }}>Care</span>
                     </span>
                 </Navbar.Brand>
 
-                <Navbar.Toggle aria-controls="basic-navbar-nav" />
-
-                <Navbar.Collapse id="basic-navbar-nav">
-                    <Nav className="me-auto align-items-center">
-                        <Link
-                            to="/"
-                            className="nav-link fw-medium mx-2"
-                            style={{ color: "#343a40" }}
-                        >
-                            Trang Chủ
-                        </Link>
-
-                        {/* Dropdown Bệnh Viện */}
-                        <NavDropdown
-                            title={
-                                <span>
-                                    <FaHospital className="me-1" style={{ color: "#007bff" }} />
-                                    Bệnh Viện
-                                </span>
-                            }
-                            id="hospital-nav-dropdown"
-                            className="mx-2"
-                            renderMenuOnMount={true}
-                        >
-                            {hospitals.map((h) => (
-                                <NavDropdown.Item
-                                    as={Link}
-                                    to={`/?hospital=${h.name}`}
-                                    key={h.id}
-                                    className="py-2"
-                                >
+                <Navbar.Toggle />
+                <Navbar.Collapse>
+                    {/* Navigation links */}
+                    <Nav className="me-auto ms-4">
+                        <Link to="/" className="nav-link fs-6 text-dark fw-semibold">Trang Chủ</Link>
+                        <NavDropdown title={<span><FaHospital className="me-1 text-info" />Bệnh Viện</span>} className="fw-semibold">
+                            {hospitals.map(h => (
+                                <NavDropdown.Item key={h.id} as={Link} to={`/?hospital=${h.name}`}>
                                     {h.name}
                                 </NavDropdown.Item>
                             ))}
                         </NavDropdown>
-
-                        {/* Dropdown Chuyên Khoa */}
-                        <NavDropdown
-                            title={
-                                <span>
-                                    <FaStethoscope className="me-1" style={{ color: "#007bff" }} />
-                                    Chuyên Khoa
-                                </span>
-                            }
-                            id="specialization-nav-dropdown"
-                            className="mx-2"
-                            renderMenuOnMount={true}
-                        >
-                            {specialization.map((s) => (
-                                <NavDropdown.Item
-                                    as={Link}
-                                    to={`/?specialization=${s.name}`}
-                                    key={s.id}
-                                    className="py-2"
-                                >
+                        <NavDropdown title={<span><FaStethoscope className="me-1 text-success" />Chuyên Khoa</span>} className="fw-semibold">
+                            {specialization.map(s => (
+                                <NavDropdown.Item key={s.id} as={Link} to={`/?specialization=${s.name}`}>
                                     {s.name}
                                 </NavDropdown.Item>
                             ))}
                         </NavDropdown>
-
-                        <Link
-                            to="/login"
-                            className="nav-link fw-medium mx-2"
-                            style={{ color: "#343a40" }}
-                        >
-                            Đăng Nhập
-                        </Link>
-
-                        <Link
-                            to="/register"
-                            className="nav-link fw-medium mx-2"
-                            style={{ color: "#343a40" }}
-                        >
-                            Đăng ký
-                        </Link>
                     </Nav>
 
-                    {/* Form Tìm kiếm */}
-                    <Form onSubmit={search} className="d-flex align-items-center">
-                        <InputGroup style={{ maxWidth: "300px" }}>
+                    {/* Search bar */}
+                    <Form onSubmit={search} className="d-flex me-3">
+                        <InputGroup>
                             <Form.Control
                                 type="text"
+                                placeholder="Tìm bác sĩ..."
                                 value={doctorName}
                                 onChange={(e) => setDoctorName(e.target.value)}
-                                placeholder="Tìm bác sĩ..."
-                                className="rounded-start"
-                                style={{ borderColor: "#007bff" }}
+                                className="border-primary"
                             />
-                            <Button
-                                type="submit"
-                                variant="primary"
-                                className="rounded-end"
-                                style={{ backgroundColor: "#007bff", borderColor: "#007bff" }}
-                            >
+                            <Button type="submit" variant="primary">
                                 <FaSearch />
                             </Button>
                         </InputGroup>
                     </Form>
+
+                    {/* User menu */}
+                    {user ? (
+                        <NavDropdown title={<span><FaUser className="me-1" />{user.firstName}</span>}>
+                            <NavDropdown.Item onClick={logout}>Đăng xuất</NavDropdown.Item>
+                        </NavDropdown>
+                    ) : (
+                        <>
+                            <Link to="/login" className="btn btn-outline-primary me-2">Đăng Nhập</Link>
+                            <Link to="/register" className="btn btn-primary">Đăng Ký</Link>
+                        </>
+                    )}
                 </Navbar.Collapse>
             </Container>
         </Navbar>

@@ -26,6 +26,6 @@ public interface AppointmentService {
     List<Appointment> getAppointmentsByDoctor(int doctorId, int page);
     List<Appointment> getAppointmentsByPatient(int patientId, int page);
     Appointment cancelAppointment(int id, String username);
-    Appointment rescheduleAppointment(int id, String newDateStr, String username);
+    Appointment rescheduleAppointment(int id, Date newDate, String username);
     Appointment confirmAppointment(int id, String username);
 }

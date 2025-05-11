@@ -176,7 +176,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         q.select(b.count(root));
         q.where(
                 b.equal(root.get("doctor"), doctor),
-                b.equal(root.get("appointmentDate"), appointment.getAppointmentDate()),
+                b.equal(root.get("appointmentDate"), new java.sql.Timestamp(appointment.getAppointmentDate().getTime())),
                 b.notEqual(root.get("status"), AppointmentStatus.CANCELLED)
         );
         Long count = s.createQuery(q).getSingleResult();
@@ -351,7 +351,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
 
     @Override
-    public Appointment rescheduleAppointment(int id, LocalDateTime newDate) {
+    public Appointment rescheduleAppointment(int id, Date newDate) {
         Session s = this.factory.getObject().getCurrentSession();
 
         Appointment existingAppointment = s.get(Appointment.class, id);
@@ -359,7 +359,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
             throw new RuntimeException("Appointment with ID " + id + " not found");
         }
 
-        // Kiểm tra trùng lịch với bác sĩ
         Doctor doctor = existingAppointment.getDoctor();
         if (doctor != null) {
             CriteriaBuilder b = s.getCriteriaBuilder();
@@ -377,10 +376,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                 throw new RuntimeException("Doctor is already booked at this time");
             }
         }
-        
-        
 
-        // Cập nhật ngày mới
         existingAppointment.setAppointmentDate(newDate);
         Appointment updatedAppointment = (Appointment) s.merge(existingAppointment);
 
