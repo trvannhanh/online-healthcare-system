@@ -13,7 +13,7 @@ public interface ResponseRepository {
     List<Response> getResponsesByDoctorId(Integer doctorId);
     Response addResponse(Response response);
     Response updateResponse(Response response);
-    void deleteResponse(Integer responseId);
-    boolean isResponseExist(Integer responseId);
+    void deleteResponse(Integer id);
+    boolean isResponseExist(Integer id);
     Response getResponsesByRating(Integer ratingId);
 } 

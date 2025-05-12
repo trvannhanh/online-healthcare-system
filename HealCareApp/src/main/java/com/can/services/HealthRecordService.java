@@ -24,6 +24,6 @@ public interface HealthRecordService {
 
     void deleteHealthRecord(int id);
 
-    List<HealthRecord> getHealthRecordsByPatient(int patientId, int page);
+    List<HealthRecord> getHealthRecordsByPatient(int patientId);
     
 } 

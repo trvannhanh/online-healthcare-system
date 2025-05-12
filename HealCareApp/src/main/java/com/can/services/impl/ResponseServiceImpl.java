@@ -52,15 +52,15 @@ public class ResponseServiceImpl implements ResponseService {
     }
 
     @Override
-    public void deleteResponse(Integer responseId) {
+    public void deleteResponse(Integer id) {
         // Implementation here
-        this.responseRepo.deleteResponse(responseId);
+        this.responseRepo.deleteResponse(id);
     }
 
     @Override
-    public boolean isResponseExist(int responseId) {
+    public boolean isResponseExist(int id) {
         // Implementation here
-        return this.responseRepo.isResponseExist(responseId);
+        return this.responseRepo.isResponseExist(id);
     }
 
     @Override

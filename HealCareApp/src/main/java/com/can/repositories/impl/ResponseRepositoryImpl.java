@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 
+import com.can.pojo.Rating;
 import com.can.pojo.Response;
 import java.util.List;
 import java.util.Map;
@@ -12,9 +13,9 @@ import java.util.Map;
 import com.can.repositories.ResponseRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.Query;
 import org.hibernate.Transaction;
@@ -26,7 +27,7 @@ import org.hibernate.Session;
 @Repository
 @Transactional
 public class ResponseRepositoryImpl implements ResponseRepository {
-        // Implement the methods defined in the RatingRepository interface here
+    // Implement the methods defined in the RatingRepository interface here
 
     @Autowired
     private LocalSessionFactoryBean factory;
@@ -67,7 +68,17 @@ public class ResponseRepositoryImpl implements ResponseRepository {
     @Override
     public Response getResponseById(Integer id) {
         Session session = this.factory.getObject().getCurrentSession();
-        return session.get(Response.class, id);
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Response> query = builder.createQuery(Response.class);
+        Root<Response> root = query.from(Response.class);
+
+        // Fetch các mối quan hệ liên quan
+        root.fetch("rating", JoinType.LEFT);
+
+        // Điều kiện lọc theo ID
+        query.where(builder.equal(root.get("id"), id));
+
+        return session.createQuery(query).uniqueResult();
     }
 
     @Override
@@ -85,9 +96,18 @@ public class ResponseRepositoryImpl implements ResponseRepository {
     @Override
     public Response addResponse(Response response) {
         Session session = this.factory.getObject().getCurrentSession();
-        Transaction tx = session.beginTransaction();
-        session.save(response);
-        tx.commit();
+
+        // Kiểm tra xem rating có tồn tại hay không
+        if (response.getRating() == null) {
+            throw new RuntimeException("Rating is required for a Response");
+        }
+        Rating rating = session.get(Rating.class, response.getRating().getId());
+        if (rating == null) {
+            throw new RuntimeException("Rating with ID " + response.getRating().getId() + " not found");
+        }
+
+        // Lưu response vào cơ sở dữ liệu
+        session.persist(response);
         return response;
     }
 
@@ -101,20 +121,18 @@ public class ResponseRepositoryImpl implements ResponseRepository {
     }
 
     @Override
-    public void deleteResponse(Integer responseId) {
+    public void deleteResponse(Integer id) {
         Session session = this.factory.getObject().getCurrentSession();
-        Transaction tx = session.beginTransaction();
-        Response response = session.get(Response.class, responseId);
+        Response response = session.get(Response.class, id);
         if (response != null) {
-            session.delete(response);
+            session.remove(response);
         }
-        tx.commit();
     }
 
     @Override
-    public boolean isResponseExist(Integer responseId) {
-        Session session = this.factory.getObject().getCurrentSession();
-        return session.get(Response.class, responseId) != null;
+    public boolean isResponseExist(Integer id) {
+        Response response = this.getResponseById(id);
+        return response != null;
     }
 
     @Override
@@ -132,5 +150,5 @@ public class ResponseRepositoryImpl implements ResponseRepository {
             return null; // Trả về null nếu không tìm thấy Response
         }
     }
-    
+
 }

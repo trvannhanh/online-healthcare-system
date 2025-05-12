@@ -5,17 +5,19 @@ import java.util.List;
 import java.util.Map;
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate5.LocalSessionFactoryBean;  
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-
+import com.can.pojo.Doctor;
+import com.can.pojo.Patient;
 import com.can.pojo.Rating;
 import com.can.repositories.RatingRepository;
 
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.Session;
@@ -34,7 +36,7 @@ public class RatingRepositoryImpl implements RatingRepository {
     private static final int PAGE_SIZE = 10;
 
     @Override
-    public List<Rating> getAllRatings( Map<String, String> params) {
+    public List<Rating> getAllRatings(Map<String, String> params) {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Rating> query = builder.createQuery(Rating.class);
@@ -74,8 +76,18 @@ public class RatingRepositoryImpl implements RatingRepository {
 
     @Override
     public Rating getRatingById(Integer id) {
-        Session session = this.factory.getObject().getCurrentSession();
-        return session.get(Rating.class, id);
+        Session s = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder b = s.getCriteriaBuilder();
+        CriteriaQuery<Rating> q = b.createQuery(Rating.class);
+        Root<Rating> root = q.from(Rating.class);
+
+        // Fetch các mối quan hệ liên quan
+        root.fetch("doctor", JoinType.LEFT).fetch("user", JoinType.LEFT);
+        root.fetch("patient", JoinType.LEFT).fetch("user", JoinType.LEFT);
+
+        q.where(b.equal(root.get("id"), id));
+
+        return s.createQuery(q).uniqueResult();
     }
 
     @Override
@@ -84,7 +96,7 @@ public class RatingRepositoryImpl implements RatingRepository {
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Rating> query = builder.createQuery(Rating.class);
         Root<Rating> root = query.from(Rating.class);
-        
+
         query.where(builder.equal(root.get("doctor").get("id"), doctorId));
         Query hqlQuery = session.createQuery(query);
         return hqlQuery.getResultList();
@@ -96,7 +108,7 @@ public class RatingRepositoryImpl implements RatingRepository {
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Rating> query = builder.createQuery(Rating.class);
         Root<Rating> root = query.from(Rating.class);
-        
+
         query.where(builder.equal(root.get("patient").get("id"), patientId));
         Query hqlQuery = session.createQuery(query);
         return hqlQuery.getResultList();
@@ -104,10 +116,28 @@ public class RatingRepositoryImpl implements RatingRepository {
 
     @Override
     public Rating addRating(Rating rating) {
-        Session session = this.factory.getObject().getCurrentSession();
-        Transaction transaction = session.beginTransaction();
-        session.save(rating);
-        transaction.commit();
+        Session s = this.factory.getObject().getCurrentSession();
+
+        // Kiểm tra xem doctor có tồn tại hay không
+        if (rating.getDoctor() == null) {
+            throw new RuntimeException("Doctor is required for a Rating");
+        }
+        Doctor doctor = s.get(Doctor.class, rating.getDoctor().getId());
+        if (doctor == null) {
+            throw new RuntimeException("Doctor with ID " + rating.getDoctor().getId() + " not found");
+        }
+
+        // Kiểm tra xem patient có tồn tại hay không
+        if (rating.getPatient() == null) {
+            throw new RuntimeException("Patient is required for a Rating");
+        }
+        Patient patient = s.get(Patient.class, rating.getPatient().getId());
+        if (patient == null) {
+            throw new RuntimeException("Patient with ID " + rating.getPatient().getId() + " not found");
+        }
+
+        // Lưu rating vào cơ sở dữ liệu
+        s.persist(rating);
         return rating;
     }
 
@@ -123,12 +153,10 @@ public class RatingRepositoryImpl implements RatingRepository {
     @Override
     public void deleteRating(Integer ratingId) {
         Session session = this.factory.getObject().getCurrentSession();
-        Transaction transaction = session.beginTransaction();
         Rating rating = session.get(Rating.class, ratingId);
         if (rating != null) {
-            session.delete(rating);
+            session.remove(rating);
         }
-        transaction.commit();
     }
 
     @Override
@@ -137,5 +165,25 @@ public class RatingRepositoryImpl implements RatingRepository {
         Rating rating = session.get(Rating.class, ratingId);
         return rating != null;
     }
-    
+
+    @Override
+    public Map<Integer, Double> getAverageRatingsForDoctors(List<Integer> doctorIds) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        Map<Integer, Double> averageRatings = new java.util.HashMap<>();
+        for (Integer doctorId : doctorIds) {
+            // Tạo truy vấn để tính trung bình đánh giá cho từng bác sĩ
+            CriteriaQuery<Double> q = builder.createQuery(Double.class);
+            Root<Rating> root = q.from(Rating.class);
+
+            q.select(builder.avg(root.get("score"))); // Tính trung bình cột "score"
+            q.where(builder.equal(root.get("doctor").get("id"), doctorId));
+
+            Double average = session.createQuery(q).getSingleResult();
+            averageRatings.put(doctorId, average != null ? average : 0.0);
+        }
+
+        return averageRatings;
+    }
+
 }

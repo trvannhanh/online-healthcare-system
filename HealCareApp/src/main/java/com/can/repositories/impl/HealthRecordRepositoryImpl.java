@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.can.repositories.impl;
+
 import com.can.pojo.HealthRecord;
 import com.can.pojo.Patient;
 import com.can.pojo.User;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
 /**
  *
  * @author DELL
@@ -165,7 +167,7 @@ public class HealthRecordRepositoryImpl implements HealthRecordRepository {
     }
 
     @Override
-    public List<HealthRecord> getHealthRecordsByPatient(int patientId, int page) {
+    public List<HealthRecord> getHealthRecordsByPatient(int patientId) {
         Session s = this.factory.getObject().getCurrentSession();
         CriteriaBuilder b = s.getCriteriaBuilder();
         CriteriaQuery<HealthRecord> q = b.createQuery(HealthRecord.class);
@@ -174,12 +176,14 @@ public class HealthRecordRepositoryImpl implements HealthRecordRepository {
         root.fetch("patient").fetch("user");
 
         q.where(b.equal(root.get("patient").get("id"), patientId));
-        q.orderBy(b.asc(root.get("recordDate")));
 
         Query query = s.createQuery(q);
-        int start = (page - 1) * PAGE_SIZE;
-        query.setFirstResult(start);
-        query.setMaxResults(PAGE_SIZE);
+        int totalRecords = query.getResultList().size();
+        // Nếu số bản ghi vượt quá PAGE_SIZE, áp dụng phân trang
+        if (totalRecords > PAGE_SIZE) {
+            query.setFirstResult(0); // Trang đầu tiên
+            query.setMaxResults(PAGE_SIZE);
+        }
 
         return query.getResultList();
     }

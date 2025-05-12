@@ -49,8 +49,12 @@ public class ApiRatingController {
         try {
             Rating newRating = ratingService.addRating(rating);
             return new ResponseEntity<>(newRating, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -76,7 +80,6 @@ public class ApiRatingController {
             if (!ratingService.isRatingExist(id)) {
                 return ResponseEntity.notFound().build();
             }
-            
             //Lấy và xóa phản hồi liên quan đến đánh giá
             Response response = responseService.getResponsesByRating(id);
             if (response != null) {
@@ -85,6 +88,7 @@ public class ApiRatingController {
             ratingService.deleteRating(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

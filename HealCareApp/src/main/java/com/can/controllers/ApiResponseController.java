@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/response")
 public class ApiResponseController {
-    
+
     @Autowired
     private ResponseService responseService;
 
@@ -65,6 +66,7 @@ public class ApiResponseController {
             Response updatedResponse = responseService.updateResponse(response);
             return ResponseEntity.ok(updatedResponse);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -73,12 +75,16 @@ public class ApiResponseController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteResponse(@PathVariable("id") Integer id) {
         try {
+            // Kiểm tra xem phản hồi có tồn tại không
             if (!responseService.isResponseExist(id)) {
                 return ResponseEntity.notFound().build();
             }
+
+            // Xóa phản hồi
             responseService.deleteResponse(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
