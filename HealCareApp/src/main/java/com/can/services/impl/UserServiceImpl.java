@@ -93,7 +93,7 @@ public class UserServiceImpl implements UserService {
         if (avatar == null || avatar.isEmpty()) {
             throw new IllegalArgumentException("Avatar là bắt buộc");
         }
-        //Tạo User
+        // Tạo User
         User u = new User();
         u.setFirstName(params.get("firstName"));
         u.setLastName(params.get("lastName"));
@@ -121,7 +121,7 @@ public class UserServiceImpl implements UserService {
         User savedUser = this.userRepo.addUser(u);
         System.out.println("User saved successfully: " + savedUser.getId());
 
-        //Xử lý thông tin riêng dựa trên role
+        // Xử lý thông tin riêng dựa trên role
         String role = params.get("role").toUpperCase();
         if ("PATIENT".equalsIgnoreCase(role)) {
             Patient patient = new Patient();
@@ -143,7 +143,7 @@ public class UserServiceImpl implements UserService {
                 hospital = hospitalRepo.addHospital(hospital);
             }
             doctor.setHospital(hospital);
-            
+
             String specializationName = params.get("specialization");
             Specialization specialization = specializationRepo.getSpecializationByName(specializationName);
             if (specialization == null) {
@@ -159,7 +159,7 @@ public class UserServiceImpl implements UserService {
 
         return savedUser;
 
-//        return this.userRepo.addUser(u);
+        // return this.userRepo.addUser(u);
     }
 
     private void validateParams(Map<String, String> params) {
@@ -240,4 +240,10 @@ public class UserServiceImpl implements UserService {
     public boolean authenticate(String username, String password) {
         return this.userRepo.authenticate(username, password);
     }
+
+    @Override
+    public List<User> getUsersByRole(String role) {
+        return this.userRepo.getUsersByRole(role);
+    }
+
 }

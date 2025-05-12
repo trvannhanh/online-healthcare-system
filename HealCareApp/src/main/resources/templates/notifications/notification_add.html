@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>Thêm Thông Báo</title>
+    <th:block th:replace="base :: styles"></th:block>
+  </head>
+  <body>
+    <div th:replace="base :: header"></div>
+
+    <main>
+      <div class="d-flex bg-secondary">
+        <div th:replace="base :: sidebar" class="p-2"></div>
+        <div class="p-2 bg-light flex-grow-1">
+          <h1 class="text-center text-info mt-1">Thêm Thông Báo</h1>
+          <form
+            th:action="@{/notifications/add}"
+            th:object="${notification}"
+            method="post"
+          >
+            <div class="mb-3">
+              <label>Loại người nhận:</label>
+              <select name="role" id="userType" class="form-control">
+                <option value="">-- Chọn loại người nhận --</option>
+                <option value="PATIENT">Bệnh nhân</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label>Loại thông báo</label>
+              <select
+                th:field="*{type}"
+                class="form-control"
+                onchange="fillMessageTemplate(this.value)"
+              >
+                <option value="">-- Chọn loại thông báo --</option>
+                <option value="DISCOUNT">Ưu đãi</option>
+                <option value="HEALTH_PROGRAM">
+                  Chương trình khám miễn phí
+                </option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label>Nội dung thông báo:</label>
+              <textarea
+              id="message"
+                class="form-control"
+                th:field="*{message}"
+                placeholder="Nhập nội dung thông báo"
+                required
+              ></textarea>
+            </div>
+            <div class="mb-3">
+              <label>Ngày gửi:</label>
+              <input
+                class="form-control"
+                type="date"
+                th:field="*{sentAt}"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-primary">
+              Thêm Thông Báo
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+    <div th:replace="base :: footer"></div>
+    <script>
+      function fillMessageTemplate(type) {
+        let msg = "";
+        const today = new Date().toLocaleDateString("vi-VN");
+
+        switch (type) {
+          case "DISCOUNT":
+            msg =
+              "🎉 Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!";
+            break;
+          case "HEALTH_PROGRAM":
+            msg = `🏥 Tham gia chương trình khám sức khỏe tổng quát miễn phí từ ngày ${today}.`;
+            break;
+        }
+
+        document.getElementById("message").value = msg;
+      }
+    </script>
+  </body>
+</html>

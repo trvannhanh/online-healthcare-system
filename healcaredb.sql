@@ -104,7 +104,7 @@ CREATE TABLE `health_records` (
   KEY `doctor_id` (`doctor_id`),
   CONSTRAINT `health_records_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`id`) ON DELETE CASCADE,
   CONSTRAINT `health_records_ibfk_2` FOREIGN KEY (`doctor_id`) REFERENCES `doctor` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -113,7 +113,7 @@ CREATE TABLE `health_records` (
 
 LOCK TABLES `health_records` WRITE;
 /*!40000 ALTER TABLE `health_records` DISABLE KEYS */;
-INSERT INTO `health_records` VALUES (1,1,3,'Không có tiền sử bệnh lý','Kết quả xét nghiệm bình thường.','2025-04-02 03:48:14','2025-04-02 03:48:14'),(2,2,4,'Tiểu đường type 2','Kết quả xét nghiệm đường huyết cao.','2025-04-02 03:48:14','2025-04-02 03:48:14');
+INSERT INTO `health_records` VALUES (2,2,4,'Bình thường','Kết quả xét nghiệm đường huyết cao.','2025-04-02 03:48:14','2025-05-10 15:01:43'),(6,1,4,'Patient has a history of hypertension.','Blood pressure is normal.','2025-05-10 14:58:15','2025-05-10 14:58:15');
 /*!40000 ALTER TABLE `health_records` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -184,10 +184,11 @@ CREATE TABLE `notifications` (
   `user_id` int DEFAULT NULL,
   `message` text,
   `sent_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `type` enum('DISCOUNT','APPOINTMENT','HEALTH_PROGRAM') DEFAULT 'APPOINTMENT',
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -196,6 +197,7 @@ CREATE TABLE `notifications` (
 
 LOCK TABLES `notifications` WRITE;
 /*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+INSERT INTO `notifications` VALUES (1,1,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:16:26','DISCOUNT'),(2,2,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:16:26','DISCOUNT'),(3,20,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:16:26','DISCOUNT'),(4,21,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:16:26','DISCOUNT'),(5,1,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:17:32','DISCOUNT'),(6,2,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:17:32','DISCOUNT'),(7,20,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:17:32','DISCOUNT'),(8,21,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:17:32','DISCOUNT'),(9,1,'? Ưu đãi đặc biệt lên đến 20% cho khách hàng đặt lịch khám trong tuần này!','2025-05-14 17:00:00','DISCOUNT'),(10,2,'? Ưu đãi đặc biệt lên đến 20% cho khách hàng đặt lịch khám trong tuần này!','2025-05-14 17:00:00','DISCOUNT'),(11,20,'? Ưu đãi đặc biệt lên đến 20% cho khách hàng đặt lịch khám trong tuần này!','2025-05-14 17:00:00','DISCOUNT'),(12,21,'? Ưu đãi đặc biệt lên đến 20% cho khách hàng đặt lịch khám trong tuần này!','2025-05-14 17:00:00','DISCOUNT');
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -210,7 +212,6 @@ CREATE TABLE `patient` (
   `id` int NOT NULL,
   `date_of_birth` date DEFAULT NULL,
   `insurance_number` varchar(20) DEFAULT NULL,
-  `medical_history` text,
   PRIMARY KEY (`id`),
   CONSTRAINT `patient_ibfk_1` FOREIGN KEY (`id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -222,7 +223,7 @@ CREATE TABLE `patient` (
 
 LOCK TABLES `patient` WRITE;
 /*!40000 ALTER TABLE `patient` DISABLE KEYS */;
-INSERT INTO `patient` VALUES (1,'1990-01-01','BH123456','Không có tiền sử bệnh lý'),(2,'1985-05-15','BH654321','Tiểu đường type 2'),(20,'1990-01-01','0666111555222',NULL),(21,'1990-01-01','0666111555222',NULL);
+INSERT INTO `patient` VALUES (1,'1990-01-01','BH123456'),(2,'1985-05-15','BH654321'),(20,'1990-01-01','0666111555222'),(21,'1990-01-01','0666111555222');
 /*!40000 ALTER TABLE `patient` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -277,7 +278,7 @@ CREATE TABLE `rating` (
   CONSTRAINT `rating_ibfk_1` FOREIGN KEY (`doctor_id`) REFERENCES `doctor` (`id`) ON DELETE CASCADE,
   CONSTRAINT `rating_ibfk_2` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`id`) ON DELETE CASCADE,
   CONSTRAINT `rating_chk_1` CHECK ((`rating` between 1 and 5))
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -286,7 +287,7 @@ CREATE TABLE `rating` (
 
 LOCK TABLES `rating` WRITE;
 /*!40000 ALTER TABLE `rating` DISABLE KEYS */;
-INSERT INTO `rating` VALUES (1,3,1,5,'Bác sĩ rất tận tình và chuyên nghiệp.','2025-04-10 12:00:00'),(2,4,2,4,'Bác sĩ giỏi nhưng thời gian chờ hơi lâu.','2025-04-11 15:00:00');
+INSERT INTO `rating` VALUES (2,4,2,4,'Bác sĩ giỏi nhưng thời gian chờ hơi lâu.','2025-04-11 15:00:00'),(3,10,20,5,'Bác sĩ tốt nhưng hơi khó đặt lịch','2025-05-11 22:54:51');
 /*!40000 ALTER TABLE `rating` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -305,7 +306,7 @@ CREATE TABLE `response` (
   PRIMARY KEY (`id`),
   KEY `fk_rating_response` (`rating_id`),
   CONSTRAINT `fk_rating_response` FOREIGN KEY (`rating_id`) REFERENCES `rating` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -314,6 +315,7 @@ CREATE TABLE `response` (
 
 LOCK TABLES `response` WRITE;
 /*!40000 ALTER TABLE `response` DISABLE KEYS */;
+INSERT INTO `response` VALUES (1,2,'Bác sĩ sẽ rút kinh nghiệm','2025-04-12 15:00:00'),(3,3,'Mong lần sau quý khách lại đến','2025-05-12 12:46:28');
 /*!40000 ALTER TABLE `response` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -389,4 +391,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-05-06 23:51:03
+-- Dump completed on 2025-05-13  2:03:28

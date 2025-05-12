@@ -3,6 +3,7 @@ package com.can.repositories;
 import com.can.pojo.Notifications;
 import java.util.List;
 import java.util.Map;
+import java.text.ParseException;
 import java.util.Date;
 
 /**
@@ -12,7 +13,7 @@ import java.util.Date;
 public interface NotificationRepository {
 
     // Lọc thông báo theo các tiêu chí động (sử dụng Map)
-    List<Notifications> getNotificationsByCriteria(Map<String, String> params);
+    List<Notifications> getNotificationsByCriteria(Map<String, String> params) throws ParseException;
     
     // Tìm thông báo theo id
     Notifications getNotificationById(Integer id);
@@ -41,5 +42,6 @@ public interface NotificationRepository {
     // Cập nhật nội dung thông báo
     void updateNotificationMessage(int notificationId, String message);
     
+    List<Notifications> getAllNotifications() throws ParseException;
 
 } 

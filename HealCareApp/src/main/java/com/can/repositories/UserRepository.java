@@ -23,4 +23,5 @@ public interface UserRepository {
     boolean isEmailExist(String email);
     String getEmailByUserId(int userId);
     List<String> getAllEmails();
+    List<User> getUsersByRole(String role);
 }

@@ -1,5 +1,6 @@
 package com.can.repositories.impl;
 
+import com.can.pojo.Appointment;
 import com.can.pojo.Notifications;
 import com.can.pojo.User;
 import com.can.repositories.NotificationRepository;
@@ -9,6 +10,9 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +20,7 @@ import java.util.Date;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate5.LocalSessionFactoryBean;  
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,42 +37,51 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     private static final int PAGE_SIZE = 10;
 
     @Override
-    public List<Notifications> getNotificationsByCriteria(Map<String, String> params) {
+    public List<Notifications> getNotificationsByCriteria(Map<String, String> params) throws ParseException {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
-        Root<Notifications> root = query.from(Notifications.class);
+        CriteriaQuery<Notifications> q = builder.createQuery(Notifications.class);
+        Root<Notifications> root = q.from(Notifications.class);
+
+        Join<Notifications, User> userJoin = root.join("user");
+
+        List<Predicate> predicates = new ArrayList<>();
 
         if (params != null) {
-            List<Predicate> predicates = new ArrayList<>();
-
-            // Lọc theo trạng thái đọc
-            String isRead = params.get("isRead");
-            if (isRead != null) {
-                predicates.add(builder.equal(root.get("isRead"), Boolean.parseBoolean(isRead)));
+            // Lọc theo role
+            String role = params.get("role");
+            if (role != null && !role.isEmpty()) {
+                predicates.add(builder.equal(userJoin.get("role"), role));
             }
 
-            // Lọc theo ngày tạo
-            String createAt = params.get("createAt");
-            if (createAt != null) {
-                predicates.add(builder.equal(root.get("createAt"), createAt));
-            }
+            // Lọc theo khoảng thời gian gửi (sentAt)
+            String fromDateStr = params.get("fromDate");
+            String toDateStr = params.get("toDate");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-            // Áp dụng các điều kiện lọc
-            query.where(predicates.toArray(new Predicate[0]));
+            if (fromDateStr != null && toDateStr != null) {
+                Date fromDate = sdf.parse(fromDateStr);
+                Date toDate = sdf.parse(toDateStr);
+                predicates.add(builder.between(root.get("sentAt"), fromDate, toDate));
+            }
         }
 
-        Query hqlQuery = session.createQuery(query);
+        if (!predicates.isEmpty()) {
+            q.where(predicates.toArray(Predicate[]::new));
+        }
 
-        // Phân trang nếu có
+        q.orderBy(builder.desc(root.get("sentAt"))); // sắp xếp mới nhất trước
+
+        Query query = session.createQuery(q);
+
         if (params != null) {
             int page = Integer.parseInt(params.getOrDefault("page", "1"));
             int start = (page - 1) * PAGE_SIZE;
-            hqlQuery.setFirstResult(start);
-            hqlQuery.setMaxResults(PAGE_SIZE);
+            query.setFirstResult(start);
+            query.setMaxResults(PAGE_SIZE);
         }
 
-        return hqlQuery.getResultList();
+        return query.getResultList();
     }
 
     @Override
@@ -83,7 +96,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
         Root<Notifications> root = query.from(Notifications.class);
-        
+
         query.where(builder.equal(root.get("userId"), userId));
         Query hqlQuery = session.createQuery(query);
         return hqlQuery.getResultList();
@@ -95,7 +108,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
         Root<Notifications> root = query.from(Notifications.class);
-        
+
         query.where(builder.equal(root.get("createAt"), createAt));
         Query hqlQuery = session.createQuery(query);
         return hqlQuery.getResultList();
@@ -103,10 +116,11 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 
     @Override
     public Notifications addNotification(Notifications notification) {
+        if (notification.getType() == null) {
+            throw new IllegalArgumentException("Notification type is required.");
+        }
         Session session = this.factory.getObject().getCurrentSession();
-        Transaction transaction = session.beginTransaction();
-        session.save(notification);
-        transaction.commit();
+        session.persist(notification);
         return notification;
     }
 
@@ -116,10 +130,10 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
         Root<Notifications> root = query.from(Notifications.class);
-        
+
         query.where(builder.equal(root.get("isVerified"), isVerified));
         query.orderBy(builder.asc(root.get("id")));
-        
+
         Query hqlQuery = session.createQuery(query);
         int start = (page - 1) * PAGE_SIZE;
         hqlQuery.setFirstResult(start);
@@ -134,7 +148,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
         Root<Notifications> root = query.from(Notifications.class);
-        
+
         query.where(builder.equal(root.get("userId"), userId));
         query.orderBy(builder.asc(root.get("id")));
 
@@ -152,7 +166,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
         Root<Notifications> root = query.from(Notifications.class);
-        
+
         query.where(builder.between(root.get("sentAt"), startDate, endDate));
         Query hqlQuery = session.createQuery(query);
         return hqlQuery.getResultList();
@@ -177,4 +191,8 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         transaction.commit();
     }
 
+    @Override
+    public List<Notifications> getAllNotifications() throws ParseException {
+        return getNotificationsByCriteria(null);
+    }
 }

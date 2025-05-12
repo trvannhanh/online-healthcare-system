@@ -4,14 +4,22 @@
  */
 package com.can.pojo;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+
 import java.util.Date;
+
+import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  *
@@ -24,7 +32,13 @@ public class Notifications {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String message;
+    @Temporal(TemporalType.TIMESTAMP)
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "sent_at")
     private Date sentAt;
+    @Column(name = "type")
+    @Enumerated(EnumType.STRING)
+    private NotificationType type;
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -70,6 +84,20 @@ public class Notifications {
      */
     public void setSentAt(Date sentAt) {
         this.sentAt = sentAt;
+    }
+
+    /**
+     * @return the type
+     */
+    public NotificationType getType() {
+        return type;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType(NotificationType type) {
+        this.type = type;
     }
 
     /**
