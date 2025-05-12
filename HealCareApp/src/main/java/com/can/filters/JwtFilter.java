@@ -25,6 +25,19 @@ public class JwtFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         
         HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
+        
+        // Bỏ qua và xử lý OPTIONS request (preflight)
+        if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
+            httpResponse.setStatus(HttpServletResponse.SC_OK);
+            httpResponse.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+            httpResponse.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+            httpResponse.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+            httpResponse.setHeader("Access-Control-Allow-Credentials", "true");
+            httpResponse.setHeader("Access-Control-Max-Age", "3600");
+            chain.doFilter(request, response);
+            return;
+        }
         
         if (httpRequest.getRequestURI().startsWith(String.format("%s/api/secure", httpRequest.getContextPath())) == true) {
         
@@ -48,8 +61,9 @@ public class JwtFilter implements Filter {
                         return;
                     }
                 } catch (Exception e) {
-                    // Log lỗi
+                    System.out.println("JWT validation error: " + e.getMessage());
                 }
+                
             }
 
             ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED, 

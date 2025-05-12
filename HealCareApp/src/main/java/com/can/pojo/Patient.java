@@ -30,6 +30,7 @@ public class Patient {
     private User user;
 
     @Column(name = "date_of_birth")
+    @Temporal(TemporalType.DATE)
     private Date dateOfBirth;
 
     @Column(name = "insurance_number", length = 20)

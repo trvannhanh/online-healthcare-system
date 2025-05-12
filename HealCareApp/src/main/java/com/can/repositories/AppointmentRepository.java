@@ -31,6 +31,7 @@ public interface AppointmentRepository {
     Appointment cancelAppointment(int id);
     Appointment rescheduleAppointment(int id, Date newDate);
     Appointment confirmAppointment(int id);
+    List<Appointment> getAppointmentsWithFilters(Map<String, String> params);
     List<Appointment> getAppointmentsCompleteByDateRange(Date fromDateStr, Date toDateStr) throws ParseException;
     int countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr) throws ParseException;
     int countDistinctPatientsByDoctorAndMonth(int doctorId, int year, int month) throws ParseException;

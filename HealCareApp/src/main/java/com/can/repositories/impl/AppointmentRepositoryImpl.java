@@ -82,6 +82,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                 predicates.add(b.equal(b.function("DATE", Date.class, root.get("appointmentDate")), date));
             }
 
+
             // Lọc theo doctorId
             String doctorId = params.get("doctorId");
             if (doctorId != null && !doctorId.isEmpty()) {
@@ -109,6 +110,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                         b.lower(doctorUserJoin.get("lastName")),
                         searchPattern);
                 predicates.add(b.or(firstNamePredicate, lastNamePredicate));
+
             }
 
             // Lọc theo tên bệnh nhân
@@ -410,6 +412,60 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         Appointment updatedAppointment = (Appointment) s.merge(existingAppointment);
 
         return updatedAppointment;
+    }
+    
+    @Override
+    public List<Appointment> getAppointmentsWithFilters(Map<String, String> params) {
+        Session s = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder b = s.getCriteriaBuilder();
+        CriteriaQuery<Appointment> q = b.createQuery(Appointment.class);
+        Root<Appointment> root = q.from(Appointment.class);
+
+        // Fetch liên quan để tránh lỗi LazyInitializationException
+        root.fetch("doctor").fetch("user");
+        root.fetch("patient").fetch("user");
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (params != null) {
+            // Lọc theo trạng thái
+            String status = params.get("status");
+            if (status != null && !status.isEmpty()) {
+                predicates.add(b.equal(root.get("status"), AppointmentStatus.valueOf(status.toUpperCase())));
+            }
+
+            // Lọc theo ID bác sĩ
+            String doctorId = params.get("doctorId");
+            if (doctorId != null && !doctorId.isEmpty()) {
+                predicates.add(b.equal(root.get("doctor").get("id"), Integer.parseInt(doctorId)));
+            }
+
+            // Lọc theo ID bệnh nhân
+            String patientId = params.get("patientId");
+            if (patientId != null && !patientId.isEmpty()) {
+                predicates.add(b.equal(root.get("patient").get("id"), Integer.parseInt(patientId)));
+            }
+        }
+
+        // Áp dụng các điều kiện lọc
+        if (!predicates.isEmpty()) {
+            q.where(predicates.toArray(Predicate[]::new));
+        }
+
+        // Sắp xếp theo ngày hẹn
+        q.orderBy(b.asc(root.get("appointmentDate")));
+
+        Query query = s.createQuery(q);
+
+        // Phân trang
+        if (params != null) {
+            int page = Integer.parseInt(params.getOrDefault("page", "1"));
+            int start = (page - 1) * PAGE_SIZE;
+            query.setFirstResult(start);
+            query.setMaxResults(PAGE_SIZE);
+        }
+
+        return query.getResultList();
     }
 
     @Override
