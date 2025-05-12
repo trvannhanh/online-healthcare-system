@@ -11,10 +11,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import java.time.LocalDate;
 import java.util.Date;
+
 
 /**
  *

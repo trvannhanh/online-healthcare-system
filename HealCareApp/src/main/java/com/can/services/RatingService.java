@@ -12,9 +12,9 @@ public interface RatingService {
     List<Rating> getAllRatings(Map<String, String> params);
     Rating getRatingById(Integer id);
     List<Rating> getRatingsByDoctorId(Integer doctorId);
-    List<Rating> getRatingsByPatientId(Integer patientId);
     Rating addRating(Rating rating);
     Rating updateRating(Rating rating);
     void deleteRating(Integer ratingId);
     boolean isRatingExist(int ratingId);
+    Map<Integer, Double> getAverageRatingsForDoctors(List<Integer> doctorIds);
 } 

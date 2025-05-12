@@ -98,4 +98,37 @@ public class UserRepositoryImpl implements UserRepository{
 
         return this.passwordEncoder.matches(password, u.getPassword());
     }
+
+    @Override 
+    public boolean isEmailExist(String email) {
+        try {
+            Session session = sessionFactory.getObject().getCurrentSession();
+            Query<User> query = session.createQuery("FROM User WHERE email = :email", User.class);
+            query.setParameter("email", email);
+            User user = query.getSingleResult();
+            return user != null; // Nếu có kết quả trả về thì email đã tồn tại
+        } catch (NoResultException ex) {
+            return false; // Nếu không có kết quả, email chưa tồn tại
+        }
+    }
+
+    @Override
+    public String getEmailByUserId(int userId) {
+        try {
+            Session session = sessionFactory.getObject().getCurrentSession();
+            Query<User> query = session.createQuery("FROM User WHERE id = :id", User.class);
+            query.setParameter("id", userId);
+            User user = query.getSingleResult();
+            return user.getEmail(); // Trả về email của người dùng
+        } catch (NoResultException ex) {
+            return null; // Nếu không tìm thấy người dùng, trả về null
+        }
+    }
+
+    @Override
+    public List<String> getAllEmails() {
+        Session session = sessionFactory.getObject().getCurrentSession();
+        Query<String> query = session.createQuery("SELECT email FROM User", String.class);
+        return query.getResultList(); // Trả về danh sách tất cả email
+    }
 }

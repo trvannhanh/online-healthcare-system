@@ -18,10 +18,13 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.security.Principal;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.Session;
@@ -79,22 +82,35 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                 predicates.add(b.equal(b.function("DATE", Date.class, root.get("appointmentDate")), date));
             }
 
-            //Lọc theo tên bác sĩ
+
+            // Lọc theo doctorId
+            String doctorId = params.get("doctorId");
+            if (doctorId != null && !doctorId.isEmpty()) {
+                predicates.add(b.equal(doctorJoin.get("id"), Long.parseLong(doctorId)));
+            }
+
+            // Lọc theo khoảng thời gian
+            String fromDateStr = params.get("fromDate");
+            String toDateStr = params.get("toDate");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            if (fromDateStr != null && toDateStr != null) {
+                Date fromDate = sdf.parse(fromDateStr);
+                Date toDate = sdf.parse(toDateStr);
+                predicates.add(b.between(root.get("appointmentDate"), fromDate, toDate));
+            }
+
+            // Lọc theo tên bác sĩ
             String doctorName = params.get("doctorName");
             if (doctorName != null && !doctorName.isEmpty()) {
-                String[] nameParts = doctorName.trim().toLowerCase().split("\\s+");
+                String searchPattern = String.format("%%%s%%", doctorName.toLowerCase());
+                Predicate firstNamePredicate = b.like(
+                        b.lower(doctorUserJoin.get("firstName")),
+                        searchPattern);
+                Predicate lastNamePredicate = b.like(
+                        b.lower(doctorUserJoin.get("lastName")),
+                        searchPattern);
+                predicates.add(b.or(firstNamePredicate, lastNamePredicate));
 
-                List<Predicate> namePredicates = new ArrayList<>();
-
-                for (String part : nameParts) {
-                    String pattern = "%" + part + "%";
-                    namePredicates.add(b.or(
-                            b.like(b.lower(doctorUserJoin.get("firstName")), pattern),
-                            b.like(b.lower(doctorUserJoin.get("lastName")), pattern)
-                    ));
-                }
-
-                predicates.add(b.and(namePredicates.toArray(Predicate[]::new)));
             }
 
             // Lọc theo tên bệnh nhân
@@ -103,12 +119,10 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                 String searchPattern = String.format("%%%s%%", patientName.toLowerCase());
                 Predicate firstNamePredicate = b.like(
                         b.lower(patientUserJoin.get("firstName")),
-                        searchPattern
-                );
+                        searchPattern);
                 Predicate lastNamePredicate = b.like(
                         b.lower(patientUserJoin.get("lastName")),
-                        searchPattern
-                );
+                        searchPattern);
                 predicates.add(b.or(firstNamePredicate, lastNamePredicate));
             }
         }
@@ -214,10 +228,12 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
             throw new RuntimeException("Doctor with ID " + appointment.getDoctor().getId() + " not found");
         }
 
-        // Kiểm tra xem bác sĩ có lịch hẹn trùng thời gian không (nếu thay đổi thời gian hoặc bác sĩ)
-        boolean dateChanged = (existingAppointment.getAppointmentDate() == null && appointment.getAppointmentDate() != null)
+        // Kiểm tra xem bác sĩ có lịch hẹn trùng thời gian không (nếu thay đổi thời gian
+        // hoặc bác sĩ)
+        boolean dateChanged = (existingAppointment.getAppointmentDate() == null
+                && appointment.getAppointmentDate() != null)
                 || (existingAppointment.getAppointmentDate() != null && appointment.getAppointmentDate() != null
-                && !existingAppointment.getAppointmentDate().equals(appointment.getAppointmentDate()));
+                        && !existingAppointment.getAppointmentDate().equals(appointment.getAppointmentDate()));
 
         // Kiểm tra thay đổi bác sĩ
         boolean doctorChanged = false;
@@ -242,8 +258,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                     b.equal(root.get("doctor"), doctor),
                     b.equal(root.get("appointmentDate"), appointment.getAppointmentDate()),
                     b.notEqual(root.get("status"), AppointmentStatus.CANCELLED),
-                    b.notEqual(root.get("id"), appointment.getId())
-            );
+                    b.notEqual(root.get("id"), appointment.getId()));
             Long count = s.createQuery(q).getSingleResult();
             if (count > 0) {
                 throw new RuntimeException("Doctor is already booked at this time");
@@ -343,7 +358,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         if (existingAppointment == null) {
             throw new RuntimeException("Appointment with ID " + id + " not found");
         }
-        
 
         // Cập nhật trạng thái thành CANCELLED
         existingAppointment.setStatus(AppointmentStatus.CANCELLED);
@@ -351,7 +365,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
         return updatedAppointment;
     }
-
 
     @Override
     public Appointment rescheduleAppointment(int id, Date newDate) {
@@ -372,8 +385,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                     b.equal(root.get("doctor"), doctor),
                     b.equal(root.get("appointmentDate"), newDate),
                     b.notEqual(root.get("status"), AppointmentStatus.CANCELLED),
-                    b.notEqual(root.get("id"), id)
-            );
+                    b.notEqual(root.get("id"), id));
             Long count = s.createQuery(q).getSingleResult();
             if (count > 0) {
                 throw new RuntimeException("Doctor is already booked at this time");
@@ -385,7 +397,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
         return updatedAppointment;
     }
-    
+
     @Override
     public Appointment confirmAppointment(int id) {
         Session s = this.factory.getObject().getCurrentSession();
@@ -456,4 +468,102 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         return query.getResultList();
     }
 
+    @Override
+    public List<Appointment> getAppointmentsCompleteByDateRange(Date fromDateStr, Date toDateStr)
+            throws ParseException {
+        Session s = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder b = s.getCriteriaBuilder();
+        CriteriaQuery<Appointment> q = b.createQuery(Appointment.class);
+        Root<Appointment> root = q.from(Appointment.class);
+        root.fetch("doctor").fetch("user");
+        root.fetch("patient").fetch("user");
+
+        LocalDateTime fromDate = fromDateStr.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().withHour(0)
+                .withMinute(0).withSecond(0);
+        LocalDateTime toDate = toDateStr.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().withHour(23)
+                .withMinute(59).withSecond(59);
+
+        q.where(
+                b.equal(root.get("status"), AppointmentStatus.COMPLETED),
+                b.between(root.get("appointmentDate"), fromDate, toDate));
+        q.orderBy(b.asc(root.get("appointmentDate")));
+
+        Query query = s.createQuery(q);
+        return query.getResultList();
+    }
+
+    @Override
+    public int countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr)
+            throws ParseException {
+        // Lấy danh sách lịch hẹn hoàn thành trong khoảng thời gian
+        List<Appointment> appointments = getAppointmentsCompleteByDateRange(fromDateStr, toDateStr);
+
+        // Lọc theo bác sĩ và đếm số bệnh nhân duy nhất
+        return (int) appointments.stream()
+                .filter(a -> a.getDoctor().getId() == doctorId)
+                .map(a -> a.getPatient().getId())
+                .distinct()
+                .count();
+    }
+
+    @Override
+    public int countDistinctPatientsByDoctorAndMonth(int doctorId, int year, int month) throws ParseException {
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.plusMonths(1).minusDays(1);
+    
+        // Chuyển đổi LocalDate sang Date
+        Date fromDate = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date toDate = Date.from(endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
+    
+        // Tận dụng phương thức countDistinctPatientsByDoctorAndDateRange
+        return countDistinctPatientsByDoctorAndDateRange(doctorId, fromDate, toDate);
+    }
+
+    @Override
+    public int countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException {
+        LocalDate startDate = LocalDate.of(year, (quarter - 1) * 3 + 1, 1);
+        LocalDate endDate = startDate.plusMonths(3).minusDays(1);
+
+        // Chuyển đổi LocalDate sang Date
+        Date fromDate = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date toDate = Date.from(endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
+
+        // Tận dụng phương thức countDistinctPatientsByDoctorAndDateRange
+        return countDistinctPatientsByDoctorAndDateRange(doctorId, fromDate, toDate);
+    }
+
+    @Override
+    public int countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException {
+        List<Appointment> appointments = this.getAppointmentsCompleteByDateRange(fromDateStr, toDateStr);
+
+        return (int) appointments.stream()
+                .map(Appointment::getPatient)
+                .map(Patient::getId)
+                .distinct()
+                .count();
+    }
+
+    @Override
+    public int countDistinctPatientsByQuarter(int year, int quarter) throws ParseException {
+        LocalDate startDate = LocalDate.of(year, (quarter - 1) * 3 + 1, 1);
+        LocalDate endDate = startDate.plusMonths(3).minusDays(1);
+
+        // Chuyển đổi LocalDate sang Date
+        Date fromDate = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date toDate = Date.from(endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
+
+        return countDistinctPatientsByDateRange(fromDate, toDate);
+    }
+
+    @Override
+    public int countDistinctPatientsByMonth(int year, int month) throws ParseException {
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.plusMonths(1).minusDays(1);
+
+        // Chuyển đổi LocalDate sang Date
+        Date fromDate = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date toDate = Date.from(endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
+
+        return countDistinctPatientsByDateRange(fromDate, toDate);
+    }
 }

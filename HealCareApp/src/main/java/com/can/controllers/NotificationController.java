@@ -1,5 +1,6 @@
 package com.can.controllers;
 
+import com.can.pojo.Appointment;
 import com.can.pojo.Notifications;
 import com.can.services.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +19,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/notifications")
-public class ApiNotificationController {
+public class NotificationController {
 
     @Autowired
     private NotificationService notificationService;
@@ -128,4 +130,25 @@ public class ApiNotificationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    //Thông báo xác nhận lịch hẹn
+    @PostMapping("/appointment/notify")
+    public ResponseEntity<Notifications> createAppointmentNotification(@RequestBody Appointment appointment) {
+        try {
+            String message = String.format(
+            "Xác nhận lịch hẹn với bác sĩ %s vào lúc %s.",
+            appointment.getDoctor().getUser().getFullName(),
+            new SimpleDateFormat("HH:mm dd/MM/yyyy").format(appointment.getAppointmentDate())
+        );
+            Notifications notification = new Notifications();
+            notification.setMessage(message);
+            notification.setUser(appointment.getPatient().getUser());
+            notification.setSentAt(new Date());
+            Notifications newNotification = notificationService.addNotification(notification);
+            return new ResponseEntity<>(newNotification, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

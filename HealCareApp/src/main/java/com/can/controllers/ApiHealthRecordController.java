@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  *
@@ -51,13 +52,21 @@ public class ApiHealthRecordController {
     // Xóa một hồ sơ sức khỏe theo id
     @DeleteMapping("/{recordId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void destroy(@PathVariable(value = "recordId") int id) {
-        this.healthRecordService.deleteHealthRecord(id);
+    public void deleteHealthRecord(@PathVariable(value = "recordId") Integer id) {
+        try {
+            healthRecordService.deleteHealthRecord(id);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ID");
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Health record not found");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+        }
     }
 
     /// Cập nhật một hồ sơ sức khỏe theo id
-    @PutMapping("{recordId}/update")
-    public ResponseEntity<HealthRecord> updateHealthRecord(@PathVariable Long id,
+    @PutMapping("{recordId}")
+    public ResponseEntity<HealthRecord> updateHealthRecord(@PathVariable("recordId") Integer id,
             @RequestBody HealthRecord healthRecord) {
         try {
             healthRecord.setId(id.intValue());
@@ -74,25 +83,14 @@ public class ApiHealthRecordController {
 
     // Lấy hồ sơ sức khỏe theo ID
     @GetMapping("/{recordId}")
-    public ResponseEntity<HealthRecord> getHealthRecordById(@PathVariable int id) {
+    public ResponseEntity<HealthRecord> getHealthRecordById(@PathVariable("recordId") Integer id) {
         HealthRecord healthRecord = healthRecordService.getHealthRecordById(id);
         return healthRecord != null ? ResponseEntity.ok(healthRecord) : ResponseEntity.notFound().build();
     }
 
-    // Lấy tất cả hồ sơ sức khỏe
-    @GetMapping
-    public ResponseEntity<List<HealthRecord>> getHealthRecords(@RequestParam Map<String, String> params) {
-        try {
-            List<HealthRecord> healthRecords = healthRecordService.getHealthRecords(params);
-            return ResponseEntity.ok(healthRecords);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
     // Lấy hồ sơ sức khỏe theo bệnh nhân (với phân trang)
     @GetMapping("patient/{patientId}")
-    public ResponseEntity<List<HealthRecord>> getHealthRecordsByPatient(@PathVariable int patientId, @RequestParam(defaultValue = "0") int page) {
+    public ResponseEntity<List<HealthRecord>> getHealthRecordsByPatient(@PathVariable("patientId") Integer patientId, @RequestParam(defaultValue = "0") int page) {
         try {
             List<HealthRecord> healthRecords = healthRecordService.getHealthRecordsByPatient(patientId, page);
             return ResponseEntity.ok(healthRecords);
