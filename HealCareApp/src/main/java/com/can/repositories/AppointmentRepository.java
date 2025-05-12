@@ -31,4 +31,5 @@ public interface AppointmentRepository {
     Appointment cancelAppointment(int id);
     Appointment rescheduleAppointment(int id, Date newDate);
     Appointment confirmAppointment(int id);
+    List<Appointment> getAppointmentsWithFilters(Map<String, String> params);
 }

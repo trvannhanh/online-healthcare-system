@@ -28,4 +28,5 @@ public interface AppointmentService {
     Appointment cancelAppointment(int id, String username);
     Appointment rescheduleAppointment(int id, Date newDate, String username);
     Appointment confirmAppointment(int id, String username);
+    List<Appointment> getAppointmentsWithFilters(Map<String, String> params);
 }

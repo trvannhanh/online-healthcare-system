@@ -43,6 +43,19 @@ public class ApiAppointmentController {
 
     @Autowired
     private AppointmentService appService;
+    
+    
+    @GetMapping("/appointments/filter")
+    @CrossOrigin
+    public ResponseEntity<List<Appointment>> getAppointmentsWithFilters(
+            @RequestParam Map<String, String> params) {
+        try {
+            List<Appointment> appointments = appService.getAppointmentsWithFilters(params);
+            return new ResponseEntity<>(appointments, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @PostMapping("/appointments")
     public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {

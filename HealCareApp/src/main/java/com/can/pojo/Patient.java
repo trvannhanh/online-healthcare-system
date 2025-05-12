@@ -33,7 +33,7 @@ public class Patient {
 
     @Column(name = "date_of_birth")
     @Temporal(TemporalType.DATE)
-    private LocalDate dateOfBirth;
+    private Date dateOfBirth;
 
     @Column(name = "insurance_number", length = 20)
     private String insuranceNumber;
@@ -71,14 +71,14 @@ public class Patient {
     /**
      * @return the dateOfBirth
      */
-    public LocalDate getDateOfBirth() {
+    public Date getDateOfBirth() {
         return dateOfBirth;
     }
 
     /**
      * @param dateOfBirth the dateOfBirth to set
      */
-    public void setDateOfBirth(LocalDate dateOfBirth) {
+    public void setDateOfBirth(Date dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
