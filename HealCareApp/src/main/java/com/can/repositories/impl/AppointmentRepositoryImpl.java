@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -191,9 +192,9 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         q.select(b.count(root));
         q.where(
                 b.equal(root.get("doctor"), doctor),
-                b.equal(root.get("appointmentDate"), new java.sql.Timestamp(appointment.getAppointmentDate().getTime())),
-                b.notEqual(root.get("status"), AppointmentStatus.CANCELLED)
-        );
+                b.equal(root.get("appointmentDate"),
+                        new java.sql.Timestamp(appointment.getAppointmentDate().getTime())),
+                b.notEqual(root.get("status"), AppointmentStatus.CANCELLED));
         Long count = s.createQuery(q).getSingleResult();
         if (count > 0) {
             throw new RuntimeException("Doctor is already booked at this time");
@@ -422,14 +423,9 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         root.fetch("doctor").fetch("user");
         root.fetch("patient").fetch("user");
 
-        LocalDateTime fromDate = fromDateStr.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().withHour(0)
-                .withMinute(0).withSecond(0);
-        LocalDateTime toDate = toDateStr.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().withHour(23)
-                .withMinute(59).withSecond(59);
-
         q.where(
                 b.equal(root.get("status"), AppointmentStatus.COMPLETED),
-                b.between(root.get("appointmentDate"), fromDate, toDate));
+                b.between(root.get("appointmentDate"), fromDateStr, toDateStr));
         q.orderBy(b.asc(root.get("appointmentDate")));
 
         Query query = s.createQuery(q);
@@ -437,9 +433,8 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
     }
 
     @Override
-    public int countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr)
+    public Integer countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr)
             throws ParseException {
-        // Lấy danh sách lịch hẹn hoàn thành trong khoảng thời gian
         List<Appointment> appointments = getAppointmentsCompleteByDateRange(fromDateStr, toDateStr);
 
         // Lọc theo bác sĩ và đếm số bệnh nhân duy nhất
@@ -451,33 +446,38 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
     }
 
     @Override
-    public int countDistinctPatientsByDoctorAndMonth(int doctorId, int year, int month) throws ParseException {
-        LocalDate startDate = LocalDate.of(year, month, 1);
-        LocalDate endDate = startDate.plusMonths(1).minusDays(1);
-    
-        // Chuyển đổi LocalDate sang Date
-        Date fromDate = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        Date toDate = Date.from(endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
-    
+    public Integer countDistinctPatientsByDoctorAndMonth(int doctorId, int year, int month) throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date fromDate = sdf.parse(year + "-" + month + "-01");
+
+        // Tính ngày cuối cùng của tháng
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(fromDate);
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+        Date toDate = calendar.getTime();
         // Tận dụng phương thức countDistinctPatientsByDoctorAndDateRange
         return countDistinctPatientsByDoctorAndDateRange(doctorId, fromDate, toDate);
     }
 
     @Override
-    public int countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException {
-        LocalDate startDate = LocalDate.of(year, (quarter - 1) * 3 + 1, 1);
-        LocalDate endDate = startDate.plusMonths(3).minusDays(1);
+    public Integer countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException {
+        int startMonth = (quarter - 1) * 3 + 1; // Tháng bắt đầu của quý
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    Date fromDate = sdf.parse(year + "-" + startMonth + "-01");
 
-        // Chuyển đổi LocalDate sang Date
-        Date fromDate = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        Date toDate = Date.from(endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
+    // Tính ngày cuối cùng của quý
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(fromDate);
+    calendar.add(Calendar.MONTH, 2); // Thêm 2 tháng để đến tháng cuối của quý
+    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+    Date toDate = calendar.getTime();
 
         // Tận dụng phương thức countDistinctPatientsByDoctorAndDateRange
         return countDistinctPatientsByDoctorAndDateRange(doctorId, fromDate, toDate);
     }
 
     @Override
-    public int countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException {
+    public Integer countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException {
         List<Appointment> appointments = this.getAppointmentsCompleteByDateRange(fromDateStr, toDateStr);
 
         return (int) appointments.stream()
@@ -488,7 +488,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
     }
 
     @Override
-    public int countDistinctPatientsByQuarter(int year, int quarter) throws ParseException {
+    public Integer countDistinctPatientsByQuarter(int year, int quarter) throws ParseException {
         LocalDate startDate = LocalDate.of(year, (quarter - 1) * 3 + 1, 1);
         LocalDate endDate = startDate.plusMonths(3).minusDays(1);
 
@@ -500,7 +500,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
     }
 
     @Override
-    public int countDistinctPatientsByMonth(int year, int month) throws ParseException {
+    public Integer countDistinctPatientsByMonth(int year, int month) throws ParseException {
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.plusMonths(1).minusDays(1);
 
