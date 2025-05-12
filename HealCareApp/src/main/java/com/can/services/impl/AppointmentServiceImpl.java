@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -203,19 +204,23 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         // Kiểm tra thời gian tạo lịch hẹn
-        LocalDateTime createdAt = existingAppointment.getCreatedAt();
-        LocalDateTime now = LocalDateTime.now();
-        long hoursSinceCreation = ChronoUnit.HOURS.between(createdAt, now);
+        Date createdAt = existingAppointment.getCreatedAt();
+        Date now = new Date();
+        Calendar calCreated = Calendar.getInstance();
+        Calendar calNow = Calendar.getInstance();
+        calCreated.setTime(createdAt);
+        calNow.setTime(now);
+        long hoursSinceCreation = (calNow.getTimeInMillis() - calCreated.getTimeInMillis()) / (1000 * 60 * 60);
 
         if (hoursSinceCreation > 24) {
-            throw new IllegalStateException("Không thể hủy lịch hẹn sau 24 giờ kể từ khi tạo");
+            throw new IllegalStateException("Không thể đổi lịch hẹn sau 24 giờ kể từ khi tạo");
         }
 
         return this.appRepo.cancelAppointment(id);
     }
 
     @Override
-    public Appointment rescheduleAppointment(int id, String newDateStr, String username) {
+    public Appointment rescheduleAppointment(int id, Date newDate, String username) {
         // Tìm lịch hẹn
         Appointment existingAppointment = appRepo.getAppointmentById(id);
         if (existingAppointment == null) {
@@ -248,19 +253,20 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         // Kiểm tra thời gian tạo lịch hẹn
-        LocalDateTime createdAt = existingAppointment.getCreatedAt();
-        LocalDateTime now = LocalDateTime.now();
-        long hoursSinceCreation = ChronoUnit.HOURS.between(createdAt, now);
+        Date createdAt = existingAppointment.getCreatedAt();
+        Date now = new Date();
+        Calendar calCreated = Calendar.getInstance();
+        Calendar calNow = Calendar.getInstance();
+        calCreated.setTime(createdAt);
+        calNow.setTime(now);
+        long hoursSinceCreation = (calNow.getTimeInMillis() - calCreated.getTimeInMillis()) / (1000 * 60 * 60);
 
         if (hoursSinceCreation > 24) {
             throw new IllegalStateException("Không thể đổi lịch hẹn sau 24 giờ kể từ khi tạo");
         }
 
-        // Parse ngày mới
-        LocalDateTime newDateTime;
-        newDateTime = LocalDateTime.parse(newDateStr);
-
-        return this.appRepo.rescheduleAppointment(id, newDateTime);
+        // Gọi repository để reschedule
+        return this.appRepo.rescheduleAppointment(id, newDate);
     }
 
     @Override

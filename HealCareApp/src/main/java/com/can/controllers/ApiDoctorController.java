@@ -65,4 +65,18 @@ public class ApiDoctorController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    
+    // API mới: Lấy thông tin chi tiết bác sĩ
+    @GetMapping("/doctors/{id}")
+    public ResponseEntity<Doctor> getDoctorById(@PathVariable("id") int id) {
+        try {
+            Doctor doctor = doctorService.getDoctorById(id);
+            if (doctor == null) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<>(doctor, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
