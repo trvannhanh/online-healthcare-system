@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>Thống Kê</title>
+    <th:block th:replace="base :: styles"></th:block>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div th:replace="base :: header"></div>
+
+    <main>
+      <div class="d-flex bg-secondary">
+        <div th:replace="base :: sidebar" class="p-2"></div>
+        <div class="p-2 bg-light flex-grow-1">
+          <h1 class="text-center text-info mt-1">Thống Kê</h1>
+
+          <!-- Form thống kê theo quý -->
+          <form
+            th:action="@{/statistics/patients-count-by-quarter}"
+            method="get"
+          >
+            <h2 class="text-center">Thống Kê Số Lượng Bệnh Nhân Theo Quý</h2>
+            <div class="mb-3">
+              <label for="year-quarter" class="form-label">Năm</label>
+              <input
+                type="number"
+                class="form-control"
+                id="year-quarter"
+                name="year"
+                placeholder="Nhập năm (VD: 2025)"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="quarter" class="form-label">Quý</label>
+              <select class="form-select" id="quarter" name="quarter" required>
+                <option value="1">Quý 1 (Tháng 1 - Tháng 3)</option>
+                <option value="2">Quý 2 (Tháng 4 - Tháng 6)</option>
+                <option value="3">Quý 3 (Tháng 7 - Tháng 9)</option>
+                <option value="4">Quý 4 (Tháng 10 - Tháng 12)</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Thống Kê</button>
+
+            <div class="mt-4">
+              <h2>Kết Quả</h2>
+              <p><strong>Năm:</strong> <span th:text="${year}"></span></p>
+              <p><strong>Quý: </strong> <span th:text="${quarter}"></span></p>
+              <p>
+                <strong>Số Lượng Bệnh Nhân:</strong>
+                <span th:text="${count}"></span>
+              </p>
+            </div>
+          </form>
+
+          <hr />
+
+          <!-- Form thống kê theo tháng -->
+          <form th:action="@{/statistics/patients-count-by-month}" method="get">
+            <h2 class="text-center">Thống Kê Số Lượng Bệnh Nhân Theo Tháng</h2>
+            <div class="mb-3">
+              <label for="year-month" class="form-label">Năm</label>
+              <input
+                type="number"
+                class="form-control"
+                id="year-month"
+                name="year"
+                placeholder="Nhập năm (VD: 2025)"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="month" class="form-label">Tháng</label>
+              <select class="form-select" id="month" name="month" required>
+                <option value="1">Tháng 1</option>
+                <option value="2">Tháng 2</option>
+                <option value="3">Tháng 3</option>
+                <option value="4">Tháng 4</option>
+                <option value="5">Tháng 5</option>
+                <option value="6">Tháng 6</option>
+                <option value="7">Tháng 7</option>
+                <option value="8">Tháng 8</option>
+                <option value="9">Tháng 9</option>
+                <option value="10">Tháng 10</option>
+                <option value="11">Tháng 11</option>
+                <option value="12">Tháng 12</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Thống Kê</button>
+
+            <div class="mt-4">
+              <h2>Kết Quả</h2>
+              <p><strong>Năm:</strong> <span th:text="${year}"></span></p>
+              <p><strong>Tháng:</strong> <span th:text="${month}"></span></p>
+              <p>
+                <strong>Số Lượng Bệnh Nhân:</strong>
+                <span th:text="${count}"></span>
+              </p>
+            </div>
+          </form>
+
+          <hr />
+
+          <form th:action="@{/statistics/monthly-data-ajax}" method="get">
+            <h2>Biểu Đồ Thống Kê Theo Năm</h2>
+            <div class="mt-4">
+              <canvas id="statisticsChart" width="400" height="200"></canvas>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <div th:replace="base :: footer"></div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const apiUrlBase = "/HealCareApp/statistics/monthly-data-ajax";
+        const chartCanvas = document.getElementById("statisticsChart");
+        let statisticsChart;
+
+        // Hàm cập nhật biểu đồ
+        function updateChart(year) {
+          const apiUrl = `${apiUrlBase}?year=${year}`;
+
+          fetch(apiUrl)
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("Failed to fetch data");
+              }
+              return response.json();
+            })
+            .then((monthlyData) => {
+              const labels = [
+                "Tháng 1",
+                "Tháng 2",
+                "Tháng 3",
+                "Tháng 4",
+                "Tháng 5",
+                "Tháng 6",
+                "Tháng 7",
+                "Tháng 8",
+                "Tháng 9",
+                "Tháng 10",
+                "Tháng 11",
+                "Tháng 12",
+              ];
+
+              const data = {
+                labels: labels,
+                datasets: [
+                  {
+                    label: "Số Lượng Bệnh Nhân",
+                    data: monthlyData,
+                    backgroundColor: "rgba(54, 162, 235, 0.2)",
+                    borderColor: "rgba(54, 162, 235, 1)",
+                    borderWidth: 1,
+                  },
+                ],
+              };
+
+              if (statisticsChart) {
+                statisticsChart.data = data;
+                statisticsChart.update();
+              } else {
+                const config = {
+                  type: "bar",
+                  data: data,
+                  options: {
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                      },
+                    },
+                  },
+                };
+                statisticsChart = new Chart(chartCanvas, config);
+              }
+            })
+            .catch((error) => {
+              console.error("Error loading chart data:", error);
+            });
+        }
+
+        // Lấy năm hiện tại
+        const currentYear = new Date().getFullYear();
+
+        // Tự động tải biểu đồ cho năm hiện tại
+        updateChart(currentYear);
+      });
+    </script>
+  </body>
+</html>

@@ -88,15 +88,26 @@ public class ApiHealthRecordController {
         return healthRecord != null ? ResponseEntity.ok(healthRecord) : ResponseEntity.notFound().build();
     }
 
-    // Lấy hồ sơ sức khỏe theo bệnh nhân (với phân trang)
+    // Lấy hồ sơ sức khỏe theo bệnh nhân
     @GetMapping("patient/{patientId}")
-    public ResponseEntity<List<HealthRecord>> getHealthRecordsByPatient(@PathVariable("patientId") Integer patientId, @RequestParam(defaultValue = "0") int page) {
+    public ResponseEntity<List<HealthRecord>> getHealthRecordsByPatient(@PathVariable("patientId") Integer patientId) {
         try {
-            List<HealthRecord> healthRecords = healthRecordService.getHealthRecordsByPatient(patientId, page);
-            return ResponseEntity.ok(healthRecords);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+        if (patientId == null || patientId <= 0) {
+            return ResponseEntity.badRequest().body(null);
         }
+
+        System.out.println("Fetching health records for patientId: " + patientId);
+        List<HealthRecord> healthRecords = healthRecordService.getHealthRecordsByPatient(patientId);
+
+        if (healthRecords == null || healthRecords.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(healthRecords);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
     }
 
 }

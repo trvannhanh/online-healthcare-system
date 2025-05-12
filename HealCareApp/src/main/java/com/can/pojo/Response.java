@@ -24,10 +24,10 @@ import java.util.Date;
 @Table(name = "response")
 public class Response {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @OneToOne
-    @MapsId
     @JoinColumn(name = "rating_id", nullable = false)
     private Rating rating;
 

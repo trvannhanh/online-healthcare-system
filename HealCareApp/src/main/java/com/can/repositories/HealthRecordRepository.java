@@ -25,5 +25,5 @@ public interface HealthRecordRepository {
 
     void deleteHealthRecord(int id);
 
-    List<HealthRecord> getHealthRecordsByPatient(int patientId, int page);
+    List<HealthRecord> getHealthRecordsByPatient(int patientId);
 }

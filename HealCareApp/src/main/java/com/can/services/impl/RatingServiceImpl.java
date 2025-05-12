@@ -51,26 +51,7 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     public Rating addRating(Rating rating) {
-        // Implementation code here
-        if (rating.getRating() < 1 || rating.getRating() > 5) {
-            throw new IllegalArgumentException("Rating phải từ 1 đến 5.");
-        }
-
-        // Kiểm tra doctor có tồn tại không
-        Doctor doctor = doctorRepo.getDoctorById(rating.getDoctor().getId());
-        if (doctor == null) {
-            throw new IllegalArgumentException("Bác sĩ không tồn tại.");
-        }
-
-        // Kiểm tra patient có tồn tại không
-        Patient patient = patientRepo.getPatientById(rating.getPatient().getId());
-        if (patient == null) {
-            throw new IllegalArgumentException("Bệnh nhân không tồn tại.");
-        }
-
-        rating.setDoctor(doctor);
-        rating.setPatient(patient);
-        return ratingRepository.addRating(rating);
+        return this.ratingRepository.addRating(rating);
     }
 
     @Override
@@ -92,15 +73,8 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
-    public Map<Integer, Double> getAverageRatingsForDoctors(List<Integer> doctorIds) {
-        Map<Integer, Double> averageRatings = new HashMap<>();
-        for (Integer doctorId : doctorIds) {
-            List<Rating> ratings = ratingRepository.getRatingsByDoctorId(doctorId);
-            double average = ratings.isEmpty() ? 0.0
-                    : ratings.stream().mapToDouble(Rating::getRating).average().orElse(0.0);
-            averageRatings.put(doctorId, average);
-        }
-        return averageRatings;
+    public Double getAverageRatingForDoctor(Integer doctorId) {
+        return this.ratingRepository.getAverageRatingForDoctor(doctorId);
     }
 
 }

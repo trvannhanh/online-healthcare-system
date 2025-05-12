@@ -49,8 +49,12 @@ public class ApiRatingController {
         try {
             Rating newRating = ratingService.addRating(rating);
             return new ResponseEntity<>(newRating, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -76,8 +80,7 @@ public class ApiRatingController {
             if (!ratingService.isRatingExist(id)) {
                 return ResponseEntity.notFound().build();
             }
-            
-            //Lấy và xóa phản hồi liên quan đến đánh giá
+            // Lấy và xóa phản hồi liên quan đến đánh giá
             Response response = responseService.getResponsesByRating(id);
             if (response != null) {
                 responseService.deleteResponse(response.getId());
@@ -85,18 +88,22 @@ public class ApiRatingController {
             ratingService.deleteRating(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     // Tính trung bình đánh giá cho nhiều bác sĩ
-    @GetMapping("/average")
-    public ResponseEntity<Map<Integer, Double>> getAverageRatingsForDoctors(@RequestParam(required = false) List<Integer> doctorIds) {
+    @GetMapping("/average/{doctorId}")
+    public ResponseEntity<Double> getAverageRatingForDoctor(@PathVariable("doctorId") Integer doctorId) {
         try {
-            Map<Integer, Double> averageRatings = ratingService.getAverageRatingsForDoctors(doctorIds);
-            return ResponseEntity.ok(averageRatings);
+            // Tính trung bình đánh giá cho bác sĩ
+            Double averageRating = ratingService.getAverageRatingForDoctor(doctorId);
+            return ResponseEntity.ok(averageRating);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            System.err.println("Error calculating average rating for doctor ID " + doctorId + ": " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

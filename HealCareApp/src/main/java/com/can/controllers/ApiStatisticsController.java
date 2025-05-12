@@ -13,6 +13,7 @@ import com.can.pojo.AppointmentStatus;
 import com.can.services.AppointmentService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -30,20 +31,18 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
-import com.can.services.AppointmentService;
-
 @RestController
 @RequestMapping("/api/statistics")
 public class ApiStatisticsController {
     @Autowired
     private AppointmentService appointmentService;
 
-    //Thống kê số lượng bệnh nhân theo bác sĩ và khoảng thời gian
+    // Thống kê số lượng bệnh nhân theo bác sĩ và khoảng thời gian
     @GetMapping("/doctor/patients-count")
     public ResponseEntity<?> countPatientsByDoctor(
-            @RequestParam Integer doctorId,
-            @RequestParam Date fromDate,
-            @RequestParam Date toDate) {
+            @RequestParam(name = "doctorId") Integer doctorId,
+            @RequestParam(name = "fromDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
+            @RequestParam(name = "toDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate) {
         try {
             int count = appointmentService.countDistinctPatientsByDoctorAndDateRange(doctorId, fromDate, toDate);
             return ResponseEntity.ok(count);
@@ -52,13 +51,16 @@ public class ApiStatisticsController {
         }
     }
 
-    //Thống kê số lượng bệnh nhân theo bác sĩ và tháng
+    // Thống kê số lượng bệnh nhân theo bác sĩ và tháng
     @GetMapping("/doctor/patients-count-by-month")
     public ResponseEntity<?> countPatientsByDoctorAndMonth(
-            @RequestParam Integer doctorId,
-            @RequestParam Integer year,
-            @RequestParam Integer month) {
+            @RequestParam(name = "doctorId") Integer doctorId,
+            @RequestParam(name = "year") Integer year,
+            @RequestParam(name = "month") Integer month) {
         try {
+            if (month < 1 || month > 12) {
+                return ResponseEntity.badRequest().body("Error: Month must be between 1 and 12.");
+            }
             int count = appointmentService.countDistinctPatientsByDoctorAndMonth(doctorId, year, month);
             return ResponseEntity.ok(count);
         } catch (Exception e) {
@@ -66,13 +68,16 @@ public class ApiStatisticsController {
         }
     }
 
-    //Thống kê số lượng bệnh nhân theo bác sĩ và quý
+    // Thống kê số lượng bệnh nhân theo bác sĩ và quý
     @GetMapping("/doctor/patients-count-by-quarter")
     public ResponseEntity<?> countPatientsByDoctorAndQuarter(
-            @RequestParam Integer doctorId,
-            @RequestParam Integer year,
-            @RequestParam Integer quarter) {
+            @RequestParam(name = "doctorId") Integer doctorId,
+            @RequestParam(name = "year") Integer year,
+            @RequestParam(name = "quarter") Integer quarter) {
         try {
+            if(quarter < 1 || quarter > 4) {
+                return ResponseEntity.badRequest().body("Error: Quarter must be between 1 and 4.");
+            }
             int count = appointmentService.countDistinctPatientsByDoctorAndQuarter(doctorId, year, quarter);
             return ResponseEntity.ok(count);
         } catch (Exception e) {

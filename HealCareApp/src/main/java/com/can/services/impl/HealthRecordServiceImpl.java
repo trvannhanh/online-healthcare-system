@@ -1,4 +1,5 @@
 package com.can.services.impl;
+
 import com.can.pojo.HealthRecord;
 import com.can.repositories.HealthRecordRepository;
 import com.can.services.HealthRecordService;
@@ -47,8 +48,16 @@ public class HealthRecordServiceImpl implements HealthRecordService {
     }
 
     @Override
-    public List<HealthRecord> getHealthRecordsByPatient(int patientId, int page) {
-        return this.healthRecordRepository.getHealthRecordsByPatient(patientId, page);
+    public List<HealthRecord> getHealthRecordsByPatient(int patientId) {
+        if (patientId <= 0) {
+            throw new IllegalArgumentException("Invalid patient ID");
+        }
+
+        List<HealthRecord> records = healthRecordRepository.getHealthRecordsByPatient(patientId);
+        if (records == null) {
+            throw new RuntimeException("No health records found for patient ID: " + patientId);
+        }
+
+        return records;
     }
 }
-    

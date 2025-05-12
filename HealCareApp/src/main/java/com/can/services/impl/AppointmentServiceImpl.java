@@ -318,34 +318,39 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public int countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr)
+    public Integer countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr)
             throws ParseException {
         return this.appRepo.countDistinctPatientsByDoctorAndDateRange(doctorId, fromDateStr, toDateStr);
     }
 
     @Override
-    public int countDistinctPatientsByDoctorAndMonth(int doctorId, int year, int month) throws ParseException {
+    public Integer countDistinctPatientsByDoctorAndMonth(int doctorId, int year, int month) throws ParseException {
         return this.appRepo.countDistinctPatientsByDoctorAndMonth(doctorId, year, month);
     }
 
     @Override
-    public int countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException {
+    public Integer countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException {
 
         return this.appRepo.countDistinctPatientsByDoctorAndQuarter(doctorId, year, quarter);
     }
 
     @Override
-    public int countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException {
+    public Integer countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException {
         return this.appRepo.countDistinctPatientsByDateRange(fromDateStr, toDateStr);
     }
 
     @Override
-    public int countDistinctPatientsByQuarter(int year, int quarter) throws ParseException {
+    public Integer countDistinctPatientsByQuarter(int year, int quarter) throws ParseException {
         return this.appRepo.countDistinctPatientsByQuarter(year, quarter);
     }
 
     @Override
-    public int countDistinctPatientsByMonth(int year, int month) throws ParseException {
+    public Integer countDistinctPatientsByMonth(int year, int month) throws ParseException {
         return this.appRepo.countDistinctPatientsByMonth(year, month);
+    }
+
+    @Override
+    public List<Integer> getMonthlyStatistics(int year) throws ParseException {
+        return this.appRepo.getMonthlyStatistics(year);
     }
 }

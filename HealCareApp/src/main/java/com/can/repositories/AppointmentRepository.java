@@ -33,10 +33,11 @@ public interface AppointmentRepository {
     Appointment confirmAppointment(int id);
     List<Appointment> getAppointmentsWithFilters(Map<String, String> params);
     List<Appointment> getAppointmentsCompleteByDateRange(Date fromDateStr, Date toDateStr) throws ParseException;
-    int countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr) throws ParseException;
-    int countDistinctPatientsByDoctorAndMonth(int doctorId, int year, int month) throws ParseException;
-    int countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException;
-    int countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException;
-    int countDistinctPatientsByQuarter(int year, int quarter) throws ParseException;
-    int countDistinctPatientsByMonth(int year, int month) throws ParseException;
+    Integer countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr) throws ParseException;
+    Integer countDistinctPatientsByDoctorAndMonth(int doctorId, int year, int month) throws ParseException;
+    Integer countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException;
+    Integer countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException;
+    Integer countDistinctPatientsByQuarter(int year, int quarter) throws ParseException;
+    Integer countDistinctPatientsByMonth(int year, int month) throws ParseException;
+    List<Integer> getMonthlyStatistics(int year) throws ParseException;
 }

@@ -16,21 +16,21 @@ import java.util.Map;
  * @author DELL
  */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/messages")
 public class MessageController {
 
     @Autowired
     private MessageService messageService;
 
     // Lấy tin nhắn theo id
-    @GetMapping("/messages/{messageId}")
+    @GetMapping("/{messageId}")
     public ResponseEntity<Messages> getMessageById(@PathVariable Integer messageId) {
         Messages message = messageService.getMessageById(messageId);
         return message != null ? ResponseEntity.ok(message) : ResponseEntity.notFound().build();
     }
 
     // Lấy danh sách tin nhắn theo người gửi
-    @GetMapping("/messages/sender/{senderId}")
+    @GetMapping("/sender/{senderId}")
     public ResponseEntity<List<Messages>> getMessagesBySender(@PathVariable Integer senderId) {
         try {
             User sender = new User(); // Bạn cần lấy thông tin người gửi từ database.
@@ -43,7 +43,7 @@ public class MessageController {
     }
 
     // Lấy danh sách tin nhắn theo người nhận
-    @GetMapping("/messages/receiver/{receiverId}")
+    @GetMapping("/receiver/{receiverId}")
     public ResponseEntity<List<Messages>> getMessagesByReceiver(@PathVariable Integer receiverId) {
         try {
             User receiver = new User(); // Bạn cần lấy thông tin người nhận từ database.
@@ -56,7 +56,7 @@ public class MessageController {
     }
 
     // Lấy tin nhắn theo tham số động (chỉ cần dùng Map)
-    @GetMapping("/messages")
+    @GetMapping
     public ResponseEntity<List<Messages>> getMessagesByCriteria(@RequestParam Map<String, String> params) {
         try {
             List<Messages> messages = messageService.getMessages(params);
@@ -67,7 +67,7 @@ public class MessageController {
     }
 
     // Lấy tin nhắn theo timestamp (ngày tháng cụ thể)
-    @GetMapping("/messages/timestamp")
+    @GetMapping("/timestamp")
     public ResponseEntity<List<Messages>> getMessagesByTimestamp(@RequestParam Date timestamp) {
         try {
             List<Messages> messages = messageService.getMessagesByTimestamp(timestamp);
