@@ -18,5 +18,5 @@ public interface RatingRepository {
     Rating updateRating(Rating rating);
     void deleteRating(Integer ratingId);
     boolean isRatingExist(int ratingId);
-    Map<Integer, Double> getAverageRatingsForDoctors(List<Integer> doctorIds);
+    Double getAverageRatingForDoctor(Integer doctorId);
 } 

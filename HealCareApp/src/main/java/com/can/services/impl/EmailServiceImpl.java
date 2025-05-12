@@ -83,9 +83,7 @@ public class EmailServiceImpl implements EmailService {
         }
         // Tính số ngày còn lại
         Date now = new Date();
-        LocalDateTime localDateTime = appointment.getAppointmentDate();
-        ZoneId zoneId = ZoneId.systemDefault();
-        Date appointmentDate = Date.from(localDateTime.atZone(zoneId).toInstant());
+        Date appointmentDate = appointment.getAppointmentDate();
         long diffInMillis = appointmentDate.getTime() - now.getTime();
         long diffInDays = diffInMillis / (1000 * 60 * 60 * 24);
 

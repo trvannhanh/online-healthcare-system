@@ -167,23 +167,24 @@ public class RatingRepositoryImpl implements RatingRepository {
     }
 
     @Override
-    public Map<Integer, Double> getAverageRatingsForDoctors(List<Integer> doctorIds) {
+    public Double getAverageRatingForDoctor(Integer doctorId) {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
-        Map<Integer, Double> averageRatings = new java.util.HashMap<>();
-        for (Integer doctorId : doctorIds) {
-            // Tạo truy vấn để tính trung bình đánh giá cho từng bác sĩ
-            CriteriaQuery<Double> q = builder.createQuery(Double.class);
-            Root<Rating> root = q.from(Rating.class);
+        CriteriaQuery<Double> query = builder.createQuery(Double.class);
+        Root<Rating> root = query.from(Rating.class);
 
-            q.select(builder.avg(root.get("score"))); // Tính trung bình cột "score"
-            q.where(builder.equal(root.get("doctor").get("id"), doctorId));
+        // Tính trung bình cột "score" cho bác sĩ có ID được truyền vào
+        query.select(builder.avg(root.get("rating")));
+        query.where(builder.equal(root.get("doctor").get("id"), doctorId));
 
-            Double average = session.createQuery(q).getSingleResult();
-            averageRatings.put(doctorId, average != null ? average : 0.0);
+        try {
+            Double average = session.createQuery(query).getSingleResult();
+            return average != null ? average : 0.0; // Trả về 0.0 nếu không có đánh giá
+        } catch (Exception e) {
+            System.err.println("Error calculating average rating for doctor ID " + doctorId + ": " + e.getMessage());
+            e.printStackTrace();
+            return 0.0; // Trả về 0.0 nếu có lỗi
         }
-
-        return averageRatings;
     }
 
 }

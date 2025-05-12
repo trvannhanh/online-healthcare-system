@@ -73,8 +73,8 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
-    public Map<Integer, Double> getAverageRatingsForDoctors(List<Integer> doctorIds) {
-        return this.ratingRepository.getAverageRatingsForDoctors(doctorIds);
+    public Double getAverageRatingForDoctor(Integer doctorId) {
+        return this.ratingRepository.getAverageRatingForDoctor(doctorId);
     }
 
 }
