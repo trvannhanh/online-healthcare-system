@@ -38,4 +38,5 @@ public interface AppointmentRepository {
     Integer countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException;
     Integer countDistinctPatientsByQuarter(int year, int quarter) throws ParseException;
     Integer countDistinctPatientsByMonth(int year, int month) throws ParseException;
+    List<Integer> getMonthlyStatistics(int year) throws ParseException;
 }

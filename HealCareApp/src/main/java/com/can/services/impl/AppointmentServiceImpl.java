@@ -343,4 +343,9 @@ public class AppointmentServiceImpl implements AppointmentService {
     public Integer countDistinctPatientsByMonth(int year, int month) throws ParseException {
         return this.appRepo.countDistinctPatientsByMonth(year, month);
     }
+
+    @Override
+    public List<Integer> getMonthlyStatistics(int year) throws ParseException {
+        return this.appRepo.getMonthlyStatistics(year);
+    }
 }

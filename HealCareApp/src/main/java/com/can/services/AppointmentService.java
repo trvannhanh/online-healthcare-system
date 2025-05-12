@@ -35,4 +35,5 @@ public interface AppointmentService {
     Integer countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr) throws ParseException;
     Integer countDistinctPatientsByDoctorAndMonth(int doctorId, int year, int month) throws ParseException;
     Integer countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException;
+    List<Integer> getMonthlyStatistics(int year) throws ParseException;
 }

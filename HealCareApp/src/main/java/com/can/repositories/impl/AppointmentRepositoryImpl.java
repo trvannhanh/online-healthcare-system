@@ -462,15 +462,15 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
     @Override
     public Integer countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException {
         int startMonth = (quarter - 1) * 3 + 1; // Tháng bắt đầu của quý
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-    Date fromDate = sdf.parse(year + "-" + startMonth + "-01");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date fromDate = sdf.parse(year + "-" + startMonth + "-01");
 
-    // Tính ngày cuối cùng của quý
-    Calendar calendar = Calendar.getInstance();
-    calendar.setTime(fromDate);
-    calendar.add(Calendar.MONTH, 2); // Thêm 2 tháng để đến tháng cuối của quý
-    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-    Date toDate = calendar.getTime();
+        // Tính ngày cuối cùng của quý
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(fromDate);
+        calendar.add(Calendar.MONTH, 2); // Thêm 2 tháng để đến tháng cuối của quý
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+        Date toDate = calendar.getTime();
 
         // Tận dụng phương thức countDistinctPatientsByDoctorAndDateRange
         return countDistinctPatientsByDoctorAndDateRange(doctorId, fromDate, toDate);
@@ -489,25 +489,45 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
     @Override
     public Integer countDistinctPatientsByQuarter(int year, int quarter) throws ParseException {
-        LocalDate startDate = LocalDate.of(year, (quarter - 1) * 3 + 1, 1);
-        LocalDate endDate = startDate.plusMonths(3).minusDays(1);
+        int startMonth = (quarter - 1) * 3 + 1; // Tháng bắt đầu của quý
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date fromDate = sdf.parse(year + "-" + startMonth + "-01");
 
-        // Chuyển đổi LocalDate sang Date
-        Date fromDate = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        Date toDate = Date.from(endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
+        // Tính ngày cuối cùng của quý
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(fromDate);
+        calendar.add(Calendar.MONTH, 2); // Thêm 2 tháng để đến tháng cuối của quý
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+        Date toDate = calendar.getTime();
 
         return countDistinctPatientsByDateRange(fromDate, toDate);
     }
 
     @Override
     public Integer countDistinctPatientsByMonth(int year, int month) throws ParseException {
-        LocalDate startDate = LocalDate.of(year, month, 1);
-        LocalDate endDate = startDate.plusMonths(1).minusDays(1);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date fromDate = sdf.parse(year + "-" + month + "-01");
 
-        // Chuyển đổi LocalDate sang Date
-        Date fromDate = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        Date toDate = Date.from(endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
+        // Tính ngày cuối cùng của tháng
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(fromDate);
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+        Date toDate = calendar.getTime();
 
         return countDistinctPatientsByDateRange(fromDate, toDate);
+    }
+
+    @Override
+    public List<Integer> getMonthlyStatistics(int year) throws ParseException {
+        try {
+            List<Integer> monthlyData = new ArrayList<>();
+            for (int i = 1; i <= 12; i++) {
+                monthlyData.add(countDistinctPatientsByMonth(year, i));
+            }
+            return monthlyData;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi khi lấy dữ liệu thống kê");
+        }
     }
 }

@@ -93,6 +93,7 @@ public class SpringSecurityConfigs {
                 .requestMatchers("/api/**").permitAll()
                 .requestMatchers("/api/payment/**").permitAll()
                 .requestMatchers("/appointments/**").hasRole("ADMIN")
+                .requestMatchers("/statistics/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
         )
                 .formLogin(form -> form.loginPage("/login")
