@@ -41,7 +41,7 @@ public class SpringSecurityConfigs {
 
     @Autowired
     private UserDetailsService userDetailService;
-    
+
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -63,7 +63,7 @@ public class SpringSecurityConfigs {
 
         return cloudinary;
     }
-    
+
     @Bean
     public JavaMailSender javaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
@@ -71,7 +71,7 @@ public class SpringSecurityConfigs {
         mailSender.setPort(587);
 //        mailSender.setUsername("trvannhanh@gmail.com");
 //        mailSender.setPassword("your-app-password");
-        
+
 // Có thể dùng cái này thay thế cái trên 
         mailSender.setUsername("nhatkhanhtran117@gmail.com");
         mailSender.setPassword("holvedrmbrlaabyx");
@@ -87,7 +87,7 @@ public class SpringSecurityConfigs {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws
             Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) 
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(c -> c.disable()).authorizeHttpRequests(requests -> requests
                 .requestMatchers("/", "/home").authenticated()
                 .requestMatchers("/api/**").permitAll()
@@ -104,21 +104,17 @@ public class SpringSecurityConfigs {
                 .logout(logout -> logout.logoutSuccessUrl("/login").permitAll());
         return http.build();
     }
-    
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         CorsConfiguration config = new CorsConfiguration();
-
-        config.setAllowedOrigins(List.of("http://localhost:3000/")); 
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedOrigins(List.of("http://localhost:3000")); // Đảm bảo khớp với frontend
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setExposedHeaders(List.of("Authorization"));
-        config.setAllowCredentials(true); 
-
+        config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
         return source;
     }
 }

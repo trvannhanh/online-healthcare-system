@@ -189,7 +189,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
         }
 
-        if (!(u.getId() == existingAppointment.getDoctor().getId())) {
+        if (!(u.getId() == existingAppointment.getDoctor().getId()) && !(u.getId() == existingAppointment.getPatient().getId())) {
             try {
                 throw new AccessDeniedException("Bạn không có quyền hủy lịch hẹn này2");
             } catch (AccessDeniedException ex) {
@@ -238,7 +238,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
         }
 
-        if (!(u.getId() == existingAppointment.getDoctor().getId())) {
+        if (!(u.getId() == existingAppointment.getDoctor().getId()) && !(u.getId() == existingAppointment.getPatient().getId())) {
             try {
                 throw new AccessDeniedException("Bạn không có quyền sửa lịch hẹn này");
             } catch (AccessDeniedException ex) {
@@ -304,6 +304,11 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         return this.appRepo.confirmAppointment(id);
+    }
+    
+    @Override
+    public List<Appointment> getAppointmentsWithFilters(Map<String, String> params) {
+        return this.appRepo.getAppointmentsWithFilters(params);
     }
 
     @Override

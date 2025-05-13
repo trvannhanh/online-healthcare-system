@@ -10,7 +10,10 @@ export const endpoints = {
     'appointments': '/appointments',
     'register': '/users',
     'login': '/login',
-    'current-user': '/secure/profile'
+    'current-user': '/secure/profile',
+    'appointmentsFilter': '/appointments/filter',
+    'cancelAppointment': (id) => `/secure/appointments/${id}/cancel`,
+    'rescheduleAppointment': (id) => `/secure/appointments/${id}/reschedule`,
 }
 
 export const authApis = () => {
