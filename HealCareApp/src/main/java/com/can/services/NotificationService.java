@@ -33,4 +33,6 @@ public interface NotificationService {
 
     void updateNotificationMessage(int notificationId, String message);
 
+    void deleteNotification(int id);
+
 }

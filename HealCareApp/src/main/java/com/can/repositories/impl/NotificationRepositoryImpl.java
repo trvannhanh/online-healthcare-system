@@ -182,17 +182,25 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     @Override
     public void updateNotificationMessage(int notificationId, String message) {
         Session session = this.factory.getObject().getCurrentSession();
-        Transaction transaction = session.beginTransaction();
         Notifications notification = session.get(Notifications.class, notificationId);
-        if (notification != null) {
+        if (notification != null && (notification.getSentAt() == null ||
+                notification.getSentAt().after(new Date()))) {
             notification.setMessage(message);
             session.update(notification);
         }
-        transaction.commit();
     }
 
     @Override
     public List<Notifications> getAllNotifications() throws ParseException {
         return getNotificationsByCriteria(null);
     }
+
+    @Override
+    public void deleteNotification(int id) {
+        Session session = this.factory.getObject().getCurrentSession();
+        Notifications notification = session.get(Notifications.class, id);
+        if (notification != null)
+            session.remove(notification);
+    }
+
 }

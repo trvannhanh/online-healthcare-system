@@ -33,7 +33,7 @@ public class Notifications {
     private Integer id;
     private String message;
     @Temporal(TemporalType.TIMESTAMP)
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @Column(name = "sent_at")
     private Date sentAt;
     @Column(name = "type")

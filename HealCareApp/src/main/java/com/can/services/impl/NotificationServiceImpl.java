@@ -71,5 +71,10 @@ public class NotificationServiceImpl implements NotificationService {
     public void updateNotificationMessage(int notificationId, String message) {
         this.notificationRepository.updateNotificationMessage(notificationId, message);
     }
+
+    @Override
+    public void deleteNotification(int id) {
+        this.notificationRepository.deleteNotification(id);
+    }
     
 }

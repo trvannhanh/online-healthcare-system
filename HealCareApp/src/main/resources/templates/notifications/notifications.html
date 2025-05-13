@@ -51,9 +51,7 @@
                 <td th:text="${n.getUser().getFullName()}"></td>
                 <td th:text="${n.getUser().getRole()}"></td>
                 <td th:text="${n.getMessage()}"></td>
-                <td
-                  th:text="${n.getSentAt()}"
-                ></td>
+                <td th:text="${n.getSentAt()}"></td>
                 <td>
                   <button
                     th:onclick="'deleteNotification(\'' + @{/api/notifications} + '\', ' + ${n.id} + ')'"
@@ -62,7 +60,7 @@
                     &times;
                   </button>
                   <a
-                    th:href="@{/notifications/edit(id=${n.id})}"
+                    th:href="@{/notifications/edit/{id}(id=${n.id})}"
                     class="btn btn-info"
                     >Sửa</a
                   >

@@ -8,9 +8,9 @@
         <div th:replace="base :: header"></div>
 
         <main>
-            <div class="container mt-4">
+            <div class="container mt-4" th:if="${notification != null}">
                 <h1 class="text-center text-info">Chỉnh Sửa Thông Báo</h1>
-                <form th:action="@{/notifications/edit/{id}(id=${notification.id})}" method="post">
+                <form th:if="${canEdit}" th:action="@{/notifications/edit/{id}(id=${notification.getId()})}" method="post">
                     <div class="mb-3">
                         <label for="message" class="form-label">Nội Dung</label>
                         <textarea id="message" name="message" class="form-control" th:text="${notification.message}" required></textarea>

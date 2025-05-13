@@ -57,7 +57,7 @@ public class NotificationController {
 
     @PostMapping("/notifications/add")
     public String addNotification(
-        @ModelAttribute("notification") Notifications notificationFromForm) {
+            @ModelAttribute("notification") Notifications notificationFromForm) {
         List<User> patients = userService.getUsersByRole("PATIENT"); // hoặc Enum nếu bạn dùng
 
         for (User patient : patients) {
@@ -76,8 +76,24 @@ public class NotificationController {
     @GetMapping("/notifications/edit/{id}")
     public String showEditForm(@PathVariable("id") int id, Model model) {
         Notifications notification = this.notificationService.getNotificationById(id);
+        boolean canEdit = false;
+        String alertMessage = null;
+
+        if (notification != null) {
+            Date sentAt = notification.getSentAt();
+            if (sentAt == null || sentAt.after(new Date())) {
+                canEdit = true;
+            } else {
+                alertMessage = "Thông báo đã được gửi, không thể chỉnh sửa.";
+            }
+        } else {
+            alertMessage = "Không tìm thấy thông báo.";
+        }
+
         model.addAttribute("notification", notification);
-        return "notifications/notification_edit"; // Tên file HTML hiển thị form chỉnh sửa thông báo
+        model.addAttribute("canEdit", canEdit);
+        model.addAttribute("alertMessage", alertMessage);
+        return "notifications/notification_edit";
     }
 
     @PostMapping("/notifications/edit/{id}")
@@ -90,8 +106,6 @@ public class NotificationController {
         }
         return "redirect:/notifications"; // Quay lại danh sách thông báo
     }
-
-    @PutMapping("/notifications/update/{id}")
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {

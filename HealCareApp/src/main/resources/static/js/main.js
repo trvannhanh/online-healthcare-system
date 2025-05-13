@@ -19,7 +19,7 @@ function deleteNotification(endpoint, notificationId) {
             method: "DELETE",
         })
             .then((response) => {
-                if (response.ok) {
+                if (response.status === 204) {
                     alert("Xóa thông báo thành công!");
                     location.reload();
                 } else {
