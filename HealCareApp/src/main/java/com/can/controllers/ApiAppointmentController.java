@@ -6,8 +6,10 @@ package com.can.controllers;
 
 import com.can.pojo.Appointment;
 import com.can.pojo.AppointmentStatus;
+import com.can.pojo.Doctor;
 import com.can.pojo.NotificationType;
 import com.can.pojo.Notifications;
+import com.can.pojo.Patient;
 import com.can.services.AppointmentService;
 import com.can.services.NotificationService;
 
@@ -51,8 +53,13 @@ public class ApiAppointmentController {
 
     @Autowired
     private AppointmentService appService;
-    
-    
+
+    @Autowired
+    private com.can.services.PatientService patientService;
+
+    @Autowired
+    private com.can.services.DoctorService doctorService;
+
     @GetMapping("/appointments/filter")
     @CrossOrigin
     public ResponseEntity<List<Appointment>> getAppointmentsWithFilters(
@@ -70,23 +77,47 @@ public class ApiAppointmentController {
 
     @PostMapping("/appointments")
     public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {
+        Appointment newAppointment = null;
         try {
-            Appointment newAppointment = appService.addAppointment(appointment);
-            Notifications notification = new Notifications();
-            notification.setMessage("Bạn có lịch hẹn mới với bệnh nhân: " 
-                                    + newAppointment.getPatient().getUser().getFullName()
-                                    + " vào lúc " 
-                                    + new SimpleDateFormat("HH:mm dd/MM/yyyy").format(newAppointment.getAppointmentDate()));
-            notification.setUser(newAppointment.getDoctor().getUser()); // Người nhận thông báo là bác sĩ
-            notification.setSentAt(new Date()); // Thời gian gửi thông báo
-            notification.setType(NotificationType.APPOINTMENT); // Trạng thái thông báo
-            notiService.addNotification(notification);
+            newAppointment = appService.addAppointment(appointment);
+
+            try {
+                if (newAppointment.getPatient() != null && newAppointment.getDoctor() != null) {
+                    // Load đầy đủ thông tin bệnh nhân và bác sĩ từ repository
+                    Patient fullPatient = patientService.getPatientById(newAppointment.getPatient().getId());
+                    Doctor fullDoctor = doctorService.getDoctorById(newAppointment.getDoctor().getId());
+
+                    if (fullPatient != null && fullPatient.getUser() != null &&
+                            fullDoctor != null && fullDoctor.getUser() != null) {
+
+                        Notifications notification = new Notifications();
+                        notification.setMessage("Bạn có lịch hẹn mới với bệnh nhân: "
+                                + fullPatient.getUser().getFullName()
+                                + " vào lúc "
+                                + new SimpleDateFormat("HH:mm dd/MM/yyyy").format(newAppointment.getAppointmentDate()));
+                        notification.setUser(fullDoctor.getUser());
+                        notification.setSentAt(new Date());
+                        notification.setType(NotificationType.APPOINTMENT);
+                        notiService.addNotification(notification);
+                    }
+                }
+            } catch (Exception ex) {
+                // Ghi log lỗi nhưng không ảnh hưởng đến response
+                System.err.println("Không thể tạo thông báo: " + ex.getMessage());
+                // Có thể log thêm vào file log nếu cần
+            }
             return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         } catch (RuntimeException e) {
+            if (newAppointment != null) {
+                return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
+            }
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
+            if (newAppointment != null) {
+                return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
+            }
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -97,8 +128,6 @@ public class ApiAppointmentController {
         this.appService.deleteAppointment(id);
     }
 
-    
-    
     @PatchMapping("/secure/appointments/{id}/cancel")
     @CrossOrigin
     public ResponseEntity<?> cancelAppointment(@PathVariable("id") int id, Principal principal) {
@@ -114,7 +143,8 @@ public class ApiAppointmentController {
 
     @PatchMapping("/secure/appointments/{id}/reschedule")
     @CrossOrigin
-    public ResponseEntity<?> rescheduleAppointment(@PathVariable("id") int id, @RequestBody Map<String, String> body, Principal principal) {
+    public ResponseEntity<?> rescheduleAppointment(@PathVariable("id") int id, @RequestBody Map<String, String> body,
+            Principal principal) {
         try {
             String newDateStr = body.get("newDateTime");
             Date newDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newDateStr);
@@ -142,8 +172,6 @@ public class ApiAppointmentController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    
-    
 
     @PutMapping("/secure/appointments/{id}/confirm")
     @CrossOrigin
@@ -157,6 +185,5 @@ public class ApiAppointmentController {
             return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
 
 }
