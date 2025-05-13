@@ -127,7 +127,19 @@ public class UserServiceImpl implements UserService {
         if ("PATIENT".equalsIgnoreCase(role)) {
             Patient patient = new Patient();
             patient.setUser(savedUser);
-            patient.setDateOfBirth(new Date(params.get("dateOfBirth")));
+            // Replace this line:
+            // patient.setDateOfBirth(new Date(params.get("dateOfBirth")));
+
+            // With this code:
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                sdf.setLenient(false);
+                Date dob = sdf.parse(params.get("dateOfBirth"));
+                patient.setDateOfBirth(dob);
+            } catch (ParseException e) {
+                throw new IllegalArgumentException("Invalid date format for dateOfBirth. Expected format: yyyy-MM-dd",
+                        e);
+            }
             patient.setInsuranceNumber(params.get("insuranceNumber"));
             this.patRepo.addPatient(patient);
             System.out.println("Patient saved successfully for user" + savedUser.getId());
@@ -247,4 +259,37 @@ public class UserServiceImpl implements UserService {
         return this.userRepo.getUsersByRole(role);
     }
 
+    @Override
+    public String updateUserAvatar(int id, MultipartFile avatar) {
+        User u = this.userRepo.getUserById(id);
+        if (u == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+        if (avatar == null || avatar.isEmpty()) {
+            throw new IllegalArgumentException("Avatar is required");
+        }
+        try {
+            Map res = cloudinary.uploader().upload(avatar.getBytes(),
+                    ObjectUtils.asMap("resource_type", "auto"));
+            u.setAvatar(res.get("secure_url").toString());
+            this.userRepo.updateUser(u);
+            return u.getAvatar();
+        } catch (IOException ex) {
+            Logger.getLogger(UserServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            throw new RuntimeException("Error uploading avatar: " + ex.getMessage());
+        }
+    }
+
+    @Override
+    public boolean changePassword(String username, String password, String newPassword) {
+        User u = this.userRepo.getUserByUsername(username);
+        if (u == null) {
+            throw new UsernameNotFoundException("Invalid username!");
+        }
+        if (!this.passEncoder.matches(password, u.getPassword())) {
+            throw new IllegalArgumentException("Invalid password!");
+        }
+        u.setPassword(this.passEncoder.encode(newPassword));
+        return this.userRepo.updateUser(u);
+    }
 }

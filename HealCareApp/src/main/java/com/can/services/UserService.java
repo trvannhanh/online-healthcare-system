@@ -23,4 +23,6 @@ public interface UserService extends UserDetailsService{
     boolean deleteUser(int id);
     boolean authenticate(String username, String password);
     List<User> getUsersByRole(String role);
+    String updateUserAvatar(int id, MultipartFile avatar);
+    boolean changePassword(String username, String password, String newPassword);
 }
