@@ -12,3 +12,20 @@ function deleteAppointment(endpoint, id) {
         });
     }
 }
+
+function deleteNotification(endpoint, notificationId) {
+    if (confirm("Bạn có chắc chắn muốn xóa thông báo này?")) {
+        fetch(`${endpoint}/${notificationId}`, {
+            method: "DELETE",
+        })
+            .then((response) => {
+                if (response.status === 204) {
+                    alert("Xóa thông báo thành công!");
+                    location.reload();
+                } else {
+                    alert("Xóa thông báo thất bại!");
+                }
+            })
+            .catch((error) => console.error("Error:", error));
+    }
+}

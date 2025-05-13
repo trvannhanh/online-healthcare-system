@@ -22,4 +22,5 @@ public interface UserService extends UserDetailsService{
     boolean updateUser(User user);
     boolean deleteUser(int id);
     boolean authenticate(String username, String password);
+    List<User> getUsersByRole(String role);
 }

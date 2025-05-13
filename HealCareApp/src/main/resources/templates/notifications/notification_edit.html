@@ -1,0 +1,26 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Chỉnh Sửa Thông Báo</title>
+        <th:block th:replace="base :: styles"></th:block>
+    </head>
+    <body>
+        <div th:replace="base :: header"></div>
+
+        <main>
+            <div class="container mt-4" th:if="${notification != null}">
+                <h1 class="text-center text-info">Chỉnh Sửa Thông Báo</h1>
+                <form th:if="${canEdit}" th:action="@{/notifications/edit/{id}(id=${notification.getId()})}" method="post">
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Nội Dung</label>
+                        <textarea id="message" name="message" class="form-control" th:text="${notification.message}" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+                    <a th:href="@{/notifications}" class="btn btn-secondary">Hủy</a>
+                </form>
+            </div>
+        </main>
+
+        <div th:replace="base :: footer"></div>
+    </body>
+</html>

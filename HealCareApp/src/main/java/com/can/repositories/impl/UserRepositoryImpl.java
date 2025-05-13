@@ -5,6 +5,7 @@
 package com.can.repositories.impl;
 
 import com.can.pojo.User;
+import com.can.pojo.Role;
 import com.can.repositories.UserRepository;
 import jakarta.persistence.NoResultException;
 import java.util.List;
@@ -130,5 +131,14 @@ public class UserRepositoryImpl implements UserRepository{
         Session session = sessionFactory.getObject().getCurrentSession();
         Query<String> query = session.createQuery("SELECT email FROM User", String.class);
         return query.getResultList(); // Trả về danh sách tất cả email
+    }
+
+    @Override
+    public List<User> getUsersByRole(String role) {
+        Session session = sessionFactory.getObject().getCurrentSession();
+        Role roleEnum = Role.valueOf(role);
+        Query<User> query = session.createQuery("FROM User WHERE role = :role", User.class);
+        query.setParameter("role", roleEnum);
+        return query.getResultList(); // Trả về danh sách người dùng theo vai trò
     }
 }

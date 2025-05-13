@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.text.ParseException;
+
 
 /**
  *
@@ -21,7 +23,7 @@ public class NotificationServiceImpl implements NotificationService {
     private NotificationRepository notificationRepository;
 
     @Override
-    public List<Notifications> getNotificationsByCriteria(Map<String, String> params) {
+    public List<Notifications> getNotificationsByCriteria(Map<String, String> params) throws ParseException{
         return this.notificationRepository.getNotificationsByCriteria(params);
     }
 
@@ -68,6 +70,11 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void updateNotificationMessage(int notificationId, String message) {
         this.notificationRepository.updateNotificationMessage(notificationId, message);
+    }
+
+    @Override
+    public void deleteNotification(int id) {
+        this.notificationRepository.deleteNotification(id);
     }
     
 }

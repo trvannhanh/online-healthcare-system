@@ -6,6 +6,7 @@ package com.can.controllers;
 
 import com.can.pojo.Appointment;
 import com.can.pojo.AppointmentStatus;
+import com.can.pojo.NotificationType;
 import com.can.pojo.Notifications;
 import com.can.services.AppointmentService;
 import com.can.services.NotificationService;
@@ -78,6 +79,7 @@ public class ApiAppointmentController {
                                     + new SimpleDateFormat("HH:mm dd/MM/yyyy").format(newAppointment.getAppointmentDate()));
             notification.setUser(newAppointment.getDoctor().getUser()); // Người nhận thông báo là bác sĩ
             notification.setSentAt(new Date()); // Thời gian gửi thông báo
+            notification.setType(NotificationType.APPOINTMENT); // Trạng thái thông báo
             notiService.addNotification(notification);
             return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
