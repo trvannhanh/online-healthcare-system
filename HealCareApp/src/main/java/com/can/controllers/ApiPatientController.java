@@ -72,7 +72,7 @@ public class ApiPatientController {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
-            Patient updatedPatient = patientService.updatePatientProfile(username);
+            Patient updatedPatient = patientService.updatePatientProfile(username,patient);
             return ResponseEntity.ok(updatedPatient);
         } catch (Exception e) {
             e.printStackTrace();

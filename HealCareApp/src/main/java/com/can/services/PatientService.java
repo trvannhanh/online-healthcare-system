@@ -32,7 +32,7 @@ public interface PatientService {
 
     Patient getCurrentPatientProfile(String username);
 
-    Patient updatePatientProfile(String username);
+    Patient updatePatientProfile(String username, Patient patient);
 
     boolean changePassword(String currentPassword, String newPassword);
 

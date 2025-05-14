@@ -87,7 +87,7 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public Patient updatePatientProfile(String username) {
+    public Patient updatePatientProfile(String username, Patient patientData) {
         // Lấy thông tin bệnh nhân hiện tại
 
         User currentUser = userService.getUserByUsername(username);
@@ -101,6 +101,34 @@ public class PatientServiceImpl implements PatientService {
         }
         Patient patient = this.patRepo.getPatientById(currentUser.getId());
         // Lưu các thay đổi
+        if (patientData.getDateOfBirth() != null) {
+            patient.setDateOfBirth(patientData.getDateOfBirth());
+        }
+
+        if (patientData.getInsuranceNumber() != null) {
+            patient.setInsuranceNumber(patientData.getInsuranceNumber());
+        }
+
+        // Quan trọng: Cập nhật thông tin User
+        if (patientData.getUser() != null) {
+            User existingUser = patient.getUser();
+
+            if (patientData.getUser().getFirstName() != null) {
+                existingUser.setFirstName(patientData.getUser().getFirstName());
+            }
+
+            if (patientData.getUser().getLastName() != null) {
+                existingUser.setLastName(patientData.getUser().getLastName());
+            }
+
+            if (patientData.getUser().getPhoneNumber() != null) {
+                System.out.println("Updating phone number to: " + patientData.getUser().getPhoneNumber());
+                existingUser.setPhoneNumber(patientData.getUser().getPhoneNumber());
+            }
+
+            // Lưu thay đổi vào User
+            userService.updateUser(existingUser);
+        }
         return patRepo.updatePatient(patient);
     }
 
