@@ -63,13 +63,32 @@ const Home = () => {
                 url += `&doctorId=${user.id}`;
             }
 
-            console.log('Fetching appointments from:', url); // Log để kiểm tra URL
+            console.log('Fetching appointments from:', url);
             const res = await authApis().get(url);
-            console.log('Appointments response:', res.data); // Log để kiểm tra response
-            if (res.data.length === 0) setPage(0);
+            const appointmentsData = res.data;
+
+            // Chỉ lấy Payment cho các appointment có status COMPLETED
+            const appointmentsWithPayment = await Promise.all(
+                appointmentsData.map(async (appt) => {
+                    if (appt.status === 'COMPLETED') {
+                        try {
+                            const paymentRes = await Apis.get(`${endpoints['payment']}/appointment/${appt.id}`);
+                            return { ...appt, payment: paymentRes.data };
+                        } catch (ex) {
+                            if (ex.response?.status === 404) {
+                                return { ...appt, payment: null };
+                            }
+                            throw ex;
+                        }
+                    }
+                    return { ...appt, payment: null }; // Không cần Payment cho PENDING/CANCEL
+                })
+            );
+
+            if (appointmentsWithPayment.length === 0) setPage(0);
             else {
-                if (page === 1) setAppointments(res.data);
-                else setAppointments([...appointments, ...res.data]);
+                if (page === 1) setAppointments(appointmentsWithPayment);
+                else setAppointments([...appointments, ...appointmentsWithPayment]);
             }
         } catch (ex) {
             console.error('Load appointments error:', ex);
@@ -78,6 +97,7 @@ const Home = () => {
             setLoadingAppointments(false);
         }
     };
+
 
     useEffect(() => {
         if (page > 0) loadDoctors();
@@ -325,6 +345,31 @@ const Home = () => {
                                                         'Hủy lịch hẹn'
                                                     )}
                                                 </Button>
+                                            </td>
+                                            <td>
+                                                {user.role === 'DOCTOR' && appt.status === 'COMPLETED' && !appt.payment && (
+                                                    <Button
+                                                        as={Link}
+                                                        to={`/payment/${appt.id}`}
+                                                        variant="primary"
+                                                        size="sm"
+                                                        className="ms-2"
+                                                    >
+                                                        Tạo hóa đơn
+                                                    </Button>
+                                                )}
+                                                {user.role === 'PATIENT' && appt.status === 'COMPLETED' && appt.payment && (
+                                                    <Button
+                                                        as={Link}
+                                                        to={`/payment/${appt.id}`}
+                                                        variant="success"
+                                                        size="sm"
+                                                        disabled={appt.payment.paymentStatus !== 'PENDING'}
+                                                        className="ms-2"
+                                                    >
+                                                        Thanh toán
+                                                    </Button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

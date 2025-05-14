@@ -17,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.util.Date;
 
 /**
  *
@@ -48,7 +49,7 @@ public class Payment {
     private String transactionId;
 
     @Column(name = "created_at", length = 255)
-    private LocalDate createdAt;
+    private Date createdAt;
 
     // Getters and Setters
 
@@ -139,14 +140,14 @@ public class Payment {
    /**
      * @return the createAt
      */
-    public LocalDate getCreateAt() {
+    public Date getCreateAt() {
         return createdAt;
     }
 
     /**
      * @param createAt the createAt to set
      */
-    public void setCreateAt(LocalDate createAt) {
+    public void setCreateAt(Date createAt) {
         this.createdAt = createAt;
     }
 }
