@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate5.LocalSessionFactoryBean;  
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +17,7 @@ import com.can.pojo.PaymentMethod;
 import com.can.pojo.PaymentStatus;
 import com.can.repositories.AppointmentRepository;
 import com.can.repositories.PaymentRepository;
+import jakarta.persistence.NoResultException;
 
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -24,6 +25,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.time.LocalDate;
+import java.util.Date;
 import org.hibernate.Session;
 
 /**
@@ -33,9 +35,10 @@ import org.hibernate.Session;
 @Repository
 @Transactional
 public class PaymentRepositoryImpl implements PaymentRepository {
+
     @Autowired
     private LocalSessionFactoryBean factory;
-    
+
     @Autowired
     private AppointmentRepository appRepo;
 
@@ -62,7 +65,12 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 
         query.where(builder.equal(root.get("appointment").get("id"), appointmentId));
         Query q = session.createQuery(query);
-        return (Payment) q.getSingleResult();
+
+        try {
+            return (Payment) q.getSingleResult();
+        } catch (NoResultException e) {
+            return null; // Trả về null nếu không tìm thấy Payment
+        }
     }
 
     @Override
@@ -204,13 +212,13 @@ public class PaymentRepositoryImpl implements PaymentRepository {
         Query q = session.createQuery(query);
         return q.getResultList();
     }
-    
+
     @Override
     public Payment createPaymentForAppointment(int appointmentId, double amount) {
         Session session = this.factory.getObject().getCurrentSession();
         Appointment appointment = appRepo.getAppointmentById(appointmentId);
         if (appointment == null) {
-                System.out.println("Lịch hẹn không tồn tại");
+            System.out.println("Lịch hẹn không tồn tại");
 //            throw new ResourceNotFoundException("Lịch hẹn không tồn tại: " + appointmentId);
         }
         if (appointment.getStatus() != AppointmentStatus.COMPLETED) {
@@ -221,11 +229,11 @@ public class PaymentRepositoryImpl implements PaymentRepository {
         payment.setAppointment(appointment);
         payment.setAmount(amount);
         payment.setPaymentStatus(PaymentStatus.PENDING);
-        payment.setCreateAt(LocalDate.now());
+        payment.setCreateAt(new Date());
         session.save(payment);
         return payment;
     }
-    
+
     @Override
     public void updatePayment(Payment payment) {
         Session session = this.factory.getObject().getCurrentSession();

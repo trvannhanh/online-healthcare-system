@@ -77,47 +77,51 @@ public class ApiAppointmentController {
 
     @PostMapping("/appointments")
     public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {
-        Appointment newAppointment = null;
+//         Appointment newAppointment = null;
         try {
-            newAppointment = appService.addAppointment(appointment);
+// <<<<<<< chi
+//             newAppointment = appService.addAppointment(appointment);
 
-            try {
-                if (newAppointment.getPatient() != null && newAppointment.getDoctor() != null) {
-                    // Load đầy đủ thông tin bệnh nhân và bác sĩ từ repository
-                    Patient fullPatient = patientService.getPatientById(newAppointment.getPatient().getId());
-                    Doctor fullDoctor = doctorService.getDoctorById(newAppointment.getDoctor().getId());
+//             try {
+//                 if (newAppointment.getPatient() != null && newAppointment.getDoctor() != null) {
+//                     // Load đầy đủ thông tin bệnh nhân và bác sĩ từ repository
+//                     Patient fullPatient = patientService.getPatientById(newAppointment.getPatient().getId());
+//                     Doctor fullDoctor = doctorService.getDoctorById(newAppointment.getDoctor().getId());
 
-                    if (fullPatient != null && fullPatient.getUser() != null &&
-                            fullDoctor != null && fullDoctor.getUser() != null) {
+//                     if (fullPatient != null && fullPatient.getUser() != null &&
+//                             fullDoctor != null && fullDoctor.getUser() != null) {
 
-                        Notifications notification = new Notifications();
-                        notification.setMessage("Bạn có lịch hẹn mới với bệnh nhân: "
-                                + fullPatient.getUser().getFullName()
-                                + " vào lúc "
-                                + new SimpleDateFormat("HH:mm dd/MM/yyyy").format(newAppointment.getAppointmentDate()));
-                        notification.setUser(fullDoctor.getUser());
-                        notification.setSentAt(new Date());
-                        notification.setType(NotificationType.APPOINTMENT);
-                        notiService.addNotification(notification);
-                    }
-                }
-            } catch (Exception ex) {
-                // Ghi log lỗi nhưng không ảnh hưởng đến response
-                System.err.println("Không thể tạo thông báo: " + ex.getMessage());
-                // Có thể log thêm vào file log nếu cần
-            }
+//                         Notifications notification = new Notifications();
+//                         notification.setMessage("Bạn có lịch hẹn mới với bệnh nhân: "
+//                                 + fullPatient.getUser().getFullName()
+//                                 + " vào lúc "
+//                                 + new SimpleDateFormat("HH:mm dd/MM/yyyy").format(newAppointment.getAppointmentDate()));
+//                         notification.setUser(fullDoctor.getUser());
+//                         notification.setSentAt(new Date());
+//                         notification.setType(NotificationType.APPOINTMENT);
+//                         notiService.addNotification(notification);
+//                     }
+//                 }
+//             } catch (Exception ex) {
+//                 // Ghi log lỗi nhưng không ảnh hưởng đến response
+//                 System.err.println("Không thể tạo thông báo: " + ex.getMessage());
+//                 // Có thể log thêm vào file log nếu cần
+//             }
+// =======
+            Appointment newAppointment = appService.addAppointment(appointment);
+
             return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         } catch (RuntimeException e) {
-            if (newAppointment != null) {
-                return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
-            }
+//             if (newAppointment != null) {
+//                 return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
+//             }
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            if (newAppointment != null) {
-                return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
-            }
+//             if (newAppointment != null) {
+//                 return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
+//             }
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

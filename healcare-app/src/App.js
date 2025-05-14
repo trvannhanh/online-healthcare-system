@@ -9,6 +9,7 @@ import Login from "./components/Login";
 import { MyUserProvider } from "./configs/MyContexts";
 import DoctorDetail from "./components/DoctorDetail";
 import AppointmentForm from "./components/AppointmentForm";
+import Payment from "./components/Payment";
 
 
 const App = () => {
@@ -26,6 +27,7 @@ const App = () => {
                       {/* <Route path="/profile" element={<Profile />} /> */}
                       <Route path="/doctors/:id" element={<DoctorDetail />} />
                       <Route path="/appointments/new" element={<AppointmentForm />} />
+                      <Route path="/payment/:appointmentId" element={<Payment />} />
                   </Routes>
               </Container>
 
