@@ -53,7 +53,7 @@ public class PaymentController {
 
     // Lấy Payment theo appointmentId
     @GetMapping("/payment/appointment/{appointmentId}")
-    public ResponseEntity<Payment> getPaymentByAppointmentId(@PathVariable Integer appointmentId) {
+    public ResponseEntity<Payment> getPaymentByAppointmentId(@PathVariable("appointmentId") Integer appointmentId) {
         Payment payment = paymentService.getPaymentByAppointment_Id(appointmentId);
         return payment != null ? ResponseEntity.ok(payment) : ResponseEntity.notFound().build();
     }

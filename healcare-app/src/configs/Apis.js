@@ -17,6 +17,10 @@ export const endpoints = {
     'patientProfile': '/secure/patient/profile',     
     'patientAvatar': '/secure/patient/avatar',       
     'changePassword': '/secure/patient/change-password', 
+    'createPayment': (appointmentId) => `/secure/payment/${appointmentId}/create`,
+    'processPayment': (paymentId) => `/secure/payment/${paymentId}/process`,
+    'paymentReturn': () => '/payment/return',
+    'payment': '/payment',
 }
 
 export const authApis = () => {

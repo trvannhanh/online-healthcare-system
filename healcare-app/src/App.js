@@ -10,6 +10,7 @@ import { MyUserProvider } from "./configs/MyContexts";
 import DoctorDetail from "./components/DoctorDetail";
 import AppointmentForm from "./components/AppointmentForm";
 import PatientProfile from "./components/PatientProfile";
+import Payment from "./components/Payment";
 
 
 const App = () => {
@@ -27,6 +28,7 @@ const App = () => {
                       <Route path="/profile" element={<PatientProfile />} />
                       <Route path="/doctors/:id" element={<DoctorDetail />} />
                       <Route path="/appointments/new" element={<AppointmentForm />} />
+                      <Route path="/payment/:appointmentId" element={<Payment />} />
                   </Routes>
               </Container>
 
