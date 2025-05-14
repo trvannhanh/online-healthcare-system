@@ -72,15 +72,15 @@ public class ApiAppointmentController {
     public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {
         try {
             Appointment newAppointment = appService.addAppointment(appointment);
-            Notifications notification = new Notifications();
-            notification.setMessage("Bạn có lịch hẹn mới với bệnh nhân: " 
-                                    + newAppointment.getPatient().getUser().getFullName()
-                                    + " vào lúc " 
-                                    + new SimpleDateFormat("HH:mm dd/MM/yyyy").format(newAppointment.getAppointmentDate()));
-            notification.setUser(newAppointment.getDoctor().getUser()); // Người nhận thông báo là bác sĩ
-            notification.setSentAt(new Date()); // Thời gian gửi thông báo
-            notification.setType(NotificationType.APPOINTMENT); // Trạng thái thông báo
-            notiService.addNotification(notification);
+//            Notifications notification = new Notifications();
+//            notification.setMessage("Bạn có lịch hẹn mới với bệnh nhân: " 
+//                                    + newAppointment.getPatient().getUser().getFullName()
+//                                    + " vào lúc " 
+//                                    + new SimpleDateFormat("HH:mm dd/MM/yyyy").format(newAppointment.getAppointmentDate()));
+//            notification.setUser(newAppointment.getDoctor().getUser()); // Người nhận thông báo là bác sĩ
+//            notification.setSentAt(new Date()); // Thời gian gửi thông báo
+//            notification.setType(NotificationType.APPOINTMENT); // Trạng thái thông báo
+//            notiService.addNotification(notification);
             return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);

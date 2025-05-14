@@ -14,6 +14,10 @@ export const endpoints = {
     'appointmentsFilter': '/appointments/filter',
     'cancelAppointment': (id) => `/secure/appointments/${id}/cancel`,
     'rescheduleAppointment': (id) => `/secure/appointments/${id}/reschedule`,
+    'createPayment': (appointmentId) => `/secure/payment/${appointmentId}/create`,
+    'processPayment': (paymentId) => `/secure/payment/${paymentId}/process`,
+    'paymentReturn': () => '/payment/return',
+    'payment': '/payment',
 }
 
 export const authApis = () => {
