@@ -8,6 +8,10 @@ import com.can.pojo.Patient;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.Session;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.Date;
 
 /**
  *
@@ -15,9 +19,22 @@ import org.hibernate.Session;
  */
 public interface PatientService {
     boolean isUsernameExists(Session session, String username);
+
     List<Patient> getPatients(Map<String, String> params);
+
     Patient getPatientById(Integer id);
+
     Patient addPatient(Patient patient);
+
     Patient updatePatient(Patient patient);
+
     void deletePatient(Integer id);
+
+    Patient getCurrentPatientProfile(String username);
+
+    Patient updatePatientProfile(String username);
+
+    boolean changePassword(String currentPassword, String newPassword);
+
+    String updatePatientAvatar(String username, MultipartFile avatar) throws IOException;
 }

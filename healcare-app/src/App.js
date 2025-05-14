@@ -9,6 +9,7 @@ import Login from "./components/Login";
 import { MyUserProvider } from "./configs/MyContexts";
 import DoctorDetail from "./components/DoctorDetail";
 import AppointmentForm from "./components/AppointmentForm";
+import PatientProfile from "./components/PatientProfile";
 
 
 const App = () => {
@@ -23,7 +24,7 @@ const App = () => {
                       <Route path="/" element={<Home />} />
                       <Route path="/register" element={<Register />} />
                       <Route path="/login" element={<Login />} />
-                      {/* <Route path="/profile" element={<Profile />} /> */}
+                      <Route path="/profile" element={<PatientProfile />} />
                       <Route path="/doctors/:id" element={<DoctorDetail />} />
                       <Route path="/appointments/new" element={<AppointmentForm />} />
                   </Routes>

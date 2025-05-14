@@ -167,7 +167,6 @@ public class PatientRepositoryImpl implements PatientRepository {
     public Patient updatePatient(Patient patient) {
         Transaction transaction = null;
         Session s = this.factory.getObject().getCurrentSession();
-        transaction = s.beginTransaction();
 
         Patient existingPatient = s.get(Patient.class, patient.getId());
         if (existingPatient == null) {
@@ -192,7 +191,6 @@ public class PatientRepositoryImpl implements PatientRepository {
         s.flush();
 
         Patient updatedPatient = (Patient) s.merge(patient);
-        transaction.commit();
         return updatedPatient;
 
     }
