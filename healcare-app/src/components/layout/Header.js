@@ -108,6 +108,7 @@ const Header = () => {
                     {/* User menu */}
                     {user ? (
                         <NavDropdown title={<span><FaUser className="me-1" />{user.firstName}</span>}>
+                            <NavDropdown.Item as={Link} to="/profile">Thông Tin Cá Nhân</NavDropdown.Item>
                             <NavDropdown.Item onClick={logout}>Đăng xuất</NavDropdown.Item>
                         </NavDropdown>
                     ) : (
