@@ -31,8 +31,10 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -260,7 +262,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String updateUserAvatar(int id, MultipartFile avatar) {
+    public String updateAvatar(int id, MultipartFile avatar) {
         User u = this.userRepo.getUserById(id);
         if (u == null) {
             throw new IllegalArgumentException("User not found");
@@ -291,5 +293,22 @@ public class UserServiceImpl implements UserService {
         }
         u.setPassword(this.passEncoder.encode(newPassword));
         return this.userRepo.updateUser(u);
+    }
+
+    @Override
+    public String updateUserAvatar(String username, MultipartFile avatar) {
+        User user = this.userRepo.getUserByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        return this.updateAvatar(user.getId(), avatar);
+    }
+
+    @Override
+    public boolean changeUserPassword(String currentPassword, String newPassword) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        return this.changePassword(username, currentPassword, newPassword);
     }
 }

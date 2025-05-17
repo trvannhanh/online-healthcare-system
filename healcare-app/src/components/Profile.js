@@ -4,12 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { useMyUser } from '../configs/MyContexts';
 import { authApis, endpoints } from '../configs/Apis';
 
-const PatientProfile = () => {
+const Profile = () => {
     const navigate = useNavigate();
     const { user } = useMyUser() || {};
-    const [selectedRecordIndex, setSelectedRecordIndex] = useState(0);
-    const [updatedMedicalHistory, setUpdatedMedicalHistory] = useState('');
-    const [patientInfo, setPatientInfo] = useState({});
+    // Thông tin bệnh nhân
+    const [userInfo, setUserInfo] = useState({});
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -24,7 +23,7 @@ const PatientProfile = () => {
     const [message, setMessage] = useState({ type: '', text: '' });
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('profile');
-    //
+    // Thông tin sức khỏe bệnh nhân
     const [selfReport, setSelfReport] = useState(null);
     const [hasSelfReport, setHasSelfReport] = useState(false);
     const [height, setHeight] = useState('');
@@ -32,6 +31,15 @@ const PatientProfile = () => {
     const [personalMedicalHistory, setPersonalMedicalHistory] = useState('');
     const [familyMedicalHistory, setFamilyMedicalHistory] = useState('');
     const [pregnancyHistory, setPregnancyHistory] = useState('');
+    //Thông tin bác sĩ
+    const [specialization, setSpecialization] = useState('');
+    const [hospital, setHospital] = useState('');
+    const [licenseNumber, setLicenseNumber] = useState('');
+    const [bio, setBio] = useState('');
+    const [experienceYears, setExperienceYears] = useState('');
+
+    const isDoctor = user?.role === 'DOCTOR';
+    const isPatient = user?.role === 'PATIENT';
 
     const handleAvatarChange = (e) => {
         const file = e.target.files[0];
@@ -46,7 +54,11 @@ const PatientProfile = () => {
         if (!user) return;
 
         console.log("Thông tin người dùng:", user);
-        fetchPatientProfile();
+
+        console.log("Role của người dùng:", user.role);
+        console.log("isDoctor:", isDoctor, "isPatient:", isPatient);
+
+        fetchUserProfile();
     }, [user]);
 
     // // Khởi tạo updatedMedicalHistory khi records thay đổi
@@ -56,84 +68,111 @@ const PatientProfile = () => {
     //     }
     // }, [healthRecords, selectedRecordIndex]);
 
-    const fetchPatientProfile = useCallback(async () => {
+    const fetchUserProfile = useCallback(async () => {
         // Đơn giản hóa kiểm tra user
         if (!user) return;
 
         setLoading(true);
         try {
-            // Gọi API mà không cần truyền userId
-            const response = await authApis().get(endpoints['patientProfile']);
-            console.log("API response:", response.data);
 
-            const patient = response.data.patient;
+            let response;
 
-            setPatientInfo(patient);
+            if (isPatient) {
+                response = await authApis().get(endpoints['patientProfile']);
+                console.log("API response:", response.data);
 
-            const selfReportData = response.data.selfReport;
-            setSelfReport(selfReportData);
+                const patient = response.data.patient;
 
-            // Cải thiện việc truy cập dữ liệu
-            if (user) {
-                // Nếu API trả về { user: {...}, ... }
-                setFirstName(patient.user.firstName || '');
-                setLastName(patient.user.lastName || '');
-                setPhoneNumber(patient.user.phoneNumber || '');
-                setEmail(patient.user.email || user.username || '');
-                setAvatarPreview(patient.user.avatar || '');
-            } else {
-                // Nếu API trả về thông tin user trực tiếp
-                setFirstName(patient.user.firstName || '');
-                setLastName(patient.user.lastName || '');
-                setPhoneNumber(patient.user.phoneNumber || '');
-                setEmail(patient.user.email || patient.user.username || '');
-                setAvatarPreview(patient.user.avatar || '');
-            }
+                setUserInfo(patient);
 
-            // Xử lý dateOfBirth từ nhiều vị trí có thể có
-            const dateOfBirthSource = patient.dateOfBirth ||
-                (patient.patient && patient.patient.dateOfBirth);
-
-            if (dateOfBirthSource) {
-                const date = new Date(dateOfBirthSource);
-                setDateOfBirth(date.toISOString().split('T')[0]);
-            }
-
-            // Xử lý insuranceNumber từ nhiều vị trí có thể có
-            setInsuranceNumber(
-                patient.insuranceNumber ||
-                (patient.patient && patient.patient.insuranceNumber) ||
-                ''
-            );
-
-            if (response.data.selfReport) {
                 const selfReportData = response.data.selfReport;
+                setSelfReport(selfReportData);
 
-                if (selfReportData.exists) {
-                    setSelfReport(selfReportData.report);
-                    setHasSelfReport(true);
-
-                    // Cập nhật các trường dữ liệu
-                    setHeight(selfReportData.report.height || '');
-                    setWeight(selfReportData.report.weight || '');
-                    setPersonalMedicalHistory(selfReportData.report.personalMedicalHistory || '');
-                    setFamilyMedicalHistory(selfReportData.report.familyMedicalHistory || '');
-                    setPregnancyHistory(selfReportData.report.pregnancyHistory || '');
+                // Cải thiện việc truy cập dữ liệu
+                if (user) {
+                    // Nếu API trả về { user: {...}, ... }
+                    setFirstName(patient.user.firstName || '');
+                    setLastName(patient.user.lastName || '');
+                    setPhoneNumber(patient.user.phoneNumber || '');
+                    setEmail(patient.user.email || user.username || '');
+                    setAvatarPreview(patient.user.avatar || '');
                 } else {
+                    // Nếu API trả về thông tin user trực tiếp
+                    setFirstName(patient.user.firstName || '');
+                    setLastName(patient.user.lastName || '');
+                    setPhoneNumber(patient.user.phoneNumber || '');
+                    setEmail(patient.user.email || patient.user.username || '');
+                    setAvatarPreview(patient.user.avatar || '');
+                }
+
+                // Xử lý dateOfBirth từ nhiều vị trí có thể có
+                const dateOfBirthSource = patient.dateOfBirth ||
+                    (patient.patient && patient.patient.dateOfBirth);
+
+                if (dateOfBirthSource) {
+                    const date = new Date(dateOfBirthSource);
+                    setDateOfBirth(date.toISOString().split('T')[0]);
+                }
+
+                // Xử lý insuranceNumber từ nhiều vị trí có thể có
+                setInsuranceNumber(
+                    patient.insuranceNumber ||
+                    (patient.patient && patient.patient.insuranceNumber) ||
+                    ''
+                );
+
+                if (response.data.selfReport) {
+                    const selfReportData = response.data.selfReport;
+
+                    if (selfReportData.exists) {
+                        setSelfReport(selfReportData.report);
+                        setHasSelfReport(true);
+
+                        // Cập nhật các trường dữ liệu
+                        setHeight(selfReportData.report.height || '');
+                        setWeight(selfReportData.report.weight || '');
+                        setPersonalMedicalHistory(selfReportData.report.personalMedicalHistory || '');
+                        setFamilyMedicalHistory(selfReportData.report.familyMedicalHistory || '');
+                        setPregnancyHistory(selfReportData.report.pregnancyHistory || '');
+                    } else {
+                        setHasSelfReport(false);
+                        setSelfReport(null);
+
+                        // Reset các trường form
+                        setHeight('');
+                        setWeight('');
+                        setPersonalMedicalHistory('');
+                        setFamilyMedicalHistory('');
+                        setPregnancyHistory('');
+                    }
+                } else {
+                    console.warn("Không có dữ liệu selfReport trong response profile");
                     setHasSelfReport(false);
                     setSelfReport(null);
-
-                    // Reset các trường form
-                    setHeight('');
-                    setWeight('');
-                    setPersonalMedicalHistory('');
-                    setFamilyMedicalHistory('');
-                    setPregnancyHistory('');
                 }
-            } else {
-                console.warn("Không có dữ liệu selfReport trong response profile");
-                setHasSelfReport(false);
-                setSelfReport(null);
+            } else if (isDoctor) {
+                // Fetch doctor profile
+                response = await authApis().get(endpoints['doctorProfile']);
+                console.log("Doctor profile response:", response.data);
+
+                const doctor = response.data.doctor;
+                setUserInfo(doctor);
+
+                // Set doctor-specific fields
+                setSpecialization(doctor.specialization || '');
+                setHospital(doctor.hospital || '');
+                setLicenseNumber(doctor.licenseNumber || '');
+                setBio(doctor.bio || '');
+                setExperienceYears(doctor.experienceYears || '');
+
+                // Set common user fields from the nested user object
+                if (doctor.user) {
+                    setFirstName(doctor.user.firstName || '');
+                    setLastName(doctor.user.lastName || '');
+                    setPhoneNumber(doctor.user.phoneNumber || '');
+                    setEmail(doctor.user.email || user.username || '');
+                    setAvatarPreview(doctor.user.avatar || '');
+                }
             }
         } catch (error) {
             console.error('Error fetching profile:', error);
@@ -180,19 +219,39 @@ const PatientProfile = () => {
             dateOfBirth: dateOfBirth,
             insuranceNumber: insuranceNumber
         };
+        const doctorProfile = {
+            user: {
+                firstName: firstName,
+                lastName: lastName,
+                phoneNumber: phoneNumber
+            },
+            specialization: specialization,
+            hospital: hospital,
+            licenseNumber: licenseNumber,
+            bio: bio,
+            experienceYears: parseInt(experienceYears) || 0
+        };
 
         try {
-            const response = await authApis().put(endpoints['patientProfile'], patientProfile);
-            console.log("Kết quả cập nhật:", response.data);
+            let response;
+            if (isPatient) {
+                response = await authApis().put(endpoints['patientProfile'], patientProfile);
+                console.log("Kết quả cập nhật:", response.data);
+
+                setUserInfo(response.data);
+            }
+            else if (isDoctor) {
+                response = await authApis().put(endpoints['doctorProfile'], doctorProfile);
+                setUserInfo(response.data);
+            }
 
             setMessage({
                 type: 'success',
                 text: 'Cập nhật thông tin hồ sơ thành công!'
             });
 
-            setPatientInfo(response.data);
         } catch (error) {
-            console.error('Error updating profile:', error);
+            console.error('Lỗi cập nhật thông tin hồ sơ:', error);
             setMessage({
                 type: 'danger',
                 text: error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật hồ sơ.'
@@ -228,7 +287,7 @@ const PatientProfile = () => {
 
         setLoading(true);
         try {
-            const response = await authApis().post(endpoints['patientAvatar'], formData);
+            const response = await authApis().post(endpoints['userAvatar'], formData);
 
             setMessage({
                 type: 'success',
@@ -492,27 +551,92 @@ const PatientProfile = () => {
                             </Col>
                         </Form.Group>
 
-                        <Form.Group as={Row} className="mb-3" controlId="formDateOfBirth">
-                            <Form.Label column sm="2">Ngày sinh</Form.Label>
-                            <Col sm="10">
-                                <Form.Control
-                                    type="date"
-                                    value={dateOfBirth}
-                                    onChange={(e) => setDateOfBirth(e.target.value)}
-                                />
-                            </Col>
-                        </Form.Group>
+                        {isPatient && (
+                            <>
+                                <Form.Group as={Row} className="mb-3" controlId="formDateOfBirth">
+                                    <Form.Label column sm="2">Ngày sinh</Form.Label>
+                                    <Col sm="10">
+                                        <Form.Control
+                                            type="date"
+                                            value={dateOfBirth}
+                                            onChange={(e) => setDateOfBirth(e.target.value)}
+                                        />
+                                    </Col>
+                                </Form.Group>
 
-                        <Form.Group as={Row} className="mb-3" controlId="formInsurance">
-                            <Form.Label column sm="2">Số BHYT</Form.Label>
-                            <Col sm="10">
-                                <Form.Control
-                                    type="text"
-                                    value={insuranceNumber}
-                                    onChange={(e) => setInsuranceNumber(e.target.value)}
-                                />
-                            </Col>
-                        </Form.Group>
+                                <Form.Group as={Row} className="mb-3" controlId="formInsurance">
+                                    <Form.Label column sm="2">Số BHYT</Form.Label>
+                                    <Col sm="10">
+                                        <Form.Control
+                                            type="text"
+                                            value={insuranceNumber}
+                                            onChange={(e) => setInsuranceNumber(e.target.value)}
+                                        />
+                                    </Col>
+                                </Form.Group>
+                            </>
+                        )}
+
+                        {isDoctor && (
+                            <>
+                                <Form.Group as={Row} className="mb-3" controlId="formSpecialization">
+                                    <Form.Label column sm="2">Chuyên khoa</Form.Label>
+                                    <Col sm="10">
+                                        <Form.Control
+                                            type="text"
+                                            value={specialization}
+                                            onChange={(e) => setSpecialization(e.target.value)}
+                                        />
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row} className="mb-3" controlId="formHospital">
+                                    <Form.Label column sm="2">Bệnh viện</Form.Label>
+                                    <Col sm="10">
+                                        <Form.Control
+                                            type="text"
+                                            value={hospital}
+                                            onChange={(e) => setHospital(e.target.value)}
+                                        />
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row} className="mb-3" controlId="formLicenseNumber">
+                                    <Form.Label column sm="2">Số giấy phép</Form.Label>
+                                    <Col sm="10">
+                                        <Form.Control
+                                            type="text"
+                                            value={licenseNumber}
+                                            onChange={(e) => setLicenseNumber(e.target.value)}
+                                        />
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row} className="mb-3" controlId="formExperienceYears">
+                                    <Form.Label column sm="2">Năm kinh nghiệm</Form.Label>
+                                    <Col sm="10">
+                                        <Form.Control
+                                            type="number"
+                                            value={experienceYears}
+                                            onChange={(e) => setExperienceYears(e.target.value)}
+                                        />
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row} className="mb-3" controlId="formBio">
+                                    <Form.Label column sm="2">Giới thiệu</Form.Label>
+                                    <Col sm="10">
+                                        <Form.Control
+                                            as="textarea"
+                                            rows={3}
+                                            value={bio}
+                                            onChange={(e) => setBio(e.target.value)}
+                                            placeholder="Giới thiệu về bản thân và kinh nghiệm chuyên môn của bạn..."
+                                        />
+                                    </Col>
+                                </Form.Group>
+                            </>
+                        )}
 
                         <div className="d-grid gap-2">
                             <Button variant="primary" type="submit" disabled={loading}>
@@ -599,110 +723,95 @@ const PatientProfile = () => {
                         </div>
                     </Form>
                 </Tab>
-                <Tab eventKey="selfReport" title="Thông tin sức khỏe">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h3>Thông tin sức khỏe cá nhân</h3>
-                        <Button
-                            variant="outline-primary"
-                            size="sm"
-                            onClick={() => fetchSelfReport()}
-                            disabled={loading}
-                        >
-                            {loading ? <Spinner size="sm" animation="border" /> : <i className="fas fa-sync"></i>} Làm mới
-                        </Button>
-                    </div>
+                {/* Chỉ hiển thị khi người dùng là bệnh nhân */}
+                {isPatient && (
+                    <Tab eventKey="selfReport" title="Thông tin sức khỏe">
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                            <h3>Thông tin sức khỏe cá nhân</h3>
+                            <Button
+                                variant="outline-primary"
+                                size="sm"
+                                onClick={fetchUserProfile}
+                                disabled={loading}
+                            >
+                                {loading ? <Spinner size="sm" animation="border" /> : <i className="fas fa-sync"></i>} Làm mới
+                            </Button>
+                        </div>
 
-                    {message.text && message.text.includes('sức khỏe') && (
-                        <Alert variant={message.type} dismissible onClose={() => setMessage({ type: '', text: '' })}>
-                            {message.text}
-                        </Alert>
-                    )}
+                        <Form onSubmit={handleSelfReportSubmit}>
+                            <Row className="mb-3">
+                                <Col md={6}>
+                                    <Form.Group controlId="formHeight">
+                                        <Form.Label>Chiều cao (cm)</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={height}
+                                            onChange={(e) => setHeight(e.target.value)}
+                                            placeholder="Nhập chiều cao (cm)"
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Group controlId="formWeight">
+                                        <Form.Label>Cân nặng (kg)</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={weight}
+                                            onChange={(e) => setWeight(e.target.value)}
+                                            placeholder="Nhập cân nặng (kg)"
+                                        />
+                                    </Form.Group>
+                                </Col>
+                            </Row>
 
-                    <Form onSubmit={handleSelfReportSubmit}>
-                        <Row className="mb-3">
-                            <Col md={6}>
-                                <Form.Group controlId="formHeight">
-                                    <Form.Label>Chiều cao (cm)</Form.Label>
-                                    <Form.Control
-                                        type="number"
-                                        value={height}
-                                        onChange={(e) => setHeight(e.target.value)}
-                                        placeholder="Nhập chiều cao (cm)"
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group controlId="formWeight">
-                                    <Form.Label>Cân nặng (kg)</Form.Label>
-                                    <Form.Control
-                                        type="number"
-                                        value={weight}
-                                        onChange={(e) => setWeight(e.target.value)}
-                                        placeholder="Nhập cân nặng (kg)"
-                                    />
-                                </Form.Group>
-                            </Col>
-                        </Row>
+                            <Form.Group className="mb-3" controlId="formPersonalHistory">
+                                <Form.Label>Tiền sử bệnh cá nhân</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={3}
+                                    value={personalMedicalHistory}
+                                    onChange={(e) => setPersonalMedicalHistory(e.target.value)}
+                                    placeholder="Nhập thông tin về bệnh lý, dị ứng, phẫu thuật trong quá khứ..."
+                                />
+                            </Form.Group>
 
-                        <Form.Group className="mb-3" controlId="formPersonalHistory">
-                            <Form.Label>Tiền sử bệnh cá nhân</Form.Label>
-                            <Form.Control
-                                as="textarea"
-                                rows={3}
-                                value={personalMedicalHistory}
-                                onChange={(e) => setPersonalMedicalHistory(e.target.value)}
-                                placeholder="Nhập thông tin về bệnh lý, dị ứng, phẫu thuật trong quá khứ..."
-                            />
-                        </Form.Group>
+                            <Form.Group className="mb-3" controlId="formFamilyHistory">
+                                <Form.Label>Tiền sử bệnh gia đình</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={3}
+                                    value={familyMedicalHistory}
+                                    onChange={(e) => setFamilyMedicalHistory(e.target.value)}
+                                    placeholder="Nhập thông tin về bệnh lý trong gia đình (cha mẹ, anh chị em ruột)..."
+                                />
+                            </Form.Group>
 
-                        <Form.Group className="mb-3" controlId="formFamilyHistory">
-                            <Form.Label>Tiền sử bệnh gia đình</Form.Label>
-                            <Form.Control
-                                as="textarea"
-                                rows={3}
-                                value={familyMedicalHistory}
-                                onChange={(e) => setFamilyMedicalHistory(e.target.value)}
-                                placeholder="Nhập thông tin về bệnh lý trong gia đình (cha mẹ, anh chị em ruột)..."
-                            />
-                        </Form.Group>
+                            <Form.Group className="mb-3" controlId="formPregnancyHistory">
+                                <Form.Label>Tiểu sử thai sản (nếu có)</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={3}
+                                    value={pregnancyHistory}
+                                    onChange={(e) => setPregnancyHistory(e.target.value)}
+                                    placeholder="Nhập thông tin về các lần mang thai, sinh nở..."
+                                />
+                            </Form.Group>
 
-                        <Form.Group className="mb-3" controlId="formPregnancyHistory">
-                            <Form.Label>Tiểu sử thai sản (nếu có)</Form.Label>
-                            <Form.Control
-                                as="textarea"
-                                rows={3}
-                                value={pregnancyHistory}
-                                onChange={(e) => setPregnancyHistory(e.target.value)}
-                                placeholder="Nhập thông tin về các lần mang thai, sinh nở..."
-                            />
-                        </Form.Group>
-
-                        <div className="d-grid gap-2">
-                            {/* Nút tạo mới chỉ hiển thị khi chưa có báo cáo */}
-                            {!hasSelfReport ? (
+                            <div className="d-grid gap-2">
                                 <Button variant="primary" type="submit" disabled={loading}>
                                     {loading ? (
                                         <>
                                             <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
-                                            {' '}Đang tạo mới...
+                                            {' '}{hasSelfReport ? 'Đang cập nhật...' : 'Đang tạo mới...'}
                                         </>
-                                    ) : 'Tạo mới báo cáo sức khỏe'}
+                                    ) : (hasSelfReport ? 'Cập nhật thông tin sức khỏe' : 'Tạo mới báo cáo sức khỏe')}
                                 </Button>
-                            ) : (
-                                <Button variant="success" type="submit" disabled={loading}>
-                                    {loading ? (
-                                        <>
-                                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
-                                            {' '}Đang cập nhật...
-                                        </>
-                                    ) : 'Cập nhật thông tin sức khỏe'}
-                                </Button>
-                            )}
-                        </div>
-                    </Form>
-                </Tab>
+                            </div>
+                        </Form>
+                    </Tab>
+                )}
             </Tabs>
         </Container>
     );
 };
-export default PatientProfile;
+export default Profile;

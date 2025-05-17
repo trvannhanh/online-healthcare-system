@@ -138,24 +138,6 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public boolean changePassword(String currentPassword, String newPassword) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        return userService.changePassword(username, currentPassword, newPassword);
-    }
-
-    // Implementation in PatientServiceImpl
-    @Override
-    public String updatePatientAvatar(String username, MultipartFile avatar) throws IOException {
-        User user = userService.getUserByUsername(username);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        return userService.updateUserAvatar(user.getId(), avatar);
-    }
-
-    @Override
     public List<HealthRecord> getCurrentPatientHealthRecords(String username) {
         User currentUser = userService.getUserByUsername(username);
         if (currentUser == null) {
