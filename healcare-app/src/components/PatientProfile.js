@@ -7,6 +7,8 @@ import { authApis, endpoints } from '../configs/Apis';
 const PatientProfile = () => {
     const navigate = useNavigate();
     const { user } = useMyUser() || {};
+    const [selectedRecordIndex, setSelectedRecordIndex] = useState(0);
+    const [updatedMedicalHistory, setUpdatedMedicalHistory] = useState('');
     const [patientInfo, setPatientInfo] = useState({});
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -22,6 +24,14 @@ const PatientProfile = () => {
     const [message, setMessage] = useState({ type: '', text: '' });
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('profile');
+    //
+    const [selfReport, setSelfReport] = useState(null);
+    const [hasSelfReport, setHasSelfReport] = useState(false);
+    const [height, setHeight] = useState('');
+    const [weight, setWeight] = useState('');
+    const [personalMedicalHistory, setPersonalMedicalHistory] = useState('');
+    const [familyMedicalHistory, setFamilyMedicalHistory] = useState('');
+    const [pregnancyHistory, setPregnancyHistory] = useState('');
 
     const handleAvatarChange = (e) => {
         const file = e.target.files[0];
@@ -39,6 +49,13 @@ const PatientProfile = () => {
         fetchPatientProfile();
     }, [user]);
 
+    // // Khởi tạo updatedMedicalHistory khi records thay đổi
+    // useEffect(() => {
+    //     if (healthRecords.length > 0 && selectedRecordIndex < healthRecords.length) {
+    //         setUpdatedMedicalHistory(healthRecords[selectedRecordIndex]?.medicalHistory || '');
+    //     }
+    // }, [healthRecords, selectedRecordIndex]);
+
     const fetchPatientProfile = useCallback(async () => {
         // Đơn giản hóa kiểm tra user
         if (!user) return;
@@ -49,8 +66,12 @@ const PatientProfile = () => {
             const response = await authApis().get(endpoints['patientProfile']);
             console.log("API response:", response.data);
 
-            const patient = response.data;
+            const patient = response.data.patient;
+
             setPatientInfo(patient);
+
+            const selfReportData = response.data.selfReport;
+            setSelfReport(selfReportData);
 
             // Cải thiện việc truy cập dữ liệu
             if (user) {
@@ -84,6 +105,36 @@ const PatientProfile = () => {
                 (patient.patient && patient.patient.insuranceNumber) ||
                 ''
             );
+
+            if (response.data.selfReport) {
+                const selfReportData = response.data.selfReport;
+
+                if (selfReportData.exists) {
+                    setSelfReport(selfReportData.report);
+                    setHasSelfReport(true);
+
+                    // Cập nhật các trường dữ liệu
+                    setHeight(selfReportData.report.height || '');
+                    setWeight(selfReportData.report.weight || '');
+                    setPersonalMedicalHistory(selfReportData.report.personalMedicalHistory || '');
+                    setFamilyMedicalHistory(selfReportData.report.familyMedicalHistory || '');
+                    setPregnancyHistory(selfReportData.report.pregnancyHistory || '');
+                } else {
+                    setHasSelfReport(false);
+                    setSelfReport(null);
+
+                    // Reset các trường form
+                    setHeight('');
+                    setWeight('');
+                    setPersonalMedicalHistory('');
+                    setFamilyMedicalHistory('');
+                    setPregnancyHistory('');
+                }
+            } else {
+                console.warn("Không có dữ liệu selfReport trong response profile");
+                setHasSelfReport(false);
+                setSelfReport(null);
+            }
         } catch (error) {
             console.error('Error fetching profile:', error);
 
@@ -238,6 +289,136 @@ const PatientProfile = () => {
             setMessage({
                 type: 'danger',
                 text: error.response?.data?.message || 'Có lỗi xảy ra khi đổi mật khẩu. Vui lòng thử lại.'
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Thêm vào sau handlePasswordChange và trước phần return
+    const handleSelfReportSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!user) {
+            setMessage({
+                type: 'warning',
+                text: 'Không có thông tin người dùng. Vui lòng đăng nhập lại.'
+            });
+            navigate('/login');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const reportData = {
+                height: height ? parseFloat(height) : null,
+                weight: weight ? parseFloat(weight) : null,
+                personalMedicalHistory,
+                familyMedicalHistory,
+                pregnancyHistory
+            };
+
+            let response;
+
+            // Trong hàm handleSelfReportSubmit
+            if (hasSelfReport) {
+                // Cập nhật báo cáo hiện có
+                if (selfReport && selfReport.id) {
+                    reportData.id = selfReport.id;
+                }
+
+                console.log("Đang cập nhật báo cáo sức khỏe:", reportData);
+                response = await authApis().put(endpoints['updatePatientSelfReport'], reportData);
+
+                setMessage({
+                    type: 'success',
+                    text: 'Cập nhật thông tin sức khỏe thành công!'
+                });
+            } else {
+                // Tạo báo cáo mới - đảm bảo endpoint này là đúng
+                console.log("Đang tạo báo cáo sức khỏe mới:", reportData);
+                response = await authApis().post(endpoints['createPatientSelfReport'], reportData);
+
+                setMessage({
+                    type: 'success',
+                    text: 'Tạo thông tin sức khỏe thành công!'
+                });
+            }
+
+            console.log("Kết quả từ server:", response.data);
+
+            // Cập nhật state với dữ liệu từ response
+            setSelfReport(response.data);
+            setHasSelfReport(true);
+
+            // Cập nhật các trường form
+            setHeight(response.data.height || '');
+            setWeight(response.data.weight || '');
+            setPersonalMedicalHistory(response.data.personalMedicalHistory || '');
+            setFamilyMedicalHistory(response.data.familyMedicalHistory || '');
+            setPregnancyHistory(response.data.pregnancyHistory || '');
+
+        } catch (error) {
+            console.error('Error submitting self report:', error);
+
+            // Xử lý thông báo lỗi từ server
+            if (error.response) {
+                const errorData = error.response.data;
+                let errorMessage = 'Có lỗi xảy ra khi gửi thông tin sức khỏe.';
+
+                if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else if (typeof errorData === 'string') {
+                    errorMessage = errorData;
+                }
+
+                setMessage({
+                    type: 'danger',
+                    text: errorMessage
+                });
+            } else {
+                setMessage({
+                    type: 'danger',
+                    text: 'Có lỗi kết nối đến máy chủ. Vui lòng thử lại sau.'
+                });
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Hàm helper để làm mới thông tin báo cáo sức khỏe
+    const fetchSelfReport = async () => {
+        try {
+            setLoading(true);
+            const response = await authApis().get(endpoints['patientProfile']);
+            console.log("Profile response with self report:", response.data);
+
+            if (response.data.selfReport && response.data.selfReport.exists) {
+                setSelfReport(response.data.selfReport.report);
+                setHasSelfReport(true);
+
+                // Cập nhật các trường form
+                setHeight(response.data.selfReport.report.height || '');
+                setWeight(response.data.selfReport.report.weight || '');
+                setPersonalMedicalHistory(response.data.selfReport.report.personalMedicalHistory || '');
+                setFamilyMedicalHistory(response.data.selfReport.report.familyMedicalHistory || '');
+                setPregnancyHistory(response.data.selfReport.report.pregnancyHistory || '');
+            } else {
+                // Reset nếu không có báo cáo
+                setSelfReport(null);
+                setHasSelfReport(false);
+                setHeight('');
+                setWeight('');
+                setPersonalMedicalHistory('');
+                setFamilyMedicalHistory('');
+                setPregnancyHistory('');
+            }
+        } catch (error) {
+            console.error('Error fetching profile data:', error);
+            setMessage({
+                type: 'warning',
+                text: 'Không thể tải thông tin hồ sơ và báo cáo sức khỏe.'
             });
         } finally {
             setLoading(false);
@@ -415,6 +596,108 @@ const PatientProfile = () => {
                             <Button variant="warning" type="submit" disabled={loading}>
                                 {loading ? 'Đang cập nhật...' : 'Đổi mật khẩu'}
                             </Button>
+                        </div>
+                    </Form>
+                </Tab>
+                <Tab eventKey="selfReport" title="Thông tin sức khỏe">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <h3>Thông tin sức khỏe cá nhân</h3>
+                        <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={() => fetchSelfReport()}
+                            disabled={loading}
+                        >
+                            {loading ? <Spinner size="sm" animation="border" /> : <i className="fas fa-sync"></i>} Làm mới
+                        </Button>
+                    </div>
+
+                    {message.text && message.text.includes('sức khỏe') && (
+                        <Alert variant={message.type} dismissible onClose={() => setMessage({ type: '', text: '' })}>
+                            {message.text}
+                        </Alert>
+                    )}
+
+                    <Form onSubmit={handleSelfReportSubmit}>
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <Form.Group controlId="formHeight">
+                                    <Form.Label>Chiều cao (cm)</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        value={height}
+                                        onChange={(e) => setHeight(e.target.value)}
+                                        placeholder="Nhập chiều cao (cm)"
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group controlId="formWeight">
+                                    <Form.Label>Cân nặng (kg)</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        value={weight}
+                                        onChange={(e) => setWeight(e.target.value)}
+                                        placeholder="Nhập cân nặng (kg)"
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Form.Group className="mb-3" controlId="formPersonalHistory">
+                            <Form.Label>Tiền sử bệnh cá nhân</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={3}
+                                value={personalMedicalHistory}
+                                onChange={(e) => setPersonalMedicalHistory(e.target.value)}
+                                placeholder="Nhập thông tin về bệnh lý, dị ứng, phẫu thuật trong quá khứ..."
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3" controlId="formFamilyHistory">
+                            <Form.Label>Tiền sử bệnh gia đình</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={3}
+                                value={familyMedicalHistory}
+                                onChange={(e) => setFamilyMedicalHistory(e.target.value)}
+                                placeholder="Nhập thông tin về bệnh lý trong gia đình (cha mẹ, anh chị em ruột)..."
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3" controlId="formPregnancyHistory">
+                            <Form.Label>Tiểu sử thai sản (nếu có)</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={3}
+                                value={pregnancyHistory}
+                                onChange={(e) => setPregnancyHistory(e.target.value)}
+                                placeholder="Nhập thông tin về các lần mang thai, sinh nở..."
+                            />
+                        </Form.Group>
+
+                        <div className="d-grid gap-2">
+                            {/* Nút tạo mới chỉ hiển thị khi chưa có báo cáo */}
+                            {!hasSelfReport ? (
+                                <Button variant="primary" type="submit" disabled={loading}>
+                                    {loading ? (
+                                        <>
+                                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                                            {' '}Đang tạo mới...
+                                        </>
+                                    ) : 'Tạo mới báo cáo sức khỏe'}
+                                </Button>
+                            ) : (
+                                <Button variant="success" type="submit" disabled={loading}>
+                                    {loading ? (
+                                        <>
+                                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                                            {' '}Đang cập nhật...
+                                        </>
+                                    ) : 'Cập nhật thông tin sức khỏe'}
+                                </Button>
+                            )}
                         </div>
                     </Form>
                 </Tab>

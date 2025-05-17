@@ -7,8 +7,10 @@ package com.can.controllers;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +23,11 @@ import java.security.Principal;
 import java.text.ParseException;
 import org.springframework.security.core.Authentication;
 
+import com.can.pojo.HealthRecord;
 import com.can.pojo.Patient;
+import com.can.pojo.PatientSelfReport;
 import com.can.services.PatientService;
+import com.can.services.PatientSelfReportService;
 import com.can.pojo.User;
 import com.can.repositories.PatientRepository;
 import com.can.services.UserService;
@@ -38,6 +43,9 @@ public class ApiPatientController {
     @Autowired
     private PatientService patientService;
 
+    @Autowired
+    private PatientSelfReportService patientSelfReportService;
+
     // Get the current patient's profile
     @GetMapping("/profile")
 
@@ -47,7 +55,36 @@ public class ApiPatientController {
             String username = authentication.getName();
             System.out.println("Username: " + username);
             Patient patient = patientService.getCurrentPatientProfile(username);
-            return ResponseEntity.ok(patient);
+            // Tạo đối tượng phản hồi
+            Map<String, Object> response = new HashMap<>();
+            response.put("patient", patient);
+
+            // try {
+            //     List<HealthRecord> records = patientService.getCurrentPatientHealthRecords(username);
+            //     response.put("healthRecords", records);
+            // } catch (Exception e) {
+            //     // Just log it and continue
+            //     System.err.println("Failed to load health records: " + e.getMessage());
+            //     response.put("healthRecords", new ArrayList<>());
+            // }
+            try {
+            boolean hasReport = patientSelfReportService.hasCurrentPatientSelfReport(username);
+            Map<String, Object> selfReportData = new HashMap<>();
+            selfReportData.put("exists", hasReport);
+            
+            if (hasReport) {
+                PatientSelfReport report = patientSelfReportService.getCurrentPatientSelfReport(username);
+                selfReportData.put("report", report);
+            } else {
+                selfReportData.put("message", "Bạn chưa có báo cáo sức khỏe. Hãy tạo mới.");
+            }
+            
+            response.put("selfReport", selfReportData);
+        } catch (Exception e) {
+            System.err.println("Failed to load self report: " + e.getMessage());
+            response.put("selfReport", Map.of("exists", false, "message", "Không thể tải thông tin báo cáo sức khỏe"));
+        }
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             // Log lỗi để debug
             e.printStackTrace();
@@ -72,7 +109,7 @@ public class ApiPatientController {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
-            Patient updatedPatient = patientService.updatePatientProfile(username,patient);
+            Patient updatedPatient = patientService.updatePatientProfile(username, patient);
             return ResponseEntity.ok(updatedPatient);
         } catch (Exception e) {
             e.printStackTrace();

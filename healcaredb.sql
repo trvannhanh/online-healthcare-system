@@ -35,7 +35,7 @@ CREATE TABLE `appointment` (
   KEY `doctor_id` (`doctor_id`),
   CONSTRAINT `appointment_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`id`) ON DELETE CASCADE,
   CONSTRAINT `appointment_ibfk_2` FOREIGN KEY (`doctor_id`) REFERENCES `doctor` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -44,7 +44,7 @@ CREATE TABLE `appointment` (
 
 LOCK TABLES `appointment` WRITE;
 /*!40000 ALTER TABLE `appointment` DISABLE KEYS */;
-INSERT INTO `appointment` VALUES (1,1,3,'2025-04-10 10:00:00','2025-04-02 03:48:14','2025-04-02 03:48:14','PENDING'),(3,1,4,'2025-04-12 09:30:00','2025-04-02 03:48:14','2025-04-02 03:48:14','PENDING'),(4,2,3,'2025-04-13 11:00:00','2025-04-02 03:48:14','2025-04-02 03:48:14','PENDING'),(10,2,9,'2025-04-20 15:00:00','2025-04-22 02:16:27','2025-04-22 02:16:27','PENDING'),(12,2,4,'2025-04-25 15:00:00','2025-04-22 02:24:30','2025-04-22 02:24:30','PENDING'),(18,2,9,'2025-05-29 15:00:00','2025-04-22 03:06:26','2025-04-22 08:24:14','CANCELLED'),(19,2,9,'2025-05-11 15:00:00','2025-04-22 06:45:22','2025-04-22 08:30:12','CANCELLED'),(20,1,3,'2025-05-14 17:27:00','2025-04-23 09:27:57','2025-04-23 09:27:57','PENDING'),(21,1,3,'2025-05-20 16:29:00','2025-04-23 09:29:40','2025-04-23 09:29:40','PENDING'),(22,1,3,'2025-04-30 17:56:00','2025-04-23 10:56:14','2025-04-23 10:56:14','PENDING'),(23,21,14,'2025-05-05 14:30:00','2025-05-03 09:59:09','2025-05-04 14:42:48','COMPLETED');
+INSERT INTO `appointment` VALUES (4,2,3,'2025-04-13 11:00:00','2025-04-02 03:48:14','2025-04-02 03:48:14','PENDING'),(12,2,4,'2025-04-25 15:00:00','2025-04-22 02:24:30','2025-04-22 02:24:30','PENDING'),(18,2,9,'2025-05-29 15:00:00','2025-04-22 03:06:26','2025-04-22 08:24:14','CANCELLED'),(19,2,9,'2025-05-11 15:00:00','2025-04-22 06:45:22','2025-04-22 08:30:12','CANCELLED'),(20,1,3,'2025-05-14 17:27:00','2025-04-23 09:27:57','2025-04-23 09:27:57','PENDING'),(21,1,3,'2025-05-20 16:29:00','2025-04-23 09:29:40','2025-04-23 09:29:40','PENDING'),(22,1,3,'2025-04-30 17:56:00','2025-04-23 10:56:14','2025-04-23 10:56:14','PENDING'),(23,21,14,'2025-05-05 14:30:00','2025-05-03 09:59:09','2025-05-04 14:42:48','COMPLETED'),(24,20,10,'2025-05-18 13:10:00',NULL,'2025-05-13 06:10:18','PENDING'),(25,31,26,'2025-05-13 11:00:00','2025-05-13 07:34:15','2025-05-13 09:35:30','CANCELLED'),(26,31,26,'2025-05-14 11:00:00','2025-05-13 07:44:59','2025-05-13 07:44:59','PENDING'),(27,31,26,'2025-05-14 08:00:00','2025-05-13 07:45:59','2025-05-13 07:45:59','PENDING'),(28,31,26,'2025-05-16 12:00:00','2025-05-13 07:48:04','2025-05-13 07:48:04','PENDING'),(29,31,26,'2025-05-16 15:00:00','2025-05-13 07:52:54','2025-05-13 07:52:55','PENDING'),(30,31,22,'2025-05-22 15:00:00','2025-05-13 08:03:27','2025-05-13 08:03:26','PENDING'),(31,31,3,'2025-05-13 14:00:00','2025-05-13 08:29:06','2025-05-13 08:29:07','PENDING'),(32,31,4,'2025-05-23 16:00:00','2025-05-13 08:29:29','2025-05-13 08:29:28','PENDING'),(33,31,9,'2025-05-16 16:00:00','2025-05-13 08:29:54','2025-05-13 08:29:53','PENDING'),(34,31,4,'2025-05-16 16:00:00','2025-05-13 08:32:16','2025-05-13 08:32:16','PENDING'),(35,31,3,'2025-05-20 14:00:00','2025-05-13 08:34:10','2025-05-13 08:34:09','PENDING'),(36,31,9,'2025-05-15 12:00:00','2025-05-13 09:35:50','2025-05-13 09:35:50','PENDING'),(37,31,9,'2025-05-16 14:00:00','2025-05-13 10:02:55','2025-05-13 10:02:55','PENDING'),(38,31,4,'2025-05-29 12:00:00','2025-05-13 10:04:32','2025-05-13 10:04:32','PENDING'),(39,31,4,'2025-05-18 09:00:00','2025-05-13 10:05:04','2025-05-13 10:05:04','PENDING'),(40,31,3,'2025-05-21 12:00:00','2025-05-13 10:06:20','2025-05-13 10:06:27','PENDING'),(41,31,3,'2025-05-17 12:00:00','2025-05-13 10:09:12','2025-05-13 10:09:12','PENDING'),(42,31,3,'2025-05-27 10:00:00','2025-05-13 10:24:25','2025-05-13 10:24:26','PENDING'),(43,31,3,'2025-05-25 15:00:00','2025-05-13 10:27:13','2025-05-13 10:27:13','PENDING'),(44,31,14,'2025-05-17 13:00:00','2025-05-13 10:44:10','2025-05-13 10:44:10','PENDING');
 /*!40000 ALTER TABLE `appointment` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -80,7 +80,7 @@ CREATE TABLE `doctor` (
 
 LOCK TABLES `doctor` WRITE;
 /*!40000 ALTER TABLE `doctor` DISABLE KEYS */;
-INSERT INTO `doctor` VALUES (3,1,1,'LIC123456',1,'Bác sĩ nội khoa với 5 năm kinh nghiệm.',5,4.5),(4,2,2,'LIC654321',1,'Bác sĩ ngoại khoa với 10 năm kinh nghiệm.',10,4.8),(9,3,3,'LIC543222',0,'Orthopedic specialist',12,4.8),(10,4,3,'LIC543555',0,'Orthopedic specialist',12,4.8),(14,4,2,'83111763812',1,'Orthopedic specialist',0,0),(22,2,3,'83128763812',0,NULL,0,0);
+INSERT INTO `doctor` VALUES (3,1,1,'LIC123456',1,'Bác sĩ nội khoa với 5 năm kinh nghiệm.',5,4.5),(4,2,2,'LIC654321',1,'Bác sĩ ngoại khoa với 10 năm kinh nghiệm.',10,4.8),(9,3,3,'LIC543222',0,'Orthopedic specialist',12,4.8),(10,4,3,'LIC543555',0,'Orthopedic specialist',12,4.8),(14,4,2,'83111763812',1,'Orthopedic specialist',0,0),(22,2,3,'83128763812',0,NULL,0,0),(26,2,1,'12345678910',0,NULL,0,0);
 /*!40000 ALTER TABLE `doctor` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -188,7 +188,7 @@ CREATE TABLE `notifications` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -197,7 +197,7 @@ CREATE TABLE `notifications` (
 
 LOCK TABLES `notifications` WRITE;
 /*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
-INSERT INTO `notifications` VALUES (1,1,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:16:26','DISCOUNT'),(2,2,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:16:26','DISCOUNT'),(3,20,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:16:26','DISCOUNT'),(4,21,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:16:26','DISCOUNT'),(5,1,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:17:32','DISCOUNT'),(6,2,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:17:32','DISCOUNT'),(7,20,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:17:32','DISCOUNT'),(8,21,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:17:32','DISCOUNT'),(9,1,'? Ưu đãi đặc biệt lên đến 20% cho khách hàng đặt lịch khám trong tuần này!','2025-05-14 17:00:00','DISCOUNT'),(10,2,'? Ưu đãi đặc biệt lên đến 20% cho khách hàng đặt lịch khám trong tuần này!','2025-05-14 17:00:00','DISCOUNT'),(11,20,'? Ưu đãi đặc biệt lên đến 20% cho khách hàng đặt lịch khám trong tuần này!','2025-05-14 17:00:00','DISCOUNT'),(12,21,'? Ưu đãi đặc biệt lên đến 20% cho khách hàng đặt lịch khám trong tuần này!','2025-05-14 17:00:00','DISCOUNT');
+INSERT INTO `notifications` VALUES (1,1,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:16:26','DISCOUNT'),(2,2,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:16:26','DISCOUNT'),(3,20,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:16:26','DISCOUNT'),(4,21,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:16:26','DISCOUNT'),(5,1,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:17:32','DISCOUNT'),(6,2,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:17:32','DISCOUNT'),(7,20,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:17:32','DISCOUNT'),(8,21,'? Ưu đãi đặc biệt lên đến 50% cho khách hàng đặt lịch khám trong tuần này!','2025-05-12 18:17:32','DISCOUNT'),(13,1,'? Tham gia chương trình khám sức khỏe tổng quát miễn phí từ ngày 13/5/2025.','2025-05-13 05:28:00','HEALTH_PROGRAM'),(14,2,'? Tham gia chương trình khám sức khỏe tổng quát miễn phí từ ngày 13/5/2025.','2025-05-13 05:28:00','HEALTH_PROGRAM'),(15,20,'? Tham gia chương trình khám sức khỏe tổng quát miễn phí từ ngày 13/5/2025.','2025-05-13 05:28:00','HEALTH_PROGRAM'),(16,21,'? Tham gia chương trình khám sức khỏe tổng quát miễn phí từ ngày 13/5/2025.','2025-05-13 05:28:00','HEALTH_PROGRAM'),(17,14,'Bạn có lịch hẹn mới với bệnh nhân: Lê Công Quận vào lúc 13:00 17/05/2025','2025-05-13 10:44:11','APPOINTMENT');
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -223,8 +223,41 @@ CREATE TABLE `patient` (
 
 LOCK TABLES `patient` WRITE;
 /*!40000 ALTER TABLE `patient` DISABLE KEYS */;
-INSERT INTO `patient` VALUES (1,'1990-01-01','BH123456'),(2,'1985-05-15','BH654321'),(20,'1990-01-01','0666111555222'),(21,'1990-01-01','0666111555222');
+INSERT INTO `patient` VALUES (1,'1990-01-01','BH123456'),(2,'1985-05-15','BH654321'),(20,'1990-01-01','0666111555222'),(21,'1990-01-01','0666111555222'),(31,'2004-05-13','5843356460');
 /*!40000 ALTER TABLE `patient` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `patient_self_reports`
+--
+
+DROP TABLE IF EXISTS `patient_self_reports`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `patient_self_reports` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `height` float DEFAULT NULL,
+  `weight` float DEFAULT NULL,
+  `personal_medical_history` text COMMENT 'Tiền sử bệnh bản thân',
+  `family_medical_history` text COMMENT 'Tiền sử bệnh người thân',
+  `pregnancy_history` text COMMENT 'Tiểu sử thai sản',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `patient_id` (`patient_id`),
+  CONSTRAINT `patient_self_reports_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `patient_self_reports`
+--
+
+LOCK TABLES `patient_self_reports` WRITE;
+/*!40000 ALTER TABLE `patient_self_reports` DISABLE KEYS */;
+INSERT INTO `patient_self_reports` VALUES (1,31,160,55,'Không','Không','Không','2025-05-17 15:10:23','2025-05-17 15:10:24');
+/*!40000 ALTER TABLE `patient_self_reports` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -254,7 +287,7 @@ CREATE TABLE `payment` (
 
 LOCK TABLES `payment` WRITE;
 /*!40000 ALTER TABLE `payment` DISABLE KEYS */;
-INSERT INTO `payment` VALUES (1,1,500.00,'Momo','PENDING','TRANSACTION123','2025-04-02 03:48:14'),(3,3,450.00,'Stripe','SUCCESSFUL','TRANSACTION789','2025-04-02 03:48:14'),(4,4,250.00,'Momo','FAILED','TRANSACTION321','2025-04-02 03:48:14'),(7,23,500.00,'Momo','SUCCESSFUL','ORDER_7_1746373933666','2025-05-03 17:00:00');
+INSERT INTO `payment` VALUES (4,4,250.00,'Momo','FAILED','TRANSACTION321','2025-04-02 03:48:14'),(7,23,500.00,'Momo','SUCCESSFUL','ORDER_7_1746373933666','2025-05-03 17:00:00');
 /*!40000 ALTER TABLE `payment` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -369,7 +402,7 @@ CREATE TABLE `user` (
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `phone_number` (`phone_number`),
   UNIQUE KEY `identity_number` (`identity_number`)
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -378,7 +411,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (1,'Nguyen','Van A','nguyenvana','password123','2025-04-02 10:48:14','0123456789','MALE','nguyenvana@example.com','123456789012','PATIENT','avatar1.png'),(2,'Tran','Thi B','tranthib','password123','2025-04-02 10:48:14','0987654321','FEMALE','tranthib@example.com','234567890123','PATIENT','avatar2.png'),(3,'Le','Van C','levanc','{noop}password123','2025-04-02 10:48:14','0912345678','MALE','levanc@example.com','345678901234','DOCTOR','avatar3.png'),(4,'Pham','Thi D','phamthid','password123','2025-04-02 10:48:14','0901234567','FEMALE','phamthid@example.com','456789012345','DOCTOR','avatar4.png'),(5,'Tran','Nguyen Linh Chi','linhchi123','{noop}12345678','2025-04-02 10:48:14','0909475806','FEMALE','chitrannguyenlinh@gmail.com','079304014219','ADMIN','avatar5.png'),(6,'Charlie','Davis','charliedavis','password123',NULL,'1234567890',NULL,'charlie@example.com',NULL,'DOCTOR',NULL),(9,'Charlie','Davis','charliedavis12','password123',NULL,'1234561111',NULL,'charlie2@example.com',NULL,'DOCTOR',NULL),(10,'Charles','Davis','charliedavis4','password123',NULL,'1234561555',NULL,'charles.davis@example.com',NULL,'DOCTOR',NULL),(12,'test1','t','test1','$2a$10$U3xAhVBJ8nfj59F7e7gfiOOp1dI4da3kEfuqQGLF99NbU0ofBcqT2',NULL,'0123987654',NULL,'test1@gmail.com',NULL,'ADMIN','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1744887357/azltogghcyqkysaewkby.jpg'),(13,'','test2','test2','$2a$10$jDE2nOkaPXDefOwtDuySQOeVzxZ5MGs65ASsA.TJ8/xGanAfi2y0S',NULL,'0986756789',NULL,'test2@gmail.com',NULL,'ADMIN','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1744887955/gombsu2rhgej2xyjj0wc.jpg'),(14,'','test2','test3','$2a$10$d4cfIQV0BTktTPNRoM/eaOKj.BqLaQve5A5.AGLJkRUcwTdhhhwq2',NULL,'053826451',NULL,'test3@gmail.com',NULL,'DOCTOR','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1745248585/xoehoednqfk1pyk09zrn.jpg'),(20,'','test4','test4','$2a$10$UpfSNKYS3tFMMQl.ZnZjm..3BOCyAZL7GGgjSdJFsPXYg1n9kf7DK',NULL,'0126856711',NULL,'test4@gmail.com',NULL,'PATIENT','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1746172170/oofnz4yfx5iq96gaag2c.jpg'),(21,'Nguyen','test6','test6','$2a$10$TyqoAQXLZ1sl5ECQDzRnt.7SyJC4m7iI3Q3ZzCISx9iWqCYY/ECum',NULL,'0162748391',NULL,'test6@gmail.com',NULL,'PATIENT','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1746173523/eaopmc6vnc6w6f30dgbo.jpg'),(22,'','test5','test5','$2a$10$bF2LCaiX3oJgMSxdMDr6XeXjp7B5vtJ8OrKrBo71S/2l3ZBOhG4pa',NULL,'0777125741',NULL,'test5@gmail.com',NULL,'DOCTOR','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1746173589/oi6kflv4rhbplauvva94.jpg');
+INSERT INTO `user` VALUES (1,'Nguyen','Van A','nguyenvana','password123','2025-04-02 10:48:14','0123456789','MALE','nguyenvana@example.com','123456789012','PATIENT','avatar1.png'),(2,'Tran','Thi B','tranthib','password123','2025-04-02 10:48:14','0987654321','FEMALE','tranthib@example.com','234567890123','PATIENT','avatar2.png'),(3,'Le','Van C','levanc','{noop}password123','2025-04-02 10:48:14','0912345678','MALE','levanc@example.com','345678901234','DOCTOR','avatar3.png'),(4,'Pham','Thi D','phamthid','password123','2025-04-02 10:48:14','0901234567','FEMALE','phamthid@example.com','456789012345','DOCTOR','avatar4.png'),(5,'Tran','Nguyen Linh Chi','linhchi123','{noop}12345678','2025-04-02 10:48:14','0909475806','FEMALE','2251050011chi@gmail.com','079304014219','ADMIN','avatar5.png'),(6,'Charlie','Davis','charliedavis','password123',NULL,'1234567890',NULL,'charlie@example.com',NULL,'DOCTOR',NULL),(9,'Charlie','Davis','charliedavis12','password123',NULL,'1234561111',NULL,'charlie2@example.com',NULL,'DOCTOR',NULL),(10,'Charles','Davis','charliedavis4','password123',NULL,'1234561555',NULL,'charles.davis@example.com',NULL,'DOCTOR',NULL),(12,'test1','t','test1','$2a$10$U3xAhVBJ8nfj59F7e7gfiOOp1dI4da3kEfuqQGLF99NbU0ofBcqT2',NULL,'0123987654',NULL,'test1@gmail.com',NULL,'ADMIN','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1744887357/azltogghcyqkysaewkby.jpg'),(13,'','test2','test2','$2a$10$jDE2nOkaPXDefOwtDuySQOeVzxZ5MGs65ASsA.TJ8/xGanAfi2y0S',NULL,'0986756789',NULL,'test2@gmail.com',NULL,'ADMIN','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1744887955/gombsu2rhgej2xyjj0wc.jpg'),(14,'','test2','test3','$2a$10$d4cfIQV0BTktTPNRoM/eaOKj.BqLaQve5A5.AGLJkRUcwTdhhhwq2',NULL,'053826451',NULL,'test3@gmail.com',NULL,'DOCTOR','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1745248585/xoehoednqfk1pyk09zrn.jpg'),(20,'','test4','test4','$2a$10$UpfSNKYS3tFMMQl.ZnZjm..3BOCyAZL7GGgjSdJFsPXYg1n9kf7DK',NULL,'0126856711',NULL,'test4@gmail.com',NULL,'PATIENT','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1746172170/oofnz4yfx5iq96gaag2c.jpg'),(21,'Nguyen','test6','test6','$2a$10$TyqoAQXLZ1sl5ECQDzRnt.7SyJC4m7iI3Q3ZzCISx9iWqCYY/ECum',NULL,'0162748391',NULL,'test6@gmail.com',NULL,'PATIENT','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1746173523/eaopmc6vnc6w6f30dgbo.jpg'),(22,'','test5','test5','$2a$10$bF2LCaiX3oJgMSxdMDr6XeXjp7B5vtJ8OrKrBo71S/2l3ZBOhG4pa',NULL,'0777125741',NULL,'test5@gmail.com',NULL,'DOCTOR','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1746173589/oi6kflv4rhbplauvva94.jpg'),(26,'Trần ','Chi','lychee1','$2a$10$nBtQo6e7MKaxcaZP9uEsiegK2mXsiaiO/3FjjU02gQrhjMqPYcMHW',NULL,NULL,NULL,'2251050011chi@ou.edu.vn',NULL,'DOCTOR','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1747119703/br5dmfn2x0bwl0ooziks.jpg'),(31,'Lê','Công Quận','quanlee','$2a$10$MwiX7et3aJoo6a4Fmi236usv9bp3JK74kLe2hJGLncLqZRJAcrrTu',NULL,'1526616',NULL,'chitrannguyenlinh@gmail.com',NULL,'PATIENT','https://res.cloudinary.com/dqpkxxzaf/image/upload/v1747215443/u8ik4u14l2q8p6gfvdfx.webp');
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -391,4 +424,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-05-13  2:03:28
+-- Dump completed on 2025-05-17 22:12:35

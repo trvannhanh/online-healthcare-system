@@ -2,10 +2,14 @@ package com.can.controllers;
 
 import com.can.pojo.Appointment;
 import com.can.services.EmailService;
+import com.can.services.UserService;
+import com.can.pojo.User;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,15 +23,19 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
 /**
  *
  * @author DELL
  */
 @RestController
-@RequestMapping("/api/email")
+@RequestMapping("/api/secure/email")
 public class EmailController {
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private UserService userService;
 
     // Gửi email đơn giản
     @PostMapping("/send")
@@ -36,7 +44,21 @@ public class EmailController {
             @RequestParam String subject,
             @RequestParam String body) {
         try {
-            emailService.sendEmail(to, subject, body);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            String recipient = to;
+            if (recipient == null || recipient.isEmpty()) {
+                User user = userService.getUserByUsername(username);
+                if (user == null) {
+                    return new ResponseEntity<>("User not found", HttpStatus.BAD_REQUEST);
+                }
+
+                recipient = user.getEmail();
+                if (recipient == null || recipient.isEmpty()) {
+                    return new ResponseEntity<>("User does not have an email address", HttpStatus.BAD_REQUEST);
+                }
+            }
+            emailService.sendEmail(recipient, subject, body);
             return new ResponseEntity<>("Email sent successfully.", HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Failed to send email: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -50,7 +72,8 @@ public class EmailController {
             emailService.sendAppointmentConfirmationEmail(appointment);
             return new ResponseEntity<>("Appointment confirmation email sent.", HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>("Failed to send confirmation email: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Failed to send confirmation email: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -61,7 +84,8 @@ public class EmailController {
             emailService.sendAppointmentNotificationEmail(appointment);
             return new ResponseEntity<>("Appointment notification email sent.", HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>("Failed to send notification email: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Failed to send notification email: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -72,7 +96,8 @@ public class EmailController {
             emailService.sendPromotionalEmailToPatients(content);
             return new ResponseEntity<>("Promotional emails sent to patients.", HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>("Failed to send promotional emails: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Failed to send promotional emails: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

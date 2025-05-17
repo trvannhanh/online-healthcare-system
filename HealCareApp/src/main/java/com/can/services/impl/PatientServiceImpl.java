@@ -6,8 +6,10 @@ package com.can.services.impl;
 
 import com.can.pojo.Patient;
 import com.can.pojo.User;
+import com.can.pojo.HealthRecord;
 import com.can.repositories.PatientRepository;
 import com.can.services.PatientService;
+import com.can.services.HealthRecordService;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -37,6 +39,9 @@ public class PatientServiceImpl implements PatientService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private HealthRecordService healthRecordService;
 
     @Override
     public boolean isUsernameExists(Session session, String username) {
@@ -148,5 +153,21 @@ public class PatientServiceImpl implements PatientService {
         }
 
         return userService.updateUserAvatar(user.getId(), avatar);
+    }
+
+    @Override
+    public List<HealthRecord> getCurrentPatientHealthRecords(String username) {
+        User currentUser = userService.getUserByUsername(username);
+        if (currentUser == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        // Đảm bảo người dùng là bệnh nhân
+        if (!currentUser.getRole().name().equals("PATIENT")) {
+            throw new RuntimeException("Access denied. Only patients can access this resource");
+        }
+
+        // Lấy thông tin bệnh nhân
+        return this.healthRecordService.getHealthRecordsByPatient(currentUser.getId());
     }
 }

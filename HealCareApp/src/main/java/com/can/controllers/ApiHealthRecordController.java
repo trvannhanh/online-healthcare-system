@@ -1,13 +1,25 @@
 package com.can.controllers;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.can.pojo.HealthRecord;
 import com.can.services.HealthRecordService;
+import com.can.services.PatientService;
+import com.can.services.UserService;
+import com.can.pojo.Patient;
+import com.can.pojo.User;
+import com.can.repositories.PatientRepository;
+import com.can.services.PatientService;
+import com.can.services.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,86 +40,112 @@ import org.springframework.web.server.ResponseStatusException;
  * @author DELL
  */
 @RestController
-@RequestMapping("/api/health-records")
+@RequestMapping("/api/secure/health-records")
+@CrossOrigin
 public class ApiHealthRecordController {
 
     @Autowired
     private HealthRecordService healthRecordService;
 
+    @Autowired
+    private PatientService patientService;
+
+    @Autowired
+    private UserService userService;
+
     // Thêm mới một hồ sơ sức khỏe
-    @PostMapping
-    public ResponseEntity<HealthRecord> createHealthRecord(@RequestBody HealthRecord healthRecord) {
+    @PostMapping("/add")
+    public ResponseEntity<?> createHealthRecord(@RequestBody HealthRecord healthRecord) {
         try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            User currentUser = userService.getUserByUsername(username);
+            // Nếu người dùng là bệnh nhân, tự động gán patient vào health record
+            if (currentUser.getRole().name().equals("PATIENT")) {
+                Patient patient = patientService.getPatientById(currentUser.getId());
+                healthRecord.setPatient(patient);
+            } else if (healthRecord.getPatient() == null) {
+                return new ResponseEntity<>("Thiếu thông tin bệnh nhân", HttpStatus.BAD_REQUEST);
+            }
             HealthRecord newHealthRecord = healthRecordService.addHealthRecord(healthRecord);
             return new ResponseEntity<>(newHealthRecord, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Dữ liệu không hợp lệ");
+            errorResponse.put("error", e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Không thể tạo hồ sơ sức khỏe");
+            errorResponse.put("error", e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    // Xóa một hồ sơ sức khỏe theo id
-    @DeleteMapping("/{recordId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteHealthRecord(@PathVariable(value = "recordId") Integer id) {
-        try {
-            healthRecordService.deleteHealthRecord(id);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ID");
-        } catch (RuntimeException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Health record not found");
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+            e.printStackTrace();
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Lỗi hệ thống khi tạo hồ sơ sức khỏe");
+            errorResponse.put("error", e.getMessage());
+            errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+            errorResponse.put("timestamp", LocalDateTime.now().toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     /// Cập nhật một hồ sơ sức khỏe theo id
-    @PutMapping("{recordId}")
-    public ResponseEntity<HealthRecord> updateHealthRecord(@PathVariable("recordId") Integer id,
+    @PutMapping("/{recordId}")
+    public ResponseEntity<?> updateHealthRecord(@PathVariable("recordId") Integer id,
             @RequestBody HealthRecord healthRecord) {
         try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
             healthRecord.setId(id.intValue());
+            HealthRecord existingRecord = healthRecordService.getHealthRecordById(id);
+            if (existingRecord == null) {
+                return new ResponseEntity<>("Không tìm thấy hồ sơ sức khỏe", HttpStatus.NOT_FOUND);
+            }
+            
+            // Kiểm tra quyền: chỉ bác sĩ hoặc chính bệnh nhân mới được cập nhật
+            User currentUser = userService.getUserByUsername(username);
+            String role = currentUser.getRole().name();
+            
+            if (!"DOCTOR".equals(role) && 
+                !(role.equals("PATIENT") && currentUser.getId() == existingRecord.getPatient().getId())) {
+                return new ResponseEntity<>("Bạn không có quyền cập nhật hồ sơ này", HttpStatus.FORBIDDEN);
+            }
+            
+            // Gán ID để cập nhật đúng record
+            healthRecord.setId(id);
+            
+            // Giữ nguyên thông tin bệnh nhân
+            if (healthRecord.getPatient() == null) {
+                healthRecord.setPatient(existingRecord.getPatient());
+            }
+            
+            // Giữ nguyên thông tin bác sĩ nếu không có cập nhật
+            if (healthRecord.getDoctor() == null) {
+                healthRecord.setDoctor(existingRecord.getDoctor());
+            }
+            
             HealthRecord updatedHealthRecord = healthRecordService.updateHealthRecord(healthRecord);
             return new ResponseEntity<>(updatedHealthRecord, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Dữ liệu không hợp lệ");
+            errorResponse.put("error", e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Không thể cập nhật hồ sơ sức khỏe");
+            errorResponse.put("error", e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            e.printStackTrace();
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Lỗi hệ thống khi cập nhật hồ sơ sức khỏe");
+            errorResponse.put("error", e.getMessage());
+            errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+            errorResponse.put("timestamp", LocalDateTime.now().toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    // Lấy hồ sơ sức khỏe theo ID
-    @GetMapping("/{recordId}")
-    public ResponseEntity<HealthRecord> getHealthRecordById(@PathVariable("recordId") Integer id) {
-        HealthRecord healthRecord = healthRecordService.getHealthRecordById(id);
-        return healthRecord != null ? ResponseEntity.ok(healthRecord) : ResponseEntity.notFound().build();
-    }
-
-    // Lấy hồ sơ sức khỏe theo bệnh nhân
-    @GetMapping("patient/{patientId}")
-    public ResponseEntity<List<HealthRecord>> getHealthRecordsByPatient(@PathVariable("patientId") Integer patientId) {
-        try {
-        if (patientId == null || patientId <= 0) {
-            return ResponseEntity.badRequest().body(null);
-        }
-
-        System.out.println("Fetching health records for patientId: " + patientId);
-        List<HealthRecord> healthRecords = healthRecordService.getHealthRecordsByPatient(patientId);
-
-        if (healthRecords == null || healthRecords.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-
-        return ResponseEntity.ok(healthRecords);
-    } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
     }
 
 }

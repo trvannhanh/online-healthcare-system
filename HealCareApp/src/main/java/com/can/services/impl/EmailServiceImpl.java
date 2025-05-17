@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 
 import com.can.pojo.Appointment;
 import com.can.pojo.AppointmentStatus;
@@ -20,6 +21,9 @@ import com.can.pojo.User;
 import com.can.pojo.Patient;
 import com.can.repositories.PatientRepository;
 import com.can.services.EmailService;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 /**
  *
@@ -46,12 +50,30 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
+    public void sendHtmlEmail(String to, String subject, String htmlContent) {
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true); // Set true to indicate HTML content
+
+            javaMailSender.send(message);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            // Handle exception
+        }
+    }
+
+    @Override
     public void sendAppointmentConfirmationEmail(Appointment appointment) {
         // Kiểm tra trạng thái lịch hẹn
         // Nếu không phải là lịch hẹn chưa xác nhận thì không gửi email
         if (appointment.getStatus() != AppointmentStatus.PENDING) {
             return;
         }
+
         Patient patient = appointment.getPatient();
         User user = patient.getUser();
         Doctor doctor = appointment.getDoctor();
@@ -62,16 +84,45 @@ public class EmailServiceImpl implements EmailService {
 
         String formattedDate = new SimpleDateFormat("dd/MM/yyyy HH:mm").format(appointment.getAppointmentDate());
 
-        String content = String.format(
-                "Xin chào %s,\n\n" +
-                        "Bạn đã đặt lịch hẹn với bác sĩ %s vào %s ngày %s.\n" +
-                        "Vui lòng xác nhận lại lịch hẹn.\n\n" +
-                        "Trân trọng,\n",
+        // Tạo link xác nhận lịch hẹn
+        String confirmationLink = "http://localhost:3000/appointments/confirm/" + appointment.getId();
+
+        // Tạo nội dung HTML với nút bấm
+        String htmlContent = String.format(
+                "<html>" +
+                        "<head>" +
+                        "  <style>" +
+                        "    body { font-family: Arial, sans-serif; line-height: 1.6; }" +
+                        "    .container { max-width: 600px; margin: 0 auto; padding: 20px; }" +
+                        "    .button { display: inline-block; background-color: #4CAF50; color: white; " +
+                        "              padding: 12px 24px; text-decoration: none; border-radius: 4px; " +
+                        "              font-weight: bold; margin-top: 20px; }" +
+                        "    .button:hover { background-color: #45a049; }" +
+                        "  </style>" +
+                        "</head>" +
+                        "<body>" +
+                        "  <div class='container'>" +
+                        "    <p>Xin chào %s,</p>" +
+                        "    <p>Bạn đã đặt lịch hẹn với bác sĩ <strong>%s</strong> vào <strong>%s</strong>.</p>" +
+                        "    <p>Vui lòng xác nhận lịch hẹn của bạn bằng cách nhấn vào nút bên dưới:</p>" +
+                        "    <a href='%s' class='button'>Xác nhận lịch hẹn</a>" +
+                        "    <p>Hoặc bạn có thể truy cập trực tiếp vào trang web của chúng tôi để xem chi tiết lịch hẹn:"
+                        +
+                        "      <a href='http://localhost:3000/appointments'>Xem lịch hẹn</a>" +
+                        "    </p>" +
+                        "    <p>Nếu bạn không thể giữ lịch hẹn, vui lòng liên hệ với chúng tôi để hủy hoặc đổi lịch.</p>"
+                        +
+                        "    <p>Trân trọng,<br>Đội ngũ Health Care</p>" +
+                        "  </div>" +
+                        "</body>" +
+                        "</html>",
                 user.getFullName(),
                 doctorName,
-                formattedDate);
+                formattedDate,
+                confirmationLink);
 
-        sendEmail(to, subject, content);
+        // Gửi email HTML
+        sendHtmlEmail(to, subject, htmlContent);
     }
 
     @Override
