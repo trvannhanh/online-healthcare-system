@@ -4,6 +4,7 @@
  */
 package com.can.services;
 
+import com.can.pojo.HealthRecord;
 import com.can.pojo.Patient;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,9 @@ public interface PatientService {
 
     Patient updatePatientProfile(String username, Patient patient);
 
-    boolean changePassword(String currentPassword, String newPassword);
+    // boolean changePassword(String currentPassword, String newPassword);
 
-    String updatePatientAvatar(String username, MultipartFile avatar) throws IOException;
+    // String updatePatientAvatar(String username, MultipartFile avatar) throws IOException;
+
+    List<HealthRecord> getCurrentPatientHealthRecords(String username);
 }
