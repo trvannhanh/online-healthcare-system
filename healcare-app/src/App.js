@@ -11,6 +11,7 @@ import DoctorDetail from "./components/DoctorDetail";
 import AppointmentForm from "./components/AppointmentForm";
 import PatientProfile from "./components/PatientProfile";
 import Payment from "./components/Payment";
+import ChatRoom from "./components/ChatRoom";
 
 
 const App = () => {
@@ -29,6 +30,7 @@ const App = () => {
                       <Route path="/doctors/:id" element={<DoctorDetail />} />
                       <Route path="/appointments/new" element={<AppointmentForm />} />
                       <Route path="/payment/:appointmentId" element={<Payment />} />
+                      <Route path="/chat/:otherUserId" element={<ChatRoom />} />
                   </Routes>
               </Container>
 
