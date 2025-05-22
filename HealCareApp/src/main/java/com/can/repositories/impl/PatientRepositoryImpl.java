@@ -126,14 +126,17 @@ public class PatientRepositoryImpl implements PatientRepository {
     public Patient getPatientById(Integer id) {
         Session s = this.factory.getObject().getCurrentSession();
         CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Patient> q = b.createQuery(Patient.class);
-        Root<Patient> root = q.from(Patient.class);
-        root.fetch("user");
+        CriteriaQuery<Patient> q = b.createQuery(Patient.class
+        );
+        Root<Patient> root = q.from(Patient.class
+        );
 
-        q.where(b.equal(root.get("id"), id));
+        Join<Patient, User> userJoin = root.join("user");
 
-        Query<Patient> query = s.createQuery(q);
-        return query.getSingleResult();
+        q.where(b.equal(userJoin.get("id"), id));
+
+        Query query = s.createQuery(q);
+        return (Patient) query.getSingleResult();
 
     }
 

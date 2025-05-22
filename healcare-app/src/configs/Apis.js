@@ -7,6 +7,7 @@ export const endpoints = {
     'hospitals': '/hospitals',
     'specialization': '/specialization',
     'doctors': '/doctors',
+    'patients': '/patients',
     'appointments': '/appointments',
     'register': '/users',
     'login': '/login',
