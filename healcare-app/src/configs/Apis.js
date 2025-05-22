@@ -15,13 +15,21 @@ export const endpoints = {
     'appointmentsFilter': '/appointments/filter',
     'cancelAppointment': (id) => `/secure/appointments/${id}/cancel`,
     'rescheduleAppointment': (id) => `/secure/appointments/${id}/reschedule`,
-    'patientProfile': '/secure/patient/profile',     
-    'patientAvatar': '/secure/patient/avatar',       
-    'changePassword': '/secure/patient/change-password', 
+    'patientProfile': '/secure/patient/profile',
     'createPayment': (appointmentId) => `/secure/payment/${appointmentId}/create`,
     'processPayment': (paymentId) => `/secure/payment/${paymentId}/process`,
     'paymentReturn': () => '/payment/return',
     'payment': '/payment',
+    'createPatientSelfReport': '/secure/patient-self-report/add',
+    'updatePatientSelfReport': '/secure/patient-self-report',
+    'doctorProfile': '/secure/doctor/profile',
+    'userAvatar': '/secure/avatar',
+    'changePassword': '/secure/change-password',
+    
+
+    // 'healthRecord': (id) => `/secure/health-records/${id}`,
+    // 'createHealthRecord': '/secure/health-records/add',
+    // 'updateHealthRecord': (id) => `/secure/health-records/${id}`
 }
 
 export const authApis = () => {

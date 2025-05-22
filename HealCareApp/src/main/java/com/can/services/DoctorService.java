@@ -9,6 +9,8 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.web.multipart.MultipartFile;
+
 /**
  *
  * @author Giidavibe
@@ -27,4 +29,8 @@ public interface DoctorService {
     void updateLicenseNumber(int doctorId, String licenseNumber);
     // Lấy khung giờ trống của bác sĩ trong một ngày
     List<String> getAvailableTimeSlots(int doctorId, String date) throws ParseException;
+    Doctor getCurrentDoctorProfile(String username);
+    Doctor updateDoctorProfile(String username, Doctor doctorData);
+    // String updateDoctorAvatar(String username, MultipartFile avatar);
+    // boolean changePassword(String currentPassword, String newPassword);
 }

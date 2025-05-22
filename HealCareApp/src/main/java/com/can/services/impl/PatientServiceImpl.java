@@ -6,8 +6,10 @@ package com.can.services.impl;
 
 import com.can.pojo.Patient;
 import com.can.pojo.User;
+import com.can.pojo.HealthRecord;
 import com.can.repositories.PatientRepository;
 import com.can.services.PatientService;
+import com.can.services.HealthRecordService;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -37,6 +39,9 @@ public class PatientServiceImpl implements PatientService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private HealthRecordService healthRecordService;
 
     @Override
     public boolean isUsernameExists(Session session, String username) {
@@ -133,20 +138,18 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public boolean changePassword(String currentPassword, String newPassword) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        return userService.changePassword(username, currentPassword, newPassword);
-    }
-
-    // Implementation in PatientServiceImpl
-    @Override
-    public String updatePatientAvatar(String username, MultipartFile avatar) throws IOException {
-        User user = userService.getUserByUsername(username);
-        if (user == null) {
+    public List<HealthRecord> getCurrentPatientHealthRecords(String username) {
+        User currentUser = userService.getUserByUsername(username);
+        if (currentUser == null) {
             throw new RuntimeException("User not found");
         }
 
-        return userService.updateUserAvatar(user.getId(), avatar);
+        // Đảm bảo người dùng là bệnh nhân
+        if (!currentUser.getRole().name().equals("PATIENT")) {
+            throw new RuntimeException("Access denied. Only patients can access this resource");
+        }
+
+        // Lấy thông tin bệnh nhân
+        return this.healthRecordService.getHealthRecordsByPatient(currentUser.getId());
     }
 }
