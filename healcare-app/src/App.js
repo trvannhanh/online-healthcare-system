@@ -12,6 +12,7 @@ import AppointmentForm from "./components/AppointmentForm";
 import Profile from "./components/Profile";
 import Payment from "./components/Payment";
 import ChatRoom from "./components/ChatRoom";
+import Appointment from "./components/Appointment";
 
 
 const App = () => {
@@ -28,6 +29,7 @@ const App = () => {
                       <Route path="/login" element={<Login />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/doctors/:id" element={<DoctorDetail />} />
+                      <Route path="/appointment" element={<Appointment />} />
                       <Route path="/appointments/new" element={<AppointmentForm />} />
                       <Route path="/payment/:appointmentId" element={<Payment />} />
                       <Route path="/chat/:otherUserId" element={<ChatRoom />} />

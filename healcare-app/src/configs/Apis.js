@@ -4,22 +4,40 @@ import cookie from 'react-cookies'
 const BASE_URL = 'http://localhost:8080/HealCareApp/api';
 
 export const endpoints = {
-    'hospitals': '/hospitals',
-    'specialization': '/specialization',
-    'doctors': '/doctors',
-    'patients': '/patients',
-    'appointments': '/appointments',
-    'register': '/users',
-    'login': '/login',
+    //USER
+    'register': '/users', //Đăng ký tài khoản
+    'login': '/login', // Đăng nhập
     'current-user': '/secure/profile',
-    'appointmentsFilter': '/appointments/filter',
-    'cancelAppointment': (id) => `/secure/appointments/${id}/cancel`,
-    'rescheduleAppointment': (id) => `/secure/appointments/${id}/reschedule`,
-    'patientProfile': '/secure/patient/profile',
-    'createPayment': (appointmentId) => `/secure/payment/${appointmentId}/create`,
-    'processPayment': (paymentId) => `/secure/payment/${paymentId}/process`,
-    'paymentReturn': () => '/payment/return',
+
+
+
+
+    //APPOINTMENT
+    'rescheduleAppointment': (id) => `/secure/appointments/${id}/reschedule`, //Đổi thời gian lịch hẹn
+    'appointments': '/appointments', // Danh sách lịch hẹn
+    'appointmentsFilter': '/appointments/filter', //Lọc danh sách lịch hẹn
+    'cancelAppointment': (id) => `/secure/appointments/${id}/cancel`, //Hủy lịch hẹn
+    'confirmAppointment': (id) => `/secure/appointments/${id}/confirm`, // Xác nhận lịch hẹn
+
+
+    //DOCTOR
+    'createPayment': (appointmentId) => `/secure/payment/${appointmentId}/create`, //Tạo hóa đơn
+    'hospitals': '/hospitals', //Danh sách Bệnh Viện
+    'specialization': '/specialization', // Danh sách Chuyên Khoa
+    'doctors': '/doctors', 
+
+
+    //PATIENT
+    'processPayment': (paymentId) => `/secure/payment/${paymentId}/process`, //Thanh Toán Hóa Đơn
+    'paymentReturn': () => '/payment/return', //Trả về Thanh Toán
     'payment': '/payment',
+    'patients': '/patients', 
+    
+
+    
+
+
+    'patientProfile': '/secure/patient/profile',
     'createPatientSelfReport': '/secure/patient-self-report/add',
     'updatePatientSelfReport': '/secure/patient-self-report',
     'doctorProfile': '/secure/doctor/profile',

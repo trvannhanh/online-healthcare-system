@@ -87,6 +87,7 @@ const Header = () => {
                                 </NavDropdown.Item>
                             ))}
                         </NavDropdown>
+                        <Link to="/appointment" className="nav-link fs-6 text-dark fw-semibold">Lịch hẹn</Link>
                     </Nav>
 
                     {/* Search bar */}
