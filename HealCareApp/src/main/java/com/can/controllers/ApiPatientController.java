@@ -43,7 +43,9 @@ public class ApiPatientController {
     @Autowired
     private PatientService patientService;
     
-    // API mới: Lấy thông tin chi tiết bác sĩ
+    @Autowired
+    private PatientSelfReportService patientSelfReportService;
+
     @GetMapping("/patients/{id}")
     public ResponseEntity<Patient> getPatientById(@PathVariable("id") int id) {
         try {
@@ -56,61 +58,10 @@ public class ApiPatientController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-   @PostMapping("/secure/patient/avatar")
-   public ResponseEntity<?> updateAvatar(@RequestParam("avatar") MultipartFile avatar) {
-       try {
-           Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-           String username = authentication.getName();
-
-           if (avatar == null || avatar.isEmpty()) {
-               return ResponseEntity.badRequest().body("No avatar file provided");
-           }
-
-           // Call service to save the avatar
-           String avatarUrl = patientService.updatePatientAvatar(username, avatar);
-
-           Map<String, Object> response = new HashMap<>();
-           response.put("message", "Avatar updated successfully");
-           response.put("avatarUrl", avatarUrl);
-
-           return ResponseEntity.ok(response);
-       } catch (Exception e) {
-           e.printStackTrace();
-           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                   .body("Error updating avatar: " + e.getMessage());
-       }
-   }
-
-   // Đổi mật khẩu
-   @PostMapping("/secure/patient/change-password")
-   public ResponseEntity<?> changePassword(
-           @RequestParam("currentPassword") String currentPassword,
-           @RequestParam("newPassword") String newPassword) {
-
-       try {
-           boolean changed = patientService.changePassword(currentPassword, newPassword);
-           if (changed) {
-               return ResponseEntity.ok(Map.of("message", "Đổi mật khẩu thành công"));
-           } else {
-               return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mật khẩu hiện tại không đúng");
-           }
-       } catch (Exception e) {
-           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                   .body("Lỗi khi đổi mật khẩu: " + e.getMessage());
-       }
-   }
     
     
-    
-
-
-    @Autowired
-    private PatientSelfReportService patientSelfReportService;
-
     // Get the current patient's profile
     @GetMapping("/secure/patient/profile")
-
     public ResponseEntity<?> getPatientProfile() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

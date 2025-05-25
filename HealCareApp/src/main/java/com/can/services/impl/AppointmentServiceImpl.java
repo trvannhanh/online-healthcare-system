@@ -181,15 +181,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         User u = this.uServ.getUserByUsername(username);
         String role = u.getRole().toString().toUpperCase();
 
-        if (!"PATIENT".equalsIgnoreCase(role) && !"DOCTOR".equalsIgnoreCase(role)) {
-            try {
-                throw new AccessDeniedException("Bạn không có quyền hủy lịch hẹn này1");
-            } catch (AccessDeniedException ex) {
-                Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-
-        if (!(u.getId() == existingAppointment.getDoctor().getId()) && !(u.getId() == existingAppointment.getPatient().getId())) {
+        if (!(u.getId() == existingAppointment.getDoctor().getId()) && !(u.getId() == existingAppointment.getPatient().getId()) && !"ADMIN".equalsIgnoreCase(role)) {
             try {
                 throw new AccessDeniedException("Bạn không có quyền hủy lịch hẹn này2");
             } catch (AccessDeniedException ex) {
@@ -199,8 +191,8 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         String status = existingAppointment.getStatus().toString().toUpperCase();
 
-        if (!"PENDING".equals(status)) {
-            throw new IllegalStateException("Chỉ lịch hẹn chờ xác nhận mới có thể được hủy");
+        if (!"PENDING".equals(status) && !"CONFIRMED".equals(status)) {
+            throw new IllegalStateException("Chỉ lịch hẹn chưa hoàn thành mới có thể được hủy");
         }
 
         // Kiểm tra thời gian tạo lịch hẹn
@@ -230,7 +222,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         User u = this.uServ.getUserByUsername(username);
         String role = u.getRole().toString().toUpperCase();
 
-        if (!"DOCTOR".equalsIgnoreCase(role) && !"PATIENT".equalsIgnoreCase(role)) {
+        if ("DOCTOR".equalsIgnoreCase(role)) {
             try {
                 throw new AccessDeniedException("Bạn không có quyền hủy lịch hẹn này1");
             } catch (AccessDeniedException ex) {
@@ -238,7 +230,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
         }
 
-        if (!(u.getId() == existingAppointment.getDoctor().getId()) && !(u.getId() == existingAppointment.getPatient().getId())) {
+        if ( !(u.getId() == existingAppointment.getPatient().getId()) && !"ADMIN".equalsIgnoreCase(role)) {
             try {
                 throw new AccessDeniedException("Bạn không có quyền sửa lịch hẹn này");
             } catch (AccessDeniedException ex) {
@@ -248,8 +240,8 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         String status = existingAppointment.getStatus().toString().toUpperCase();
 
-        if (!"PENDING".equals(status)) {
-            throw new IllegalStateException("Chỉ lịch hẹn chờ xác nhận mới có thể được xác nhận");
+        if (!"PENDING".equals(status) && !"CONFIRMED".equals(status) ) {
+            throw new IllegalStateException("Chỉ lịch hẹn chưa hoàn thành mới có thể được xác nhận");
         }
 
         // Kiểm tra thời gian tạo lịch hẹn
@@ -281,15 +273,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         User u = this.uServ.getUserByUsername(username);
         String role = u.getRole().toString().toUpperCase();
 
-        if (!"PATIENT".equalsIgnoreCase(role)) {
-            try {
-                throw new AccessDeniedException("Bạn không có quyền hủy lịch hẹn này1");
-            } catch (AccessDeniedException ex) {
-                Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
 
-        if (!(u.getId() == existingAppointment.getPatient().getId())) {
+        if (!(u.getId() == existingAppointment.getPatient().getId()) && !"ADMIN".equalsIgnoreCase(role)) {
             try {
                 throw new AccessDeniedException("Bạn không có quyền xác nhận lịch hẹn này");
             } catch (AccessDeniedException ex) {
@@ -299,7 +284,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         String status = existingAppointment.getStatus().toString().toUpperCase();
 
-        if (!"PENDING".equals(status)) {
+        if (!"PENDING".equals(status) && !"CONFIRMED".equals(status) ) {
             throw new IllegalStateException("Chỉ lịch hẹn chờ xác nhận mới có thể được xác nhận");
         }
 
