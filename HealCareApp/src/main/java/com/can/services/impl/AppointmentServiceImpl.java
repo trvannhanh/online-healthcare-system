@@ -310,47 +310,4 @@ public class AppointmentServiceImpl implements AppointmentService {
     public List<Appointment> getAppointmentsWithFilters(Map<String, String> params) {
         return this.appRepo.getAppointmentsWithFilters(params);
     }
-
-    @Override
-    public List<Appointment> getAppointmentsCompleteByDateRange(Date fromDateStr, Date toDateStr)
-            throws ParseException {
-        return this.appRepo.getAppointmentsCompleteByDateRange(fromDateStr, toDateStr);
-    }
-
-    @Override
-    public Integer countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr)
-            throws ParseException {
-        return this.appRepo.countDistinctPatientsByDoctorAndDateRange(doctorId, fromDateStr, toDateStr);
-    }
-
-    @Override
-    public Integer countDistinctPatientsByDoctorAndMonth(int doctorId, int year, int month) throws ParseException {
-        return this.appRepo.countDistinctPatientsByDoctorAndMonth(doctorId, year, month);
-    }
-
-    @Override
-    public Integer countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException {
-
-        return this.appRepo.countDistinctPatientsByDoctorAndQuarter(doctorId, year, quarter);
-    }
-
-    @Override
-    public Integer countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException {
-        return this.appRepo.countDistinctPatientsByDateRange(fromDateStr, toDateStr);
-    }
-
-    @Override
-    public Integer countDistinctPatientsByQuarter(int year, int quarter) throws ParseException {
-        return this.appRepo.countDistinctPatientsByQuarter(year, quarter);
-    }
-
-    @Override
-    public Integer countDistinctPatientsByMonth(int year, int month) throws ParseException {
-        return this.appRepo.countDistinctPatientsByMonth(year, month);
-    }
-
-    @Override
-    public List<Integer> getMonthlyStatistics(int year) throws ParseException {
-        return this.appRepo.getMonthlyStatistics(year);
-    }
 }
