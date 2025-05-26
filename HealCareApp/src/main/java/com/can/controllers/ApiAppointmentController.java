@@ -177,7 +177,7 @@ public class ApiAppointmentController {
         }
     }
 
-    @PutMapping("/secure/appointments/{id}/confirm")
+    @PatchMapping("/secure/appointments/{id}/confirm")
     @CrossOrigin
     public ResponseEntity<?> confirmAppointment(@PathVariable("id") int id, Principal principal) {
         try {

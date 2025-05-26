@@ -371,6 +371,13 @@ const Home = () => {
                                                     </Button>
                                                 )}
                                             </td>
+                                            <td>
+                                                {appt.status === 'PENDING' && (
+                                                    <Link to={`/chat/${user.role === 'PATIENT' ? appt.doctor.id : appt.patient.id}`}>
+                                                        <Button variant="primary">Chat</Button>
+                                                    </Link>
+                                                )}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>

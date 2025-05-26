@@ -37,18 +37,31 @@ import com.can.services.UserService;
  * @author Giidavibe
  */
 @RestController
-@RequestMapping("/api/secure/patient")
+@RequestMapping("/api")
 @CrossOrigin
 public class ApiPatientController {
     @Autowired
     private PatientService patientService;
-
+    
     @Autowired
     private PatientSelfReportService patientSelfReportService;
 
+    @GetMapping("/patients/{id}")
+    public ResponseEntity<Patient> getPatientById(@PathVariable("id") int id) {
+        try {
+            Patient patient = patientService.getPatientById(id);
+            if (patient == null) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<>(patient, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    
     // Get the current patient's profile
-    @GetMapping("/profile")
-
+    @GetMapping("/secure/patient/profile")
     public ResponseEntity<?> getPatientProfile() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -102,7 +115,7 @@ public class ApiPatientController {
     }
 
     // Cập nhật thông tin cá nhân
-    @PutMapping("/profile")
+    @PutMapping("/secure/patient/profile")
     public ResponseEntity<?> updatePatientProfile(
             @RequestBody Patient patient) {
 
