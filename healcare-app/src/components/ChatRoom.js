@@ -1,11 +1,33 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { ref, onValue, push, set, off } from "firebase/database";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../configs/firebase";
-import { Alert, Button, Card, Form, Spinner } from "react-bootstrap";
+import { ref, onValue, off } from "firebase/database";
+import { db } from "../configs/firebase";
+import { Alert, Button, Card, Form, Spinner, Modal } from "react-bootstrap";
 import { useMyUser } from "../configs/MyContexts";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 import Apis, { authApis, endpoints } from "../configs/Apis";
+import cookie from 'react-cookies';
+
+// Hàm lấy biểu tượng dựa trên loại file
+const getFileIcon = (fileName) => {
+  const extension = fileName.split('.').pop().toLowerCase();
+  switch (extension) {
+    case 'pdf':
+      return '📄';
+    case 'xlsx':
+    case 'xls':
+      return '📊';
+    case 'doc':
+    case 'docx':
+      return '📜';
+    case 'txt':
+      return '📝';
+    case 'zip':
+      return '📦';
+    default:
+      return '📎';
+  }
+};
 
 const ChatRoom = () => {
   const { otherUserId } = useParams();
@@ -13,19 +35,79 @@ const ChatRoom = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [file, setFile] = useState(null);
-  const [image, setImage] = useState(null); // Thêm state cho ảnh
+  const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fileUploading, setFileUploading] = useState(false);
   const [error, setError] = useState(null);
   const [otherUser, setOtherUser] = useState({ name: "Người dùng không xác định", avatar: null });
+  const [showVideoCall, setShowVideoCall] = useState(false);
+  const [jitsiApi, setJitsiApi] = useState(null);
+  const [jitsiScriptLoaded, setJitsiScriptLoaded] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
-  const imageInputRef = useRef(null); // Thêm ref cho input ảnh
+  const imageInputRef = useRef(null);
+  const jitsiContainerRef = useRef(null);
+  const navigate = useNavigate();
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
+  // Kiểm tra script Jitsi đã tải chưa
+  useEffect(() => {
+    const checkJitsiScript = () => {
+      console.log("Kiểm tra Jitsi Meet script...");
+      if (window.JitsiMeetExternalAPI) {
+        console.log("Jitsi Meet script đã tải thành công!");
+        setJitsiScriptLoaded(true);
+      } else {
+        console.log("Đang chờ Jitsi Meet script tải... (Kiểm tra mạng hoặc domain)");
+        setTimeout(checkJitsiScript, 500); // Kiểm tra lại sau 500ms
+      }
+    };
+
+    checkJitsiScript();
+
+    // Thêm sự kiện để kiểm tra lỗi tải script
+    const handleScriptError = () => {
+      console.error("Lỗi khi tải script Jitsi Meet!");
+      setError("Không thể tải Jitsi Meet script. Vui lòng kiểm tra kết nối hoặc domain.");
+    };
+    window.addEventListener('error', handleScriptError);
+
+    return () => {
+      window.removeEventListener('error', handleScriptError);
+    };
+  }, []);
+
+  // Gọi initializeJitsi khi modal mở và script đã tải
+  useEffect(() => {
+    if (showVideoCall && jitsiScriptLoaded && !jitsiApi) {
+      console.log("Modal đã mở, kiểm tra jitsiContainerRef...");
+      if (!jitsiContainerRef.current) {
+        console.log("jitsiContainerRef.current chưa sẵn sàng, chờ DOM render...");
+        // Chờ DOM render xong
+        const timer = setTimeout(() => {
+          if (jitsiContainerRef.current) {
+            console.log("jitsiContainerRef.current đã sẵn sàng, khởi tạo Jitsi...");
+            initializeJitsi();
+          } else {
+            console.error("jitsiContainerRef.current vẫn là null sau khi chờ!");
+            setError("Không thể tìm thấy container cho video call. Vui lòng thử lại.");
+          }
+        }, 100); // Chờ 100ms để DOM render
+        return () => clearTimeout(timer);
+      } else {
+        console.log("jitsiContainerRef.current đã sẵn sàng, khởi tạo Jitsi ngay...");
+        initializeJitsi();
+      }
+    } else if (showVideoCall && !jitsiScriptLoaded) {
+      console.log("Script Jitsi chưa tải xong!");
+      setError("Jitsi Meet script chưa tải xong. Vui lòng chờ hoặc làm mới trang.");
+    }
+  }, [showVideoCall, jitsiScriptLoaded, jitsiApi]);
+
+  // Lấy thông tin người dùng khác
   useEffect(() => {
     const fetchOtherUser = async () => {
       if (!otherUserId || !user) {
@@ -47,55 +129,41 @@ const ChatRoom = () => {
         });
       } catch (error) {
         console.error("Lỗi khi lấy thông tin người dùng khác:", error);
+        if (error.response?.status === 401) {
+          navigate("/login");
+        }
         setError("Không thể tải thông tin người dùng. Vui lòng thử lại.");
       }
     };
     fetchOtherUser();
-  }, [otherUserId, user]);
+  }, [otherUserId, user, navigate]);
 
+  // Lắng nghe tin nhắn từ Firebase Realtime Database
   useEffect(() => {
-    let unsubscribe;
-    let chatRef = null;
-    if (user?.id && otherUserId) {
-      chatRef = ref(db, `chat_rooms/${user.role === "PATIENT" ? `${user.id}_${otherUserId}` : `${otherUserId}_${user.id}`}/messages`);
-      unsubscribe = onValue(
-        chatRef,
-        (snapshot) => {
-          const data = snapshot.val();
-          if (data) {
-            const messageList = Object.keys(data).map((key) => ({
-              id: key,
-              type: data[key].type || "text",
-              text: data[key].text || "",
-              fileUrl: data[key].fileUrl || null,
-              fileName: data[key].fileName || null,
-              createdAt: new Date(data[key].timestamp),
-              senderId: data[key].senderId,
-              senderName: data[key].senderName,
-              senderAvatar: data[key].senderId === user.id.toString() ? user.avatar : otherUser.avatar,
-            }));
-            setMessages(messageList.reverse());
-          } else {
-            setMessages([]);
-          }
-          setLoading(false);
-        },
-        (error) => {
-          console.error("Lỗi khi lắng nghe tin nhắn:", error);
-          setError("Không thể tải tin nhắn. Vui lòng thử lại.");
-          setLoading(false);
-        }
-      );
-    } else {
-      setMessages([]);
-      setLoading(false);
-      setError("Vui lòng đăng nhập và cung cấp ID người dùng hợp lệ.");
-    }
-    return () => {
-      if (unsubscribe && chatRef) off(chatRef);
-    };
-  }, [user, otherUserId, otherUser.avatar]);
+    if (!user?.id || !otherUserId) return;
 
+    const chatRoomId = user.id < otherUserId ? `${user.id}_${otherUserId}` : `${otherUserId}_${user.id}`;
+    const messagesRef = ref(db, `chat_rooms/${chatRoomId}/messages`);
+
+    setLoading(true);
+    const unsubscribe = onValue(messagesRef, (snapshot) => {
+      const messagesData = [];
+      snapshot.forEach((childSnapshot) => {
+        const message = childSnapshot.val();
+        message.id = childSnapshot.key;
+        messagesData.push(message);
+      });
+      setMessages(messagesData);
+      setLoading(false);
+    }, (error) => {
+      setError("Không thể tải tin nhắn: " + error.message);
+      setLoading(false);
+    });
+
+    return () => off(messagesRef, "value", unsubscribe);
+  }, [user, otherUserId]);
+
+  // Tự động cuộn xuống tin nhắn mới nhất
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
@@ -109,7 +177,7 @@ const ChatRoom = () => {
         return;
       }
       setFile(selectedFile);
-      setImage(null); // Đảm bảo chỉ chọn file hoặc ảnh
+      setImage(null);
     }
   };
 
@@ -122,11 +190,11 @@ const ChatRoom = () => {
         return;
       }
       setImage(selectedImage);
-      setFile(null); // Đảm bảo chỉ chọn ảnh hoặc file
+      setFile(null);
     }
   };
 
-  // Gửi tin nhắn, file hoặc ảnh
+  // Gửi tin nhắn
   const onSend = useCallback(async () => {
     if (!user?.id || !otherUserId) return;
     if (!newMessage.trim() && !file && !image) return;
@@ -135,54 +203,18 @@ const ChatRoom = () => {
       setLoading(true);
       setFileUploading(true);
 
-      const chatRef = ref(db, `chat_rooms/${user.role === "PATIENT" ? `${user.id}_${otherUserId}` : `${otherUserId}_${user.id}`}/messages`);
-      const newMessageRef = push(chatRef);
-      let messageData = {
-        senderId: user.id.toString(),
-        senderName: user.firstName || user.username || "Người dùng",
-        timestamp: Date.now(),
-      };
+      const formData = new FormData();
+      if (newMessage.trim()) formData.append("text", newMessage.trim());
+      if (file) formData.append("file", file);
+      if (image) formData.append("image", image);
+      formData.append("otherUserId", otherUserId);
 
-      // Xử lý gửi file
-      if (file) {
-        const filePath = `chat_files/${user.role === "PATIENT" ? `${user.id}_${otherUserId}` : `${otherUserId}_${user.id}`}/${Date.now()}_${file.name}`;
-        const fileStorageRef = storageRef(storage, filePath);
-        await uploadBytes(fileStorageRef, file);
-        const fileUrl = await getDownloadURL(fileStorageRef);
-
-        messageData.type = "file";
-        messageData.fileUrl = fileUrl;
-        messageData.fileName = file.name;
-        if (newMessage.trim()) {
-          messageData.text = newMessage.trim();
-        }
-      }
-      // Xử lý gửi ảnh
-      else if (image) {
-        const imagePath = `chat_images/${user.role === "PATIENT" ? `${user.id}_${otherUserId}` : `${otherUserId}_${user.id}`}/${Date.now()}_${image.name}`;
-        const imageStorageRef = storageRef(storage, imagePath);
-        await uploadBytes(imageStorageRef, image);
-        const imageUrl = await getDownloadURL(imageStorageRef);
-
-        messageData.type = "image";
-        messageData.fileUrl = imageUrl;
-        messageData.fileName = image.name;
-        if (newMessage.trim()) {
-          messageData.text = newMessage.trim();
-        }
-      }
-      // Gửi tin nhắn văn bản
-      else {
-        messageData.type = "text";
-        messageData.text = newMessage.trim();
-      }
-
-      await set(newMessageRef, messageData);
-
-      const participantsRef = ref(db, `chat_rooms/${user.role === "PATIENT" ? `${user.id}_${otherUserId}` : `${otherUserId}_${user.id}`}/participants`);
-      await set(participantsRef, {
-        userId: user.id.toString(),
-        otherUserId: otherUserId.toString(),
+      const token = cookie.load('token');
+      const response = await Apis.post(`${endpoints.chat}/send`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       setNewMessage("");
@@ -191,26 +223,120 @@ const ChatRoom = () => {
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (imageInputRef.current) imageInputRef.current.value = "";
     } catch (err) {
-      console.error("Lỗi khi gửi tin nhắn, tệp hoặc ảnh:", err);
-      setError(`Không thể gửi tin nhắn, tệp hoặc ảnh: ${err.message}`);
+      console.error("Lỗi khi gửi tin nhắn:", err);
+      if (err.response?.status === 401) {
+        navigate("/login");
+      }
+      setError(`Không thể gửi tin nhắn: ${err.message}`);
     } finally {
       setLoading(false);
       setFileUploading(false);
     }
-  }, [user, otherUserId, newMessage, file, image]);
+  }, [user, otherUserId, newMessage, file, image, navigate]);
 
-  // Kích hoạt input file
+  // Xóa tin nhắn
+  const onDelete = useCallback(async (messageId) => {
+    try {
+      await axios.delete(`${endpoints.chat}/messages/${messageId}`, {
+        params: { otherUserId },
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+    } catch (err) {
+      console.error("Lỗi khi xóa tin nhắn:", err);
+      if (err.response?.status === 401) {
+        navigate("/login");
+      }
+      setError(`Không thể xóa tin nhắn: ${err.message}`);
+    }
+  }, [otherUserId, navigate]);
+
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
 
-  // Kích hoạt input ảnh
   const triggerImageInput = () => {
     imageInputRef.current?.click();
   };
 
+  // Xử lý mở video call
   const handleVideoCall = () => {
-    alert("Tính năng gọi video sẽ được triển khai sau!");
+    console.log("handleVideoCall được gọi, showVideoCall:", showVideoCall, "jitsiScriptLoaded:", jitsiScriptLoaded);
+    setShowVideoCall(true);
+    if (!jitsiScriptLoaded) {
+      console.log("Script Jitsi chưa tải xong!");
+      setError("Jitsi Meet script chưa tải xong. Vui lòng chờ hoặc làm mới trang.");
+    }
+  };
+
+  const handleCloseVideoCall = () => {
+    console.log("Đóng modal video call...");
+    if (jitsiApi) {
+      console.log("Dispose Jitsi API...");
+      jitsiApi.dispose();
+    }
+    setShowVideoCall(false);
+    setJitsiApi(null);
+  };
+
+  // Khởi tạo Jitsi Meet API
+  const initializeJitsi = () => {
+    console.log("Bắt đầu khởi tạo Jitsi Meet...");
+    console.log("jitsiContainerRef.current:", jitsiContainerRef.current);
+    console.log("jitsiApi:", jitsiApi);
+
+    if (!jitsiContainerRef.current) {
+      console.error("jitsiContainerRef.current là null, kiểm tra DOM!");
+      setError("Không thể tìm thấy container cho video call.");
+      return;
+    }
+    if (jitsiApi) {
+      console.log("Jitsi API đã tồn tại, không khởi tạo lại.");
+      return;
+    }
+
+    const roomName = user?.id && otherUserId ? `chat_${user.id}_${otherUserId}` : 'default_room';
+    const options = {
+      roomName: roomName,
+      width: '100%',
+      height: 400,
+      parentNode: jitsiContainerRef.current,
+      userInfo: {
+        displayName: user.firstName || user.username || "Người dùng",
+      },
+      configOverwrite: {
+        startWithAudioMuted: true,
+        disableModeratorIndicator: true,
+      },
+      interfaceConfigOverwrite: {
+        SHOW_JITSI_WATERMARK: false,
+        SHOW_WATERMARK_FOR_GUESTS: false,
+      },
+      onLoad: () => {
+        console.log('Jitsi Meet API đã tải thành công');
+      },
+    };
+
+    try {
+      if (!window.JitsiMeetExternalAPI) {
+        console.error("JitsiMeetExternalAPI không tồn tại, kiểm tra script!");
+        setError("Không thể tải Jitsi Meet API. Vui lòng kiểm tra kết nối hoặc script.");
+        return;
+      }
+      const api = new window.JitsiMeetExternalAPI('meet.jit.si', options);
+      api.addEventListener('videoConferenceJoined', () => {
+        console.log("Đã tham gia cuộc gọi video!");
+      });
+      api.addEventListener('videoConferenceLeft', handleCloseVideoCall);
+      api.addEventListener('errorOccurred', (error) => {
+        console.error("Lỗi từ Jitsi Meet:", error);
+        setError("Đã xảy ra lỗi trong cuộc gọi video: " + error.message);
+      });
+      setJitsiApi(api);
+      console.log("Jitsi API khởi tạo thành công:", api);
+    } catch (error) {
+      console.error("Lỗi khi khởi tạo Jitsi API:", error);
+      setError("Không thể khởi tạo cuộc gọi video: " + error.message);
+    }
   };
 
   if (!user) {
@@ -226,15 +352,15 @@ const ChatRoom = () => {
 
   return (
     <div className="container py-5">
-      <Card className="shadow border-0" style={{ maxWidth: "600px", margin: "0 auto" }}>
+      <Card className="shadow border-0" style={{ maxWidth: "700px", margin: "0 auto", borderRadius: "15px" }}>
         <Card.Header className="bg-primary text-white d-flex align-items-center justify-content-between p-3">
           <div className="d-flex align-items-center">
             <img
               src={otherUser.avatar || "/images/placeholder.jpg"}
               alt={otherUser.name}
-              style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover", marginRight: "10px" }}
+              style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover", marginRight: "15px" }}
             />
-            <h4 className="mb-0">Chat với {otherUser.name}</h4>
+            <h4 className="mb-0">{otherUser.name}</h4>
           </div>
           <Button
             variant="outline-light"
@@ -259,68 +385,96 @@ const ChatRoom = () => {
           )}
           {!loading && (
             <div
-              className="chat-messages p-3"
-              style={{ height: "400px", overflowY: "auto", backgroundColor: "#f8f9fa" }}
+              className="chat-messages p-4"
+              style={{ height: "450px", overflowY: "auto", backgroundColor: "#f8f9fa" }}
             >
               {messages.map((msg) => {
                 const isCurrentUser = msg.senderId === user.id.toString();
                 return (
                   <div
                     key={msg.id}
-                    className={`d-flex mb-3 ${isCurrentUser ? "justify-content-end" : "justify-content-start"}`}
+                    className={`d-flex mb-4 ${isCurrentUser ? "justify-content-end" : "justify-content-start"}`}
                   >
                     {!isCurrentUser && (
                       <img
                         src={msg.senderAvatar || "/images/placeholder.jpg"}
                         alt={msg.senderName}
-                        style={{ width: "30px", height: "30px", borderRadius: "50%", objectFit: "cover", marginRight: "10px", alignSelf: "flex-end" }}
+                        style={{ width: "35px", height: "35px", borderRadius: "50%", objectFit: "cover", marginRight: "15px", alignSelf: "flex-end" }}
                       />
                     )}
                     <div
-                      className={`p-2 ${isCurrentUser ? "bg-primary text-white" : "bg-light text-dark"}`}
-                      style={{ borderRadius: "8px", maxWidth: "70%", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}
+                      className={`p-3 ${isCurrentUser ? "bg-primary text-white" : "bg-white text-dark"} position-relative`}
+                      style={{
+                        borderRadius: "12px",
+                        maxWidth: "75%",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        border: isCurrentUser ? "none" : "1px solid #e0e0e0",
+                      }}
                     >
-                      <small className="d-block" style={{ opacity: "0.7", fontSize: "0.8em" }}>
+                      <small className="d-block" style={{ opacity: "0.7", fontSize: "0.85em", marginBottom: "5px" }}>
                         {msg.senderName}
                       </small>
                       {msg.type === "image" && (
-                        <img
-                          src={msg.fileUrl}
-                          alt="Ảnh đã gửi"
-                          className="img-fluid rounded mb-1"
-                          style={{ maxHeight: "150px" }}
-                        />
+                        <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src={msg.fileUrl}
+                            alt="Ảnh đã gửi"
+                            className="img-fluid rounded mb-2"
+                            style={{ maxHeight: "200px", maxWidth: "100%", transition: "transform 0.2s" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                          />
+                        </a>
                       )}
                       {msg.type === "file" && (
                         <a
                           href={msg.fileUrl}
                           download={msg.fileName}
-                          className="d-flex align-items-center text-primary mb-1"
-                          style={{ textDecoration: "none" }}
+                          className="d-flex align-items-center text-decoration-none mb-2"
+                          style={{
+                            color: isCurrentUser ? "#ffffff" : "#007bff",
+                            padding: "8px",
+                            borderRadius: "8px",
+                            backgroundColor: isCurrentUser ? "rgba(255,255,255,0.1)" : "rgba(0,123,255,0.05)",
+                            transition: "background-color 0.2s",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isCurrentUser ? "rgba(255,255,255,0.2)" : "rgba(0,123,255,0.1)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isCurrentUser ? "rgba(255,255,255,0.1)" : "rgba(0,123,255,0.05)")}
                         >
-                          <svg
-                            className="me-1"
-                            width="16"
-                            height="16"
-                            fill="currentColor"
-                            viewBox="0 0 16 16"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path d="M14.5 3h-4.5l-1-1h-5a1.5 1.5 0 0 0-1.5 1.5v10a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-9.5a1.5 1.5 0 0 0-1.5-1.5zm-11 1.5a.5.5 0 0 1 .5-.5h4.793l1 1h4.707a.5.5 0 0 1 .5.5v9.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-10z"/>
-                          </svg>
-                          {msg.fileName}
+                          <span className="me-2" style={{ fontSize: "1.2em" }}>
+                            {getFileIcon(msg.fileName)}
+                          </span>
+                          <span style={{ fontSize: "0.95em", wordBreak: "break-all" }}>{msg.fileName}</span>
                         </a>
                       )}
-                      {msg.text && <p className="mb-1">{msg.text}</p>}
-                      <small className="d-block" style={{ opacity: "0.5", fontSize: "0.7em" }}>
-                        {msg.createdAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                      {msg.text && <p className="mb-2" style={{ lineHeight: "1.5" }}>{msg.text}</p>}
+                      <small className="d-block" style={{ opacity: "0.5", fontSize: "0.75em" }}>
+                        {new Date(parseInt(msg.timestamp)).toLocaleString("vi-VN", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </small>
+                      {isCurrentUser && (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="position-absolute"
+                          style={{ top: "8px", right: "8px", color: "red", padding: 0 }}
+                          onClick={() => onDelete(msg.id)}
+                          aria-label="Xóa tin nhắn"
+                        >
+                          🗑️
+                        </Button>
+                      )}
                     </div>
                     {isCurrentUser && (
                       <img
                         src={user.avatar || "/images/placeholder.jpg"}
                         alt={user.firstName || user.username}
-                        style={{ width: "30px", height: "30px", borderRadius: "50%", objectFit: "cover", marginLeft: "10px", alignSelf: "flex-end" }}
+                        style={{ width: "35px", height: "35px", borderRadius: "50%", objectFit: "cover", marginLeft: "15px", alignSelf: "flex-end" }}
                       />
                     )}
                   </div>
@@ -330,7 +484,7 @@ const ChatRoom = () => {
             </div>
           )}
         </Card.Body>
-        <Card.Footer className="p-3">
+        <Card.Footer className="p-3 bg-light">
           <Form
             className="d-flex align-items-center"
             onSubmit={(e) => {
@@ -338,30 +492,29 @@ const ChatRoom = () => {
               onSend();
             }}
           >
-            {/* Input cho file */}
             <Form.Control
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
-              accept=".pdf,.doc,.docx"
+              accept=".pdf,.doc,.docx,.xlsx,.xls,.txt,.zip"
               style={{ display: "none" }}
               aria-label="Chọn tệp để gửi"
             />
             <Button
-              variant="outline-secondary"
+              variant="outline-primary"
               size="sm"
               className="me-2"
               onClick={triggerFileInput}
               disabled={loading || fileUploading || !user.id || !otherUserId}
               aria-label="Gửi tệp"
-              style={{ borderRadius: "20px" }}
+              style={{ borderRadius: "50%", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}
             >
               {fileUploading && file ? (
                 <Spinner animation="border" size="sm" />
               ) : (
                 <svg
-                  width="16"
-                  height="16"
+                  width="18"
+                  height="18"
                   fill="currentColor"
                   viewBox="0 0 16 16"
                   xmlns="http://www.w3.org/2000/svg"
@@ -370,7 +523,6 @@ const ChatRoom = () => {
                 </svg>
               )}
             </Button>
-            {/* Input cho ảnh */}
             <Form.Control
               type="file"
               ref={imageInputRef}
@@ -380,20 +532,20 @@ const ChatRoom = () => {
               aria-label="Chọn ảnh để gửi"
             />
             <Button
-              variant="outline-secondary"
+              variant="outline-primary"
               size="sm"
               className="me-2"
               onClick={triggerImageInput}
               disabled={loading || fileUploading || !user.id || !otherUserId}
               aria-label="Gửi ảnh"
-              style={{ borderRadius: "20px" }}
+              style={{ borderRadius: "50%", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}
             >
               {fileUploading && image ? (
                 <Spinner animation="border" size="sm" />
               ) : (
                 <svg
-                  width="16"
-                  height="16"
+                  width="18"
+                  height="18"
                   fill="currentColor"
                   viewBox="0 0 16 16"
                   xmlns="http://www.w3.org/2000/svg"
@@ -410,20 +562,42 @@ const ChatRoom = () => {
               disabled={loading || fileUploading || !user.id || !otherUserId}
               className="flex-grow-1 me-2"
               aria-label="Nhập tin nhắn"
-              style={{ borderRadius: "20px" }}
+              style={{ borderRadius: "20px", padding: "10px 15px", borderColor: "#ced4da" }}
             />
             <Button
               variant="primary"
               onClick={onSend}
               disabled={loading || fileUploading || !user.id || !otherUserId || (!newMessage.trim() && !file && !image)}
               aria-label="Gửi tin nhắn, tệp hoặc ảnh"
-              style={{ borderRadius: "20px" }}
+              style={{ borderRadius: "20px", padding: "8px 20px" }}
             >
               {loading ? <Spinner animation="border" size="sm" /> : "Gửi"}
             </Button>
           </Form>
         </Card.Footer>
       </Card>
+
+      {/* Modal hiển thị giao diện video call */}
+      <Modal
+        show={showVideoCall}
+        onHide={handleCloseVideoCall}
+        size="lg"
+        centered
+        backdrop="static"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Gọi video với {otherUser.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div ref={jitsiContainerRef} style={{ width: "100%", height: "400px", backgroundColor: "#f0f0f0" }} />
+          {error && <Alert variant="danger">{error}</Alert>}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="danger" onClick={handleCloseVideoCall}>
+            Kết thúc cuộc gọi
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

@@ -8,6 +8,7 @@ export const endpoints = {
     'register': '/users', //Đăng ký tài khoản
     'login': '/login', // Đăng nhập
     'current-user': '/secure/profile',
+    'chat': '/secure/chat',
 
 
 
@@ -32,6 +33,9 @@ export const endpoints = {
     'paymentReturn': () => '/payment/return', //Trả về Thanh Toán
     'payment': '/payment',
     'patients': '/patients', 
+
+
+
     
 
     
