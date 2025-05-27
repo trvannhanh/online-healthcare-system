@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import com.can.pojo.Appointment;
 import com.can.pojo.AppointmentStatus;
-import com.can.services.AppointmentService;
+import com.can.services.StatisticService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -35,7 +35,7 @@ import org.springframework.web.servlet.view.RedirectView;
 @RequestMapping("/api/statistics")
 public class ApiStatisticsController {
     @Autowired
-    private AppointmentService appointmentService;
+    private StatisticService statisticService;
 
     // Thống kê số lượng bệnh nhân theo bác sĩ và khoảng thời gian
     @GetMapping("/doctor/patients-count")
@@ -44,7 +44,7 @@ public class ApiStatisticsController {
             @RequestParam(name = "fromDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
             @RequestParam(name = "toDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate) {
         try {
-            int count = appointmentService.countDistinctPatientsByDoctorAndDateRange(doctorId, fromDate, toDate);
+            int count = statisticService.countDistinctPatientsByDoctorAndDateRange(doctorId, fromDate, toDate);
             return ResponseEntity.ok(count);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
@@ -61,7 +61,7 @@ public class ApiStatisticsController {
             if (month < 1 || month > 12) {
                 return ResponseEntity.badRequest().body("Error: Month must be between 1 and 12.");
             }
-            int count = appointmentService.countDistinctPatientsByDoctorAndMonth(doctorId, year, month);
+            int count = statisticService.countDistinctPatientsByDoctorAndMonth(doctorId, year, month);
             return ResponseEntity.ok(count);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
@@ -78,7 +78,7 @@ public class ApiStatisticsController {
             if(quarter < 1 || quarter > 4) {
                 return ResponseEntity.badRequest().body("Error: Quarter must be between 1 and 4.");
             }
-            int count = appointmentService.countDistinctPatientsByDoctorAndQuarter(doctorId, year, quarter);
+            int count = statisticService.countDistinctPatientsByDoctorAndQuarter(doctorId, year, quarter);
             return ResponseEntity.ok(count);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
