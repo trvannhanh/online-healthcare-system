@@ -261,7 +261,7 @@ const Home = () => {
                                     </div>
                                     <div className="mt-auto d-flex justify-content-between">
                                         <Button as={Link} to={`/doctors/${d.id}`} variant="outline-primary" size="sm">Xem chi tiết</Button>
-                                        <Button as={Link} to={`/appointments/new?doctorId=${d.id}`} variant="success" size="sm">Đặt lịch</Button>
+                                        <Button as={Link} to={`/doctors/${d.id}`} variant="success" size="sm">Đặt lịch</Button>
                                     </div>
                                 </Card.Body>
                             </Card>
