@@ -88,6 +88,9 @@ const Header = () => {
                             ))}
                         </NavDropdown>
                         <Link to="/appointment" className="nav-link fs-6 text-dark fw-semibold">Lịch hẹn</Link>
+                        {user && user.role === 'DOCTOR' && (
+                            <Link to="/doctor/statistic" className="nav-link fs-6 text-dark fw-semibold">Thống kê bệnh nhân</Link>
+                        )}
                     </Nav>
 
                     {/* Search bar */}
