@@ -56,21 +56,16 @@ const ChatRoom = () => {
   // Kiểm tra script Jitsi đã tải chưa
   useEffect(() => {
     const checkJitsiScript = () => {
-      console.log("Kiểm tra Jitsi Meet script...");
       if (window.JitsiMeetExternalAPI) {
-        console.log("Jitsi Meet script đã tải thành công!");
         setJitsiScriptLoaded(true);
       } else {
-        console.log("Đang chờ Jitsi Meet script tải... (Kiểm tra mạng hoặc domain)");
-        setTimeout(checkJitsiScript, 500); // Kiểm tra lại sau 500ms
+        setTimeout(checkJitsiScript, 500);
       }
     };
 
     checkJitsiScript();
 
-    // Thêm sự kiện để kiểm tra lỗi tải script
     const handleScriptError = () => {
-      console.error("Lỗi khi tải script Jitsi Meet!");
       setError("Không thể tải Jitsi Meet script. Vui lòng kiểm tra kết nối hoặc domain.");
     };
     window.addEventListener('error', handleScriptError);
@@ -83,26 +78,19 @@ const ChatRoom = () => {
   // Gọi initializeJitsi khi modal mở và script đã tải
   useEffect(() => {
     if (showVideoCall && jitsiScriptLoaded && !jitsiApi) {
-      console.log("Modal đã mở, kiểm tra jitsiContainerRef...");
       if (!jitsiContainerRef.current) {
-        console.log("jitsiContainerRef.current chưa sẵn sàng, chờ DOM render...");
-        // Chờ DOM render xong
         const timer = setTimeout(() => {
           if (jitsiContainerRef.current) {
-            console.log("jitsiContainerRef.current đã sẵn sàng, khởi tạo Jitsi...");
             initializeJitsi();
           } else {
-            console.error("jitsiContainerRef.current vẫn là null sau khi chờ!");
             setError("Không thể tìm thấy container cho video call. Vui lòng thử lại.");
           }
-        }, 100); // Chờ 100ms để DOM render
+        }, 100);
         return () => clearTimeout(timer);
       } else {
-        console.log("jitsiContainerRef.current đã sẵn sàng, khởi tạo Jitsi ngay...");
         initializeJitsi();
       }
     } else if (showVideoCall && !jitsiScriptLoaded) {
-      console.log("Script Jitsi chưa tải xong!");
       setError("Jitsi Meet script chưa tải xong. Vui lòng chờ hoặc làm mới trang.");
     }
   }, [showVideoCall, jitsiScriptLoaded, jitsiApi]);
@@ -128,7 +116,6 @@ const ChatRoom = () => {
           avatar: userData.avatar || (user.role === "PATIENT" ? "/images/doctor-placeholder.jpg" : "/images/patient-placeholder.jpg"),
         });
       } catch (error) {
-        console.error("Lỗi khi lấy thông tin người dùng khác:", error);
         if (error.response?.status === 401) {
           navigate("/login");
         }
@@ -223,7 +210,6 @@ const ChatRoom = () => {
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (imageInputRef.current) imageInputRef.current.value = "";
     } catch (err) {
-      console.error("Lỗi khi gửi tin nhắn:", err);
       if (err.response?.status === 401) {
         navigate("/login");
       }
@@ -239,10 +225,9 @@ const ChatRoom = () => {
     try {
       await axios.delete(`${endpoints.chat}/messages/${messageId}`, {
         params: { otherUserId },
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${cookie.load('token')}` },
       });
     } catch (err) {
-      console.error("Lỗi khi xóa tin nhắn:", err);
       if (err.response?.status === 401) {
         navigate("/login");
       }
@@ -260,18 +245,11 @@ const ChatRoom = () => {
 
   // Xử lý mở video call
   const handleVideoCall = () => {
-    console.log("handleVideoCall được gọi, showVideoCall:", showVideoCall, "jitsiScriptLoaded:", jitsiScriptLoaded);
     setShowVideoCall(true);
-    if (!jitsiScriptLoaded) {
-      console.log("Script Jitsi chưa tải xong!");
-      setError("Jitsi Meet script chưa tải xong. Vui lòng chờ hoặc làm mới trang.");
-    }
   };
 
   const handleCloseVideoCall = () => {
-    console.log("Đóng modal video call...");
     if (jitsiApi) {
-      console.log("Dispose Jitsi API...");
       jitsiApi.dispose();
     }
     setShowVideoCall(false);
@@ -280,17 +258,11 @@ const ChatRoom = () => {
 
   // Khởi tạo Jitsi Meet API
   const initializeJitsi = () => {
-    console.log("Bắt đầu khởi tạo Jitsi Meet...");
-    console.log("jitsiContainerRef.current:", jitsiContainerRef.current);
-    console.log("jitsiApi:", jitsiApi);
-
     if (!jitsiContainerRef.current) {
-      console.error("jitsiContainerRef.current là null, kiểm tra DOM!");
       setError("Không thể tìm thấy container cho video call.");
       return;
     }
     if (jitsiApi) {
-      console.log("Jitsi API đã tồn tại, không khởi tạo lại.");
       return;
     }
 
@@ -311,30 +283,21 @@ const ChatRoom = () => {
         SHOW_JITSI_WATERMARK: false,
         SHOW_WATERMARK_FOR_GUESTS: false,
       },
-      onLoad: () => {
-        console.log('Jitsi Meet API đã tải thành công');
-      },
     };
 
     try {
       if (!window.JitsiMeetExternalAPI) {
-        console.error("JitsiMeetExternalAPI không tồn tại, kiểm tra script!");
         setError("Không thể tải Jitsi Meet API. Vui lòng kiểm tra kết nối hoặc script.");
         return;
       }
       const api = new window.JitsiMeetExternalAPI('meet.jit.si', options);
-      api.addEventListener('videoConferenceJoined', () => {
-        console.log("Đã tham gia cuộc gọi video!");
-      });
+      api.addEventListener('videoConferenceJoined', () => {});
       api.addEventListener('videoConferenceLeft', handleCloseVideoCall);
       api.addEventListener('errorOccurred', (error) => {
-        console.error("Lỗi từ Jitsi Meet:", error);
         setError("Đã xảy ra lỗi trong cuộc gọi video: " + error.message);
       });
       setJitsiApi(api);
-      console.log("Jitsi API khởi tạo thành công:", api);
     } catch (error) {
-      console.error("Lỗi khi khởi tạo Jitsi API:", error);
       setError("Không thể khởi tạo cuộc gọi video: " + error.message);
     }
   };
@@ -342,9 +305,14 @@ const ChatRoom = () => {
   if (!user) {
     return (
       <div className="container py-5">
-        <Alert variant="warning">
+        <Alert 
+          variant="warning" 
+          className="shadow-sm rounded-pill px-4 py-3"
+        >
           Vui lòng đăng nhập để sử dụng tính năng chat!{" "}
-          <a href="/login" className="ms-2">Đăng nhập</a>
+          <a href="/login" className="ms-2 text-decoration-none fw-semibold">
+            Đăng nhập
+          </a>
         </Alert>
       </div>
     );
@@ -352,41 +320,90 @@ const ChatRoom = () => {
 
   return (
     <div className="container py-5">
-      <Card className="shadow border-0" style={{ maxWidth: "700px", margin: "0 auto", borderRadius: "15px" }}>
-        <Card.Header className="bg-primary text-white d-flex align-items-center justify-content-between p-3">
+      <Card 
+        className="shadow-lg border-0" 
+        style={{ 
+          maxWidth: "800px", 
+          margin: "0 auto", 
+          borderRadius: "20px", 
+          background: 'linear-gradient(to bottom, #ffffff, #f8f9fa)',
+          transition: 'box-shadow 0.3s'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.15)'}
+        onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)'}
+      >
+        <Card.Header 
+          className="bg-primary text-white d-flex align-items-center justify-content-between p-3"
+          style={{ borderTopLeftRadius: '20px', borderTopRightRadius: '20px' }}
+        >
           <div className="d-flex align-items-center">
             <img
               src={otherUser.avatar || "/images/placeholder.jpg"}
               alt={otherUser.name}
-              style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover", marginRight: "15px" }}
+              style={{ 
+                width: "50px", 
+                height: "50px", 
+                borderRadius: "50%", 
+                objectFit: "cover", 
+                marginRight: "15px",
+                border: '2px solid #fff',
+                transition: 'transform 0.3s'
+              }}
+              onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
             />
-            <h4 className="mb-0">{otherUser.name}</h4>
+            <h4 className="mb-0 fw-bold" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>
+              {otherUser.name}
+            </h4>
           </div>
           <Button
             variant="outline-light"
             size="sm"
             onClick={handleVideoCall}
             aria-label="Bắt đầu gọi video"
-            style={{ borderRadius: "20px" }}
+            className="rounded-pill px-3"
+            style={{ 
+              transition: 'transform 0.2s',
+              borderColor: '#fff'
+            }}
+            onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
           >
-            📹 Gọi video
+            📹 Gọi Video
           </Button>
         </Card.Header>
         <Card.Body className="p-0">
           {error && (
-            <Alert variant="danger" dismissible onClose={() => setError(null)} className="m-3">
+            <Alert 
+              variant="danger" 
+              dismissible 
+              onClose={() => setError(null)} 
+              className="m-3 shadow-sm rounded-pill px-4 py-3"
+            >
               {error}
             </Alert>
           )}
           {loading && (
-            <div className="text-center py-3">
-              <Spinner animation="border" variant="primary" />
+            <div className="text-center py-4">
+              <Spinner 
+                animation="border" 
+                variant="primary" 
+                style={{ width: '3rem', height: '3rem' }}
+              />
+              <p className="mt-3 fw-semibold" style={{ color: '#0d6efd' }}>
+                Đang tải tin nhắn...
+              </p>
             </div>
           )}
           {!loading && (
             <div
               className="chat-messages p-4"
-              style={{ height: "450px", overflowY: "auto", backgroundColor: "#f8f9fa" }}
+              style={{ 
+                height: "500px", 
+                overflowY: "auto", 
+                background: '#f8f9fa',
+                borderRadius: '0 0 20px 20px'
+              }}
             >
               {messages.map((msg) => {
                 const isCurrentUser = msg.senderId === user.id.toString();
@@ -399,19 +416,37 @@ const ChatRoom = () => {
                       <img
                         src={msg.senderAvatar || "/images/placeholder.jpg"}
                         alt={msg.senderName}
-                        style={{ width: "35px", height: "35px", borderRadius: "50%", objectFit: "cover", marginRight: "15px", alignSelf: "flex-end" }}
+                        style={{ 
+                          width: "40px", 
+                          height: "40px", 
+                          borderRadius: "50%", 
+                          objectFit: "cover", 
+                          marginRight: "15px", 
+                          alignSelf: "flex-end",
+                          border: '2px solid #0d6efd'
+                        }}
                       />
                     )}
                     <div
                       className={`p-3 ${isCurrentUser ? "bg-primary text-white" : "bg-white text-dark"} position-relative`}
                       style={{
-                        borderRadius: "12px",
+                        borderRadius: "15px",
                         maxWidth: "75%",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                         border: isCurrentUser ? "none" : "1px solid #e0e0e0",
+                        transition: 'transform 0.2s'
                       }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     >
-                      <small className="d-block" style={{ opacity: "0.7", fontSize: "0.85em", marginBottom: "5px" }}>
+                      <small 
+                        className="d-block fw-semibold" 
+                        style={{ 
+                          opacity: "0.8", 
+                          fontSize: "0.9em", 
+                          marginBottom: "5px" 
+                        }}
+                      >
                         {msg.senderName}
                       </small>
                       {msg.type === "image" && (
@@ -420,9 +455,14 @@ const ChatRoom = () => {
                             src={msg.fileUrl}
                             alt="Ảnh đã gửi"
                             className="img-fluid rounded mb-2"
-                            style={{ maxHeight: "200px", maxWidth: "100%", transition: "transform 0.2s" }}
-                            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                            style={{ 
+                              maxHeight: "250px", 
+                              maxWidth: "100%", 
+                              transition: "transform 0.2s",
+                              border: '1px solid #e0e0e0'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
                           />
                         </a>
                       )}
@@ -432,23 +472,41 @@ const ChatRoom = () => {
                           download={msg.fileName}
                           className="d-flex align-items-center text-decoration-none mb-2"
                           style={{
-                            color: isCurrentUser ? "#ffffff" : "#007bff",
-                            padding: "8px",
-                            borderRadius: "8px",
+                            color: isCurrentUser ? "#ffffff" : "#0d6efd",
+                            padding: "10px",
+                            borderRadius: "10px",
                             backgroundColor: isCurrentUser ? "rgba(255,255,255,0.1)" : "rgba(0,123,255,0.05)",
-                            transition: "background-color 0.2s",
+                            transition: "background-color 0.2s"
                           }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isCurrentUser ? "rgba(255,255,255,0.2)" : "rgba(0,123,255,0.1)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isCurrentUser ? "rgba(255,255,255,0.1)" : "rgba(0,123,255,0.05)")}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isCurrentUser ? "rgba(255,255,255,0.2)" : "rgba(0,123,255,0.1)"}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isCurrentUser ? "rgba(255,255,255,0.1)" : "rgba(0,123,255,0.05)"}
                         >
-                          <span className="me-2" style={{ fontSize: "1.2em" }}>
+                          <span className="me-2" style={{ fontSize: "1.4em" }}>
                             {getFileIcon(msg.fileName)}
                           </span>
-                          <span style={{ fontSize: "0.95em", wordBreak: "break-all" }}>{msg.fileName}</span>
+                          <span style={{ fontSize: "1em", wordBreak: "break-all" }}>
+                            {msg.fileName}
+                          </span>
                         </a>
                       )}
-                      {msg.text && <p className="mb-2" style={{ lineHeight: "1.5" }}>{msg.text}</p>}
-                      <small className="d-block" style={{ opacity: "0.5", fontSize: "0.75em" }}>
+                      {msg.text && (
+                        <p 
+                          className="mb-2" 
+                          style={{ 
+                            lineHeight: "1.6", 
+                            fontSize: "1.05em" 
+                          }}
+                        >
+                          {msg.text}
+                        </p>
+                      )}
+                      <small 
+                        className="d-block" 
+                        style={{ 
+                          opacity: "0.6", 
+                          fontSize: "0.8em" 
+                        }}
+                      >
                         {new Date(parseInt(msg.timestamp)).toLocaleString("vi-VN", {
                           day: "2-digit",
                           month: "2-digit",
@@ -462,9 +520,17 @@ const ChatRoom = () => {
                           variant="link"
                           size="sm"
                           className="position-absolute"
-                          style={{ top: "8px", right: "8px", color: "red", padding: 0 }}
+                          style={{ 
+                            top: "8px", 
+                            right: "8px", 
+                            color: "#dc3545", 
+                            padding: 0,
+                            transition: 'transform 0.2s'
+                          }}
                           onClick={() => onDelete(msg.id)}
                           aria-label="Xóa tin nhắn"
+                          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                         >
                           🗑️
                         </Button>
@@ -474,7 +540,15 @@ const ChatRoom = () => {
                       <img
                         src={user.avatar || "/images/placeholder.jpg"}
                         alt={user.firstName || user.username}
-                        style={{ width: "35px", height: "35px", borderRadius: "50%", objectFit: "cover", marginLeft: "15px", alignSelf: "flex-end" }}
+                        style={{ 
+                          width: "40px", 
+                          height: "40px", 
+                          borderRadius: "50%", 
+                          objectFit: "cover", 
+                          marginLeft: "15px", 
+                          alignSelf: "flex-end",
+                          border: '2px solid #0d6efd'
+                        }}
                       />
                     )}
                   </div>
@@ -484,7 +558,14 @@ const ChatRoom = () => {
             </div>
           )}
         </Card.Body>
-        <Card.Footer className="p-3 bg-light">
+        <Card.Footer 
+          className="p-3" 
+          style={{ 
+            background: '#f8f9fa', 
+            borderBottomLeftRadius: '20px', 
+            borderBottomRightRadius: '20px'
+          }}
+        >
           <Form
             className="d-flex align-items-center"
             onSubmit={(e) => {
@@ -503,18 +584,28 @@ const ChatRoom = () => {
             <Button
               variant="outline-primary"
               size="sm"
-              className="me-2"
+              className="me-2 rounded-circle"
               onClick={triggerFileInput}
               disabled={loading || fileUploading || !user.id || !otherUserId}
               aria-label="Gửi tệp"
-              style={{ borderRadius: "50%", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}
+              style={{ 
+                width: "45px", 
+                height: "45px", 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center",
+                transition: 'transform 0.2s',
+                borderColor: '#0d6efd'
+              }}
+              onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
             >
               {fileUploading && file ? (
                 <Spinner animation="border" size="sm" />
               ) : (
                 <svg
-                  width="18"
-                  height="18"
+                  width="20"
+                  height="20"
                   fill="currentColor"
                   viewBox="0 0 16 16"
                   xmlns="http://www.w3.org/2000/svg"
@@ -534,18 +625,28 @@ const ChatRoom = () => {
             <Button
               variant="outline-primary"
               size="sm"
-              className="me-2"
+              className="me-2 rounded-circle"
               onClick={triggerImageInput}
               disabled={loading || fileUploading || !user.id || !otherUserId}
               aria-label="Gửi ảnh"
-              style={{ borderRadius: "50%", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}
+              style={{ 
+                width: "45px", 
+                height: "45px", 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center",
+                transition: 'transform 0.2s',
+                borderColor: '#0d6efd'
+              }}
+              onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
             >
               {fileUploading && image ? (
                 <Spinner animation="border" size="sm" />
               ) : (
                 <svg
-                  width="18"
-                  height="18"
+                  width="20"
+                  height="20"
                   fill="currentColor"
                   viewBox="0 0 16 16"
                   xmlns="http://www.w3.org/2000/svg"
@@ -560,16 +661,27 @@ const ChatRoom = () => {
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Nhập tin nhắn..."
               disabled={loading || fileUploading || !user.id || !otherUserId}
-              className="flex-grow-1 me-2"
+              className="flex-grow-1 me-2 border-primary rounded-pill"
               aria-label="Nhập tin nhắn"
-              style={{ borderRadius: "20px", padding: "10px 15px", borderColor: "#ced4da" }}
+              style={{ 
+                padding: "12px 20px", 
+                fontSize: "1.05em",
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
             />
             <Button
               variant="primary"
               onClick={onSend}
               disabled={loading || fileUploading || !user.id || !otherUserId || (!newMessage.trim() && !file && !image)}
               aria-label="Gửi tin nhắn, tệp hoặc ảnh"
-              style={{ borderRadius: "20px", padding: "8px 20px" }}
+              className="rounded-pill px-4 py-2 shadow-sm"
+              style={{ 
+                backgroundColor: '#0d6efd', 
+                borderColor: '#0d6efd',
+                transition: 'transform 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
             >
               {loading ? <Spinner animation="border" size="sm" /> : "Gửi"}
             </Button>
@@ -585,16 +697,47 @@ const ChatRoom = () => {
         centered
         backdrop="static"
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Gọi video với {otherUser.name}</Modal.Title>
+        <Modal.Header 
+          closeButton 
+          className="bg-primary text-white"
+          style={{ borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}
+        >
+          <Modal.Title className="fw-bold">
+            Gọi Video với {otherUser.name}
+          </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          <div ref={jitsiContainerRef} style={{ width: "100%", height: "400px", backgroundColor: "#f0f0f0" }} />
-          {error && <Alert variant="danger">{error}</Alert>}
+        <Modal.Body className="p-4">
+          <div 
+            ref={jitsiContainerRef} 
+            style={{ 
+              width: "100%", 
+              height: "450px", 
+              backgroundColor: "#e9ecef",
+              borderRadius: '10px',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+            }} 
+          />
+          {error && (
+            <Alert 
+              variant="danger" 
+              className="mt-3 shadow-sm rounded-pill px-4 py-3"
+              onClose={() => setError(null)} 
+              dismissible
+            >
+              {error}
+            </Alert>
+          )}
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="danger" onClick={handleCloseVideoCall}>
-            Kết thúc cuộc gọi
+        <Modal.Footer className="border-0">
+          <Button 
+            variant="danger" 
+            onClick={handleCloseVideoCall}
+            className="rounded-pill px-4 py-2"
+            style={{ transition: 'transform 0.2s' }}
+            onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+          >
+            Kết Thúc Cuộc Gọi
           </Button>
         </Modal.Footer>
       </Modal>

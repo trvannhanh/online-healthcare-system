@@ -104,6 +104,10 @@ public class DoctorServiceImpl implements DoctorService {
         if (doctor == null) {
             throw new RuntimeException("Doctor with ID " + doctorId + " not found");
         }
+        
+        if (!doctor.isIsVerified()) {
+        throw new RuntimeException("Bác sĩ chưa được xác nhận, không thể truy cập khung giờ trống.");
+        }
 
         // Chuyển đổi ngày thành định dạng Date
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");

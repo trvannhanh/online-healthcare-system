@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Button, Col, Container, Form, InputGroup, Nav, Navbar, NavDropdown, Row } from "react-bootstrap";
+import { Button, Container, Form, InputGroup, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import Apis, { authApis, endpoints } from "../../configs/Apis";
 import { Link, useNavigate } from "react-router-dom";
-import { FaSearch, FaHospital, FaStethoscope, FaUser } from "react-icons/fa"; // Thêm icon từ react-icons
+import { FaSearch, FaHospital, FaStethoscope, FaUser } from "react-icons/fa";
 import { useMyDispatcher, useMyUser } from "../../configs/MyContexts";
 import cookie from 'react-cookies'
 
@@ -11,8 +11,8 @@ const Header = () => {
     const [specialization, setSpecialization] = useState([]);
     const [doctorName, setDoctorName] = useState("");
     const nav = useNavigate();
-    const { user } = useMyUser(); // Lấy thông tin người dùng từ context
-    const dispatch = useMyDispatcher(); // Dùng để dispatch logout
+    const { user } = useMyUser();
+    const dispatch = useMyDispatcher();
 
     const loadHospitals = async () => {
         let res = await Apis.get(endpoints["hospitals"]);
@@ -30,27 +30,19 @@ const Header = () => {
     };
 
     const logout = () => {
-        cookie.remove("token"); // Xóa token khỏi cookie
-        dispatch({ type: "logout" }); // Cập nhật context
-        nav("/login"); // Điều hướng về trang login
+        cookie.remove("token");
+        dispatch({ type: "logout" });
+        nav("/login");
     };
 
-    //  // Kiểm tra token và khôi phục trạng thái đăng nhập khi tải trang
-    // useEffect(() => {
-    //     const token = cookie.load("token");
-    //     if (token && !user) {
-    //         authApis()
-    //             .get(endpoints["current-user"])
-    //             .then((res) => {
-    //                 dispatch({ type: "login", payload: res.data });
-    //             })
-    //             .catch((err) => {
-    //                 console.error("Failed to fetch current user:", err);
-    //                 cookie.remove("token"); // Xóa token nếu không hợp lệ
-    //             });
-    //     }
-    // }, [user, dispatch]);
-
+    const checkVerified = (e) => {
+        if (user && user.role === "DOCTOR" && user.isVerified === false) {
+            e.preventDefault();
+            alert("Tài khoản của bạn chưa được xác nhận giấy phép hành nghề. Vui lòng chờ quản trị viên xác nhận.");
+            return false;
+        }
+        return true;
+    };
 
     useEffect(() => {
         loadHospitals();
@@ -58,52 +50,140 @@ const Header = () => {
     }, []);
 
     return (
-        <Navbar expand="lg" sticky="top" className="shadow py-3" style={{ backgroundColor: '#ffffff', borderBottom: '2px solid #e3f2fd' }}>
+        <Navbar 
+            expand="lg" 
+            sticky="top" 
+            className="shadow-lg py-3" 
+            style={{ 
+                background: 'linear-gradient(to right, #0d6efd, #20c997)',
+                color: '#fff'
+            }}
+        >
             <Container>
                 {/* Logo */}
                 <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
-                    <FaHospital size={36} className="me-2 text-primary" />
-                    <span className="fw-bold" style={{ fontSize: "1.8rem", color: "#0d6efd", letterSpacing: '1px' }}>
-                        Heal<span style={{ color: "#198754" }}>Care</span>
+                    <FaHospital 
+                        size={40} 
+                        className="me-2 text-white" 
+                        style={{ transition: 'transform 0.3s' }} 
+                        onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                    />
+                    <span 
+                        className="fw-bold" 
+                        style={{ 
+                            fontSize: '2rem', 
+                            background: 'linear-gradient(to right, #fff, #e0f7fa)', 
+                            WebkitBackgroundClip: 'text', 
+                            WebkitTextFillColor: 'transparent' 
+                        }}
+                    >
+                        Heal<span style={{ color: '#20c997' }}>Care</span>
                     </span>
                 </Navbar.Brand>
 
-                <Navbar.Toggle />
+                <Navbar.Toggle className="bg-white bg-opacity-25 border-0" />
                 <Navbar.Collapse>
                     {/* Navigation links */}
                     <Nav className="me-auto ms-4">
-                        <Link to="/" className="nav-link fs-6 text-dark fw-semibold">Trang Chủ</Link>
-                        <NavDropdown title={<span><FaHospital className="me-1 text-info" />Bệnh Viện</span>} className="fw-semibold">
+                        <Link 
+                            to="/" 
+                            className="nav-link text-white fw-semibold px-3 py-2 rounded"
+                            style={{ transition: 'background 0.2s' }}
+                            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                        >
+                            Trang Chủ
+                        </Link>
+                        <NavDropdown 
+                            title={
+                                <span className="text-white fw-semibold">
+                                    <FaHospital className="me-1 text-light" /> Bệnh Viện
+                                </span>
+                            } 
+                            className="px-3 py-2 rounded"
+                            style={{ transition: 'background 0.2s' }}
+                            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                        >
                             {hospitals.map(h => (
-                                <NavDropdown.Item key={h.id} as={Link} to={`/?hospital=${h.name}`}>
-                                    {h.name}
+                                <NavDropdown.Item 
+                                    key={h.id} 
+                                    className="py-2 bg-white text-dark hover:bg-teal-100"
+                                >
+                                    <Link
+                                        to={`/?hospital=${h.name}`}
+                                        onClick={(e) => checkVerified(e)}
+                                        className="text-decoration-none text-dark hover:text-primary"
+                                    >
+                                        {h.name}
+                                    </Link>
                                 </NavDropdown.Item>
                             ))}
                         </NavDropdown>
-                        <NavDropdown title={<span><FaStethoscope className="me-1 text-success" />Chuyên Khoa</span>} className="fw-semibold">
+                        <NavDropdown 
+                            title={
+                                <span className="text-white fw-semibold">
+                                    <FaStethoscope className="me-1 text-light" /> Chuyên Khoa
+                                </span>
+                            } 
+                            className="px-3 py-2 rounded"
+                            style={{ transition: 'background 0.2s' }}
+                            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                        >
                             {specialization.map(s => (
-                                <NavDropdown.Item key={s.id} as={Link} to={`/?specialization=${s.name}`}>
-                                    {s.name}
+                                <NavDropdown.Item 
+                                    key={s.id} 
+                                    className="py-2 bg-white text-dark hover:bg-teal-100"
+                                >
+                                    <Link
+                                        to={`/?specialization=${s.name}`}
+                                        onClick={(e) => checkVerified(e)}
+                                        className="text-decoration-none text-dark hover:text-primary"
+                                    >
+                                        {s.name}
+                                    </Link>
                                 </NavDropdown.Item>
                             ))}
                         </NavDropdown>
-                        <Link to="/appointment" className="nav-link fs-6 text-dark fw-semibold">Lịch hẹn</Link>
+                        <Link 
+                            to="/appointment" 
+                            className="nav-link text-white fw-semibold px-3 py-2 rounded"
+                            style={{ transition: 'background 0.2s' }}
+                            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                            onClick={(e) => checkVerified(e)}
+                        >
+                            Lịch Hẹn
+                        </Link>
                         {user && user.role === 'DOCTOR' && (
-                            <Link to="/doctor/statistic" className="nav-link fs-6 text-dark fw-semibold">Thống kê bệnh nhân</Link>
+                            <Link to="/doctor/statistic" 
+                            className="nav-link fs-6 text-dark fw-semibold"
+                            onClick={(e) => checkVerified(e)}
+                        >
+                            Thống kê bệnh nhân
+                        </Link>
                         )}
                     </Nav>
 
                     {/* Search bar */}
                     <Form onSubmit={search} className="d-flex me-3">
-                        <InputGroup>
+                        <InputGroup className="shadow-sm">
                             <Form.Control
                                 type="text"
                                 placeholder="Tìm bác sĩ..."
                                 value={doctorName}
                                 onChange={(e) => setDoctorName(e.target.value)}
-                                className="border-primary"
+                                className="border-0 rounded-start-pill"
+                                style={{ background: '#fff', color: '#333' }}
                             />
-                            <Button type="submit" variant="primary">
+                            <Button 
+                                type="submit" 
+                                variant="primary" 
+                                className="rounded-end-pill"
+                                style={{ backgroundColor: '#20c997', borderColor: '#20c997' }}
+                            >
                                 <FaSearch />
                             </Button>
                         </InputGroup>
@@ -111,14 +191,40 @@ const Header = () => {
 
                     {/* User menu */}
                     {user ? (
-                        <NavDropdown title={<span><FaUser className="me-1" />{user.firstName}</span>}>
-                            <NavDropdown.Item as={Link} to="/profile">Thông Tin Cá Nhân</NavDropdown.Item>
-                            <NavDropdown.Item onClick={logout}>Đăng xuất</NavDropdown.Item>
+                        <NavDropdown 
+                            title={
+                                <span className="text-white fw-semibold">
+                                    <FaUser className="me-1" /> {user.firstName}
+                                </span>
+                            }
+                            className="px-3 py-2 rounded"
+                            style={{ transition: 'background 0.2s' }}
+                            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                        >
+                            <NavDropdown.Item as={Link} to="/profile" className="py-2 hover:bg-teal-100">
+                                Thông Tin Cá Nhân
+                            </NavDropdown.Item>
+                            <NavDropdown.Item onClick={logout} className="py-2 hover:bg-teal-100">
+                                Đăng Xuất
+                            </NavDropdown.Item>
                         </NavDropdown>
                     ) : (
                         <>
-                            <Link to="/login" className="btn btn-outline-primary me-2">Đăng Nhập</Link>
-                            <Link to="/register" className="btn btn-primary">Đăng Ký</Link>
+                            <Link 
+                                to="/login" 
+                                className="btn btn-outline-light me-2 rounded-pill px-4"
+                                style={{ borderColor: '#fff', color: '#fff' }}
+                            >
+                                Đăng Nhập
+                            </Link>
+                            <Link 
+                                to="/register" 
+                                className="btn btn-success rounded-pill px-4"
+                                style={{ backgroundColor: '#20c997', borderColor: '#20c997' }}
+                            >
+                                Đăng Ký
+                            </Link>
                         </>
                     )}
                 </Navbar.Collapse>

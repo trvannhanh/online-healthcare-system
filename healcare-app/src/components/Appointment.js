@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, Modal, Row, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import Apis, { authApis, endpoints } from '../configs/Apis';
-import { useMyUser } from '../configs/MyContexts';
 import cookie from 'react-cookies';
+import { useMyUser } from '../configs/MyContexts';
 
 const Appointment = () => {
   const { user } = useMyUser() || {};
@@ -42,7 +42,6 @@ const Appointment = () => {
       const res = await authApis().get(url);
       const appointmentsData = res.data;
 
-      // Fetch payment info for COMPLETED appointments
       const appointmentsWithPayment = await Promise.all(
         appointmentsData.map(async (appt) => {
           if (appt.status === 'COMPLETED') {
@@ -179,73 +178,104 @@ const Appointment = () => {
 
   return (
     <Container className="py-5">
-      <link
-        href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-        rel="stylesheet"
-      />
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Lịch Hẹn Của Bạn</h2>
+      <h2 
+        className="fw-bold mb-4" 
+        style={{ 
+          color: '#0d6efd', 
+          fontSize: '2.2rem', 
+          textShadow: '1px 1px 2px rgba(0,0,0,0.1)' 
+        }}
+      >
+        Lịch Hẹn Của Bạn
+      </h2>
 
       {!user && (
-        <Alert variant="warning">
-          Vui lòng đăng nhập để xem danh sách lịch hẹn!
-          <Link to="/login" className="ms-2">Đăng nhập</Link>
+        <Alert 
+          variant="warning" 
+          className="shadow-sm rounded-pill px-4 py-3"
+        >
+          Vui lòng đăng nhập để xem danh sách lịch hẹn!{' '}
+          <Link to="/login" className="ms-2 text-decoration-none fw-semibold">
+            Đăng Nhập
+          </Link>
         </Alert>
       )}
 
       {user && (
         <>
           {/* Filter Form */}
-          <Card className="mb-4 shadow-sm border-0 rounded-lg">
-            <Card.Body>
+          <Card 
+            className="mb-5 shadow-lg border-0" 
+            style={{ 
+              borderRadius: '20px', 
+              background: 'linear-gradient(to right, #f8f9fa, #e9ecef)',
+              transition: 'box-shadow 0.3s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.15)'}
+            onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)'}
+          >
+            <Card.Body className="p-4">
               <Form>
-                <Row className="g-3">
+                <Row className="g-4">
                   <Col md={4}>
                     <Form.Group>
-                      <Form.Label>Trạng thái</Form.Label>
+                      <Form.Label className="fw-semibold">Trạng Thái</Form.Label>
                       <Form.Select
                         name="status"
                         value={filters.status}
                         onChange={handleFilterChange}
+                        className="border-primary rounded-pill"
+                        style={{ padding: '0.75rem' }}
                       >
-                        <option value="">Tất cả</option>
-                        <option value="PENDING">Đang chờ</option>
-                        <option value="CONFIRMED">Đã xác nhận</option>
-                        <option value="COMPLETED">Hoàn thành</option>
-                        <option value="CANCELED">Đã hủy</option>
+                        <option value="">Tất Cả</option>
+                        <option value="PENDING">Đang Chờ</option>
+                        <option value="CONFIRMED">Đã Xác Nhận</option>
+                        <option value="COMPLETED">Hoàn Thành</option>
+                        <option value="CANCELED">Đã Hủy</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group>
-                      <Form.Label>Từ ngày</Form.Label>
+                      <Form.Label className="fw-semibold">Từ Ngày</Form.Label>
                       <Form.Control
                         type="date"
                         name="startDate"
                         value={filters.startDate}
                         onChange={handleFilterChange}
+                        className="border-primary rounded-pill"
+                        style={{ padding: '0.75rem' }}
                       />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group>
-                      <Form.Label>Đến ngày</Form.Label>
+                      <Form.Label className="fw-semibold">Đến Ngày</Form.Label>
                       <Form.Control
                         type="date"
                         name="endDate"
                         value={filters.endDate}
                         onChange={handleFilterChange}
                         min={filters.startDate}
+                        className="border-primary rounded-pill"
+                        style={{ padding: '0.75rem' }}
                       />
                     </Form.Group>
                   </Col>
                 </Row>
-                <div className="mt-3">
+                <div className="mt-4 text-end">
                   <Button
                     variant="outline-secondary"
                     onClick={clearFilters}
-                    className="rounded-full"
+                    className="rounded-pill px-4 py-2"
+                    style={{ 
+                      transition: 'transform 0.2s',
+                      borderColor: '#6c757d'
+                    }}
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                   >
-                    Xóa bộ lọc
+                    Xóa Bộ Lọc
                   </Button>
                 </div>
               </Form>
@@ -253,32 +283,68 @@ const Appointment = () => {
           </Card>
 
           {error && (
-            <Alert variant="danger" onClose={() => setError(null)} dismissible>
+            <Alert 
+              variant="danger" 
+              onClose={() => setError(null)} 
+              dismissible 
+              className="shadow-sm rounded-pill px-4 py-3 mb-4"
+            >
               {error}
             </Alert>
           )}
           {success && (
-            <Alert variant="success" onClose={() => setSuccess(null)} dismissible>
+            <Alert 
+              variant="success" 
+              onClose={() => setSuccess(null)} 
+              dismissible 
+              className="shadow-sm rounded-pill px-4 py-3 mb-4"
+            >
               {success}
             </Alert>
           )}
 
           {loadingAppointments && page === 1 && (
-            <div className="text-center my-4">
-              <Spinner animation="border" variant="primary" />
+            <div className="text-center my-5">
+              <Spinner 
+                animation="border" 
+                variant="primary" 
+                style={{ width: '3rem', height: '3rem' }}
+              />
+              <p className="mt-3 fw-semibold" style={{ color: '#0d6efd' }}>
+                Đang tải lịch hẹn...
+              </p>
             </div>
           )}
 
           {appointments.length === 0 && !loadingAppointments && (
-            <Alert variant="info">Bạn chưa có lịch hẹn nào!</Alert>
+            <Alert 
+              variant="info" 
+              className="shadow-sm rounded-pill px-4 py-3"
+            >
+              Bạn chưa có lịch hẹn nào!
+            </Alert>
           )}
 
           {appointments.length > 0 && (
             <Row xs={1} md={2} lg={3} className="g-4">
               {appointments.map((appt) => (
                 <Col key={appt.id}>
-                  <Card className="shadow-sm border-0 rounded-lg h-full">
-                    <Card.Body className="d-flex flex-column">
+                  <Card 
+                    className="shadow-lg border-0 h-100" 
+                    style={{ 
+                      borderRadius: '20px', 
+                      transition: 'transform 0.3s, box-shadow 0.3s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-5px)';
+                      e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <Card.Body className="d-flex flex-column p-4">
                       <div className="d-flex align-items-center mb-3">
                         <img
                           src={
@@ -287,62 +353,88 @@ const Appointment = () => {
                               : appt.patient.user.avatar || '/images/patient-placeholder.jpg'
                           }
                           alt="Avatar"
-                          className="rounded-full w-12 h-12 object-cover mr-3"
+                          style={{
+                            width: '60px',
+                            height: '60px',
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            marginRight: '15px',
+                            border: '2px solid #0d6efd',
+                            transition: 'transform 0.3s'
+                          }}
+                          onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                          onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                         />
                         <div>
-                          <h5 className="font-semibold text-gray-800">
+                          <h5 className="fw-bold text-primary mb-1" style={{ fontSize: '1.2rem' }}>
                             {user.role === 'PATIENT'
                               ? `${appt.doctor.user.firstName} ${appt.doctor.user.lastName}`
                               : `${appt.patient.user.firstName} ${appt.patient.user.lastName}`}
                           </h5>
-                          <p className="text-sm text-gray-500">
-                            {user.role === 'PATIENT' ? 'Bác sĩ' : 'Bệnh nhân'}
+                          <p className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>
+                            {user.role === 'PATIENT' ? 'Bác Sĩ' : 'Bệnh Nhân'}
                           </p>
                         </div>
                       </div>
-                      <p className="text-sm mb-1">
-                        <strong>Ngày hẹn:</strong> {formatDate(appt.appointmentDate)}
+                      <p className="mb-2" style={{ fontSize: '0.95rem' }}>
+                        <strong>Ngày Hẹn:</strong> {formatDate(appt.appointmentDate)}
                       </p>
-                      <p className="text-sm mb-3">
-                        <strong>Trạng thái:</strong>{' '}
+                      <p className="mb-3" style={{ fontSize: '0.95rem' }}>
+                        <strong>Trạng Thái:</strong>{' '}
                         <span
-                          className={`inline-block px-2 py-1 rounded-full text-xs font-semibold
-                            ${appt.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                              appt.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
-                              appt.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                              'bg-red-100 text-red-800'}`}
+                          style={{
+                            display: 'inline-block',
+                            padding: '4px 12px',
+                            borderRadius: '20px',
+                            fontSize: '0.85rem',
+                            fontWeight: '600',
+                            color: '#fff',
+                            backgroundColor:
+                              appt.status === 'PENDING' ? '#ffc107' :
+                              appt.status === 'CONFIRMED' ? '#0d6efd' :
+                              appt.status === 'COMPLETED' ? '#20c997' :
+                              '#dc3545'
+                          }}
                         >
-                          {appt.status}
+                          {appt.status === 'PENDING' ? 'Đang Chờ' :
+                           appt.status === 'CONFIRMED' ? 'Đã Xác Nhận' :
+                           appt.status === 'COMPLETED' ? 'Hoàn Thành' :
+                           'Đã Hủy'}
                         </span>
                       </p>
-                      <div className="mt-auto flex flex-wrap gap-2">
+                      <div className="mt-auto d-flex flex-wrap gap-2">
                         {appt.status === 'PENDING' && (
                           <>
                             <Button
                               variant="warning"
                               size="sm"
-                              className="rounded-full"
+                              className="rounded-pill px-3"
                               onClick={() => openRescheduleModal(appt)}
+                              style={{ transition: 'transform 0.2s' }}
+                              onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                             >
-                              Đổi lịch
+                              Đổi Lịch
                             </Button>
                             <Button
                               variant="danger"
                               size="sm"
-                              className="rounded-full"
+                              className="rounded-pill px-3"
                               onClick={() => cancelAppointment(appt.id)}
                               disabled={loadingCancel}
+                              style={{ transition: 'transform 0.2s' }}
+                              onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                             >
                               {loadingCancel ? (
                                 <>
                                   <Spinner animation="border" size="sm" className="me-2" />
-                                  Đang xử lý...
+                                  Đang Xử Lý...
                                 </>
                               ) : (
                                 'Hủy'
                               )}
                             </Button>
-                            
                           </>
                         )}
                         {user.role === 'DOCTOR' && appt.status === 'COMPLETED' && !appt.payment && (
@@ -351,9 +443,16 @@ const Appointment = () => {
                             to={`/payment/${appt.id}`}
                             variant="primary"
                             size="sm"
-                            className="rounded-full"
+                            className="rounded-pill px-3"
+                            style={{ 
+                              backgroundColor: '#0d6efd', 
+                              borderColor: '#0d6efd',
+                              transition: 'transform 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                           >
-                            Tạo hóa đơn
+                            Tạo Hóa Đơn
                           </Button>
                         )}
                         {user.role === 'PATIENT' && appt.status === 'COMPLETED' && appt.payment && (
@@ -362,21 +461,37 @@ const Appointment = () => {
                             to={`/payment/${appt.id}`}
                             variant="success"
                             size="sm"
-                            className="rounded-full"
+                            className="rounded-pill px-3"
                             disabled={appt.payment.paymentStatus !== 'PENDING'}
+                            style={{ 
+                              backgroundColor: '#20c997', 
+                              borderColor: '#20c997',
+                              transition: 'transform 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                           >
-                            Thanh toán
+                            Thanh Toán
                           </Button>
                         )}
                         {appt.status === 'CONFIRMED' && (
-                          <Link
+                          <Button
+                            as={Link}
                             to={`/chat/${user.role === 'PATIENT' ? appt.doctor.id : appt.patient.id}`}
+                            variant="primary"
+                            size="sm"
+                            className="rounded-pill px-3"
                             aria-label={`Chat với ${user.role === 'PATIENT' ? 'bác sĩ' : 'bệnh nhân'}`}
+                            style={{ 
+                              backgroundColor: '#0d6efd', 
+                              borderColor: '#0d6efd',
+                              transition: 'transform 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                           >
-                            <Button variant="primary" size="sm" className="rounded-full">
-                              Chat
-                            </Button>
-                          </Link>
+                            Chat
+                          </Button>
                         )}
                       </div>
                     </Card.Body>
@@ -387,52 +502,83 @@ const Appointment = () => {
           )}
 
           {page > 0 && !loadingAppointments && (
-            <div className="text-center mt-4">
+            <div className="text-center mt-5">
               <Button
                 variant="primary"
                 onClick={loadMore}
-                className="px-4 py-2 rounded-full shadow-sm"
+                className="px-5 py-2 rounded-pill shadow-sm"
+                style={{ 
+                  backgroundColor: '#0d6efd', 
+                  borderColor: '#0d6efd',
+                  transition: 'transform 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
               >
-                Xem thêm
+                Xem Thêm
               </Button>
             </div>
           )}
 
           {/* Reschedule Modal */}
-          <Modal show={showRescheduleModal} onHide={closeRescheduleModal}>
-            <Modal.Header closeButton>
-              <Modal.Title>Đổi lịch hẹn</Modal.Title>
+          <Modal 
+            show={showRescheduleModal} 
+            onHide={closeRescheduleModal}
+            centered
+          >
+            <Modal.Header 
+              closeButton 
+              className="bg-primary text-white"
+              style={{ borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}
+            >
+              <Modal.Title className="fw-bold">Đổi Lịch Hẹn</Modal.Title>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body className="p-4">
               <Form>
                 <Form.Group className="mb-3">
-                  <Form.Label>Chọn ngày giờ mới</Form.Label>
+                  <Form.Label className="fw-semibold">Chọn Ngày Giờ Mới</Form.Label>
                   <Form.Control
                     type="datetime-local"
                     value={newDateTime}
                     onChange={(e) => setNewDateTime(e.target.value)}
                     min={new Date().toISOString().slice(0, 16)}
+                    className="border-primary rounded-pill"
+                    style={{ padding: '0.75rem' }}
                   />
                 </Form.Group>
               </Form>
             </Modal.Body>
-            <Modal.Footer>
-              <Button variant="secondary" onClick={closeRescheduleModal} className="rounded-full">
+            <Modal.Footer className="border-0">
+              <Button 
+                variant="secondary" 
+                onClick={closeRescheduleModal} 
+                className="rounded-pill px-4 py-2"
+                style={{ transition: 'transform 0.2s' }}
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              >
                 Đóng
               </Button>
               <Button
                 variant="primary"
                 onClick={rescheduleAppointment}
                 disabled={loadingReschedule || !newDateTime}
-                className="rounded-full"
+                className="rounded-pill px-4 py-2"
+                style={{ 
+                  backgroundColor: '#0d6efd', 
+                  borderColor: '#0d6efd',
+                  transition: 'transform 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
               >
                 {loadingReschedule ? (
                   <>
                     <Spinner animation="border" size="sm" className="me-2" />
-                    Đang xử lý...
+                    Đang Xử Lý...
                   </>
                 ) : (
-                  'Lưu thay đổi'
+                  'Lưu Thay Đổi'
                 )}
               </Button>
             </Modal.Footer>

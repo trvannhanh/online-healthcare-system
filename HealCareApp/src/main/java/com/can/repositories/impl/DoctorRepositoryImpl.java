@@ -8,6 +8,7 @@ import com.can.pojo.Doctor;
 import com.can.pojo.Hospital;
 import com.can.pojo.Specialization;
 import com.can.pojo.User;
+import com.can.pojo.VerificationStatus;
 import com.can.repositories.DoctorRepository;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -231,21 +232,23 @@ public class DoctorRepositoryImpl implements DoctorRepository {
 
         Doctor doctor = s.get(Doctor.class, doctorId);
         if (doctor == null) {
-            throw new RuntimeException("Doctor with ID" + doctorId + "not found");
+            throw new RuntimeException("Doctor with ID " + doctorId + " not found");
         }
 
         if (doctor.isIsVerified()) {
-            throw new RuntimeException("Doctor with ID" + doctorId + " đã được chứng nhận rồi ");
+            throw new RuntimeException("Doctor with ID " + doctorId + " đã được chứng nhận rồi");
         }
 
         if (doctor.getLicenseNumber() == null || doctor.getLicenseNumber().trim().isEmpty()) {
-            throw new RuntimeException("Doctor with ID" + doctorId + "chưa cấp giấy phép");
+            throw new RuntimeException("Doctor with ID " + doctorId + " chưa cấp giấy phép");
         }
 
+        // Cập nhật cả isVerified và verificationStatus
         doctor.setIsVerified(true);
+        doctor.setVerificationStatus(VerificationStatus.APPROVED); // Cập nhật thành Approved
+
         s.merge(doctor);
         transaction.commit();
-
     }
 
     @Override

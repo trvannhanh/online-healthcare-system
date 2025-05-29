@@ -12,6 +12,7 @@ import com.can.pojo.Specialization;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.can.pojo.User;
+import com.can.pojo.VerificationStatus;
 import com.can.repositories.DoctorRepository;
 import com.can.repositories.HospitalRepository;
 import com.can.repositories.PatientRepository;
@@ -149,6 +150,9 @@ public class UserServiceImpl implements UserService {
             Doctor doctor = new Doctor();
             doctor.setUser(savedUser);
             doctor.setLicenseNumber(params.get("licenseNumber"));
+            doctor.setIsVerified(false); // Thiết lập isVerified = false
+            doctor.setVerificationStatus(VerificationStatus.PENDING); // Thiết lập verificationStatus = Pending
+            
             // Xử lý Hospital
             String hospitalName = params.get("hospital");
             Hospital hospital = hospitalRepo.getHospitalByName(hospitalName);

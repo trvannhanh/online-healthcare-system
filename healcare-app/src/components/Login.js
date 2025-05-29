@@ -25,12 +25,21 @@ const Login = () => {
         e.preventDefault();
         try {
             setLoading(true);
-            let res = await Apis.post(endpoints['login'], { ...user });
-            cookie.save('token', res.data.token);
+            let res = await Apis.post(endpoints["login"], { ...user });
+            cookie.save("token", res.data.token);
 
-            let u = await authApis().get(endpoints['current-user']);
-            dispatch({ type: "login", payload: u.data });
+            // Lấy thông tin người dùng cơ bản
+            let userRes = await authApis().get(endpoints["current-user"]);
+            let baseUser = userRes.data;
 
+            // Nếu là bác sĩ, lấy thông tin chi tiết bao gồm isVerified
+            let fullUser = baseUser;
+            if (baseUser.role === "DOCTOR") {
+                const doctorRes = await authApis().get(`${endpoints["doctors"]}/${baseUser.id}`);
+                fullUser = { ...baseUser, ...doctorRes.data, isVerified: doctorRes.data.isVerified };
+            }
+
+            dispatch({ type: "login", payload: fullUser });
             setMsg(null);
             nav("/");
         } catch (ex) {
