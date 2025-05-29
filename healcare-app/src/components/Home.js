@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Alert, Button, Card, Col, Container, Form, Modal, Row, Spinner, Table } from 'react-bootstrap';
-import Apis, { authApis, endpoints } from '../configs/Apis';
-import { Link, useSearchParams } from 'react-router-dom';
-import { useMyUser } from '../configs/MyContexts';
-import cookie from 'react-cookies';
+import { useEffect, useState } from "react";
+import { Alert, Button, Card, Col, Container, Form, Modal, Row, Spinner, Table } from "react-bootstrap";
+import Apis, { authApis, endpoints } from "../configs/Apis";
+import { Link, useSearchParams } from "react-router-dom";
+import { useMyUser } from "../configs/MyContexts";
+import cookie from "react-cookies";
 
 const Home = () => {
     const [doctors, setDoctors] = useState([]);
@@ -21,16 +21,16 @@ const Home = () => {
     // State cho modal đổi lịch hẹn
     const [showRescheduleModal, setShowRescheduleModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
-    const [newDateTime, setNewDateTime] = useState('');
+    const [newDateTime, setNewDateTime] = useState("");
 
     const loadDoctors = async () => {
         try {
             setLoadingDoctors(true);
-            let url = `${endpoints['doctors']}?page=${page}`;
+            let url = `${endpoints["doctors"]}?page=${page}`;
 
-            let hospId = q.get('hospital');
-            let specId = q.get('specialization');
-            let doctorName = q.get('doctorName');
+            let hospId = q.get("hospital");
+            let specId = q.get("specialization");
+            let doctorName = q.get("doctorName");
 
             if (hospId) url += `&hospital=${hospId}`;
             if (specId) url += `&specialization=${specId}`;
@@ -43,36 +43,38 @@ const Home = () => {
                 else setDoctors([...doctors, ...res.data]);
             }
         } catch (ex) {
-            console.error('Load doctors error:', ex);
-            setError('Không thể tải danh sách bác sĩ. Vui lòng thử lại sau.');
+            console.error("Load doctors error:", ex);
+            setError("Không thể tải danh sách bác sĩ. Vui lòng thử lại sau.");
         } finally {
             setLoadingDoctors(false);
         }
     };
 
     const loadAppointments = async () => {
-        if (!user) return;
+        if (!user || (user.role === "DOCTOR" && !user.isVerified)) {
+            setAppointments([]);
+            setLoadingAppointments(false);
+            return;
+        }
 
         try {
             setLoadingAppointments(true);
-            let url = `${endpoints['appointmentsFilter']}?page=${page}`;
+            let url = `${endpoints["appointmentsFilter"]}?page=${page}`;
 
-            if (user.role === 'PATIENT') {
+            if (user.role === "PATIENT") {
                 url += `&patientId=${user.id}`;
-            } else if (user.role === 'DOCTOR') {
+            } else if (user.role === "DOCTOR") {
                 url += `&doctorId=${user.id}`;
             }
 
-            console.log('Fetching appointments from:', url);
             const res = await authApis().get(url);
             const appointmentsData = res.data;
 
-            // Chỉ lấy Payment cho các appointment có status COMPLETED
             const appointmentsWithPayment = await Promise.all(
                 appointmentsData.map(async (appt) => {
-                    if (appt.status === 'COMPLETED') {
+                    if (appt.status === "COMPLETED") {
                         try {
-                            const paymentRes = await Apis.get(`${endpoints['payment']}/appointment/${appt.id}`);
+                            const paymentRes = await Apis.get(`${endpoints["payment"]}/appointment/${appt.id}`);
                             return { ...appt, payment: paymentRes.data };
                         } catch (ex) {
                             if (ex.response?.status === 404) {
@@ -81,7 +83,7 @@ const Home = () => {
                             throw ex;
                         }
                     }
-                    return { ...appt, payment: null }; // Không cần Payment cho PENDING/CANCEL
+                    return { ...appt, payment: null };
                 })
             );
 
@@ -91,18 +93,32 @@ const Home = () => {
                 else setAppointments([...appointments, ...appointmentsWithPayment]);
             }
         } catch (ex) {
-            console.error('Load appointments error:', ex);
-            setError(`Không thể tải danh sách lịch hẹn: ${ex.message || ex}`);
+            console.error("Load appointments error:", ex);
+            if (ex.response?.status === 403) {
+                setError("Bạn không có quyền truy cập lịch hẹn. Tài khoản bác sĩ chưa được xác nhận.");
+                setAppointments([]);
+            } else {
+                setError(`Không thể tải danh sách lịch hẹn: ${ex.message || ex}`);
+            }
         } finally {
             setLoadingAppointments(false);
         }
     };
 
-
     useEffect(() => {
-        if (page > 0) loadDoctors();
-        if (page > 0 && user) loadAppointments();
-    }, [page, q, user]);
+        if (!user) return;
+
+        if (user.role === "DOCTOR" && !user.isVerified) {
+            setLoadingDoctors(false);
+            setLoadingAppointments(false);
+            return;
+        }
+
+        if (page > 0) {
+            loadDoctors();
+            loadAppointments();
+        }
+    }, [page, q, user?.id, user?.role, user?.isVerified]);
 
     useEffect(() => {
         setPage(1);
@@ -118,37 +134,32 @@ const Home = () => {
 
     const formatDate = (timestamp) => {
         const date = new Date(timestamp);
-        return date.toLocaleString('vi-VN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
+        return date.toLocaleString("vi-VN", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
         });
     };
 
     const cancelAppointment = async (appointmentId) => {
-        if (!window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')) return;
+        if (!window.confirm("Bạn có chắc chắn muốn hủy lịch hẹn này?")) return;
 
         try {
             setLoadingCancel(true);
-            const token = cookie.load('token');
-            console.log('Token:', token);
-            console.log('Canceling appointment ID:', appointmentId);
-            const url = endpoints['cancelAppointment'](appointmentId);
-            console.log('Request URL:', url);
+            const url = endpoints["cancelAppointment"](appointmentId);
             const response = await authApis().patch(url);
-            console.log('Cancel response:', response.data);
             await loadAppointments();
-            setSuccess('Hủy lịch hẹn thành công!');
+            setSuccess("Hủy lịch hẹn thành công!");
             setTimeout(() => setSuccess(null), 2000);
         } catch (ex) {
-            console.error('Cancel error:', ex);
-            let errorMessage = 'Hủy lịch hẹn thất bại: ';
+            console.error("Cancel error:", ex);
+            let errorMessage = "Hủy lịch hẹn thất bại: ";
             if (ex.response) {
                 errorMessage += ex.response.data || ex.response.statusText;
             } else if (ex.request) {
-                errorMessage += 'Không nhận được phản hồi từ server (kiểm tra CORS hoặc network)';
+                errorMessage += "Không nhận được phản hồi từ server (kiểm tra CORS hoặc network)";
             } else {
                 errorMessage += ex.message;
             }
@@ -160,7 +171,7 @@ const Home = () => {
 
     const openRescheduleModal = (appointment) => {
         setSelectedAppointment(appointment);
-        setNewDateTime('');
+        setNewDateTime("");
         setShowRescheduleModal(true);
     };
 
@@ -171,32 +182,26 @@ const Home = () => {
 
     const rescheduleAppointment = async () => {
         if (!newDateTime) {
-            setError('Vui lòng chọn ngày giờ mới.');
+            setError("Vui lòng chọn ngày giờ mới.");
             return;
         }
 
         try {
             setLoadingReschedule(true);
-            const token = cookie.load('token');
-            console.log('Token:', token);
-            console.log('Rescheduling appointment ID:', selectedAppointment.id, 'to:', newDateTime);
             const body = { newDateTime: new Date(newDateTime).toISOString() };
-            console.log('Request body:', body);
-            const url = endpoints['rescheduleAppointment'](selectedAppointment.id);
-            console.log('Request URL:', url);
+            const url = endpoints["rescheduleAppointment"](selectedAppointment.id);
             const response = await authApis().patch(url, body);
-            console.log('Reschedule response:', response.data);
             await loadAppointments();
-            setSuccess('Đổi lịch hẹn thành công!');
+            setSuccess("Đổi lịch hẹn thành công!");
             setTimeout(() => setSuccess(null), 2000);
             closeRescheduleModal();
         } catch (ex) {
-            console.error('Reschedule error:', ex);
-            let errorMessage = 'Đổi lịch hẹn thất bại: ';
+            console.error("Reschedule error:", ex);
+            let errorMessage = "Đổi lịch hẹn thất bại: ";
             if (ex.response) {
                 errorMessage += ex.response.data || ex.response.statusText;
             } else if (ex.request) {
-                errorMessage += 'Không nhận được phản hồi từ server (kiểm tra CORS hoặc network)';
+                errorMessage += "Không nhận được phản hồi từ server (kiểm tra CORS hoặc network)";
             } else {
                 errorMessage += ex.message;
             }
@@ -210,58 +215,154 @@ const Home = () => {
         <>
             {/* Hero Section */}
             <div
-                className="text-white py-5 px-4 mb-4"
+                className="text-white py-5 px-4 mb-5 shadow-lg"
                 style={{
-                    background: "linear-gradient(rgba(13,110,253,0.8), rgba(13,110,253,0.8)), url('/images/hero-doctor.jpg') center/cover no-repeat",
-                    borderRadius: '12px'
+                    background: "linear-gradient(rgba(13,110,253,0.85), rgba(32,201,151,0.85)), url('/images/hero-doctor.jpg') center/cover no-repeat",
+                    borderRadius: "20px",
+                    minHeight: "300px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center"
                 }}
             >
                 <Container>
-                    <h1 className="display-5 fw-bold">Tìm bác sĩ phù hợp với bạn</h1>
-                    <p className="lead">Chọn theo chuyên khoa, bệnh viện hoặc tên bác sĩ để được hỗ trợ tốt nhất.</p>
+                    <h1 className="display-4 fw-bold mb-3" style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.3)" }}>
+                        Tìm Bác Sĩ Phù Hợp Với Bạn
+                    </h1>
+                    <p className="lead mb-4" style={{ fontSize: "1.25rem", fontWeight: "300" }}>
+                        Khám phá các bác sĩ theo chuyên khoa, bệnh viện hoặc tên để nhận được sự chăm sóc tốt nhất.
+                    </p>
+                    <Button
+                        as={Link}
+                        to="/appointment"
+                        variant="success"
+                        className="px-5 py-2 rounded-pill shadow-sm"
+                        style={{ backgroundColor: "#20c997", borderColor: "#20c997", transition: "transform 0.2s" }}
+                        onMouseEnter={(e) => e.target.style.transform = "scale(1.05)"}
+                        onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+                    >
+                        Đặt Lịch Ngay
+                    </Button>
                 </Container>
             </div>
 
-            <Container>
+            <Container className="py-4">
                 {error && (
-                    <Alert variant="danger" onClose={() => setError(null)} dismissible>
+                    <Alert 
+                        variant="danger" 
+                        onClose={() => setError(null)} 
+                        dismissible 
+                        className="shadow-sm rounded-pill px-4 py-3"
+                    >
                         {error}
                     </Alert>
                 )}
                 {success && (
-                    <Alert variant="success" onClose={() => setSuccess(null)} dismissible>
+                    <Alert 
+                        variant="success" 
+                        onClose={() => setSuccess(null)} 
+                        dismissible 
+                        className="shadow-sm rounded-pill px-4 py-3"
+                    >
                         {success}
                     </Alert>
                 )}
 
-                {loadingDoctors && <div className="text-center my-4"><Spinner animation="border" variant="primary" /></div>}
-                {doctors.length === 0 && !loadingDoctors && <Alert variant="info" className="mt-2">Không có bác sĩ nào!</Alert>}
+                {user?.role === "DOCTOR" && !user?.isVerified && (
+                    <Alert 
+                        variant="warning" 
+                        className="mt-3 shadow-sm rounded-pill px-4 py-3"
+                    >
+                        Giấy phép hành nghề của bạn chưa được xác nhận. Vui lòng chờ quản trị viên xác nhận trước khi sử dụng các chức năng của hệ thống.
+                    </Alert>
+                )}
 
-                <Row>
-                    {doctors.map(d => (
+                {loadingDoctors && (
+                    <div className="text-center my-5">
+                        <Spinner 
+                            animation="border" 
+                            variant="primary" 
+                            style={{ width: "3rem", height: "3rem" }}
+                        />
+                    </div>
+                )}
+                {doctors.length === 0 && !loadingDoctors && (
+                    <Alert 
+                        variant="info" 
+                        className="mt-3 shadow-sm rounded-pill px-4 py-3"
+                    >
+                        Không có bác sĩ nào!
+                    </Alert>
+                )}
+
+                <Row className="g-4">
+                    {doctors.map((d) => (
                         <Col key={d.id} className="mb-4" md={4} lg={3} sm={6}>
-                            <Card className="h-100 shadow-sm border-0" style={{ borderRadius: '16px' }}>
+                            <Card 
+                                className="h-100 shadow-lg border-0" 
+                                style={{ 
+                                    borderRadius: "20px", 
+                                    overflow: "hidden",
+                                    transition: "transform 0.3s, box-shadow 0.3s"
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = "translateY(-5px)";
+                                    e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.15)";
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = "translateY(0)";
+                                    e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
+                                }}
+                            >
                                 <Card.Img
                                     variant="top"
-                                    src={d.user.avatar || '/images/doctor-placeholder.jpg'}
+                                    src={d.user.avatar || "/images/doctor-placeholder.jpg"}
                                     style={{
-                                        width: '100%',
-                                        height: '220px',
-                                        objectFit: 'cover',
-                                        borderTopLeftRadius: '16px',
-                                        borderTopRightRadius: '16px'
+                                        width: "100%",
+                                        height: "250px",
+                                        objectFit: "cover",
+                                        borderTopLeftRadius: "20px",
+                                        borderTopRightRadius: "20px",
                                     }}
                                 />
-                                <Card.Body className="d-flex flex-column justify-content-between">
+                                <Card.Body className="d-flex flex-column justify-content-between p-4">
                                     <div>
-                                        <Card.Title className="fs-5 text-primary">{d.user.firstName} {d.user.lastName}</Card.Title>
-                                        <Card.Text className="mb-1"><strong>📞</strong> {d.user.phoneNumber}</Card.Text>
-                                        <Card.Text className="mb-1"><strong>🏥</strong> {d.hospital.name}</Card.Text>
-                                        <Card.Text className="mb-2"><strong>🩺</strong> {d.specialization.name}</Card.Text>
+                                        <Card.Title className="fs-5 fw-bold text-primary mb-3">
+                                            {d.user.firstName} {d.user.lastName}
+                                        </Card.Title>
+                                        <Card.Text className="mb-2" style={{ fontSize: "0.95rem" }}>
+                                            <strong>📞</strong> {d.user.phoneNumber}
+                                        </Card.Text>
+                                        <Card.Text className="mb-2" style={{ fontSize: "0.95rem" }}>
+                                            <strong>🏥</strong> {d.hospital.name}
+                                        </Card.Text>
+                                        <Card.Text className="mb-3" style={{ fontSize: "0.95rem" }}>
+                                            <strong>🩺</strong> {d.specialization.name}
+                                        </Card.Text>
                                     </div>
-                                    <div className="mt-auto d-flex justify-content-between">
-                                        <Button as={Link} to={`/doctors/${d.id}`} variant="outline-primary" size="sm">Xem chi tiết</Button>
-                                        <Button as={Link} to={`/doctors/${d.id}`} variant="success" size="sm">Đặt lịch</Button>
+                                    <div className="mt-auto d-flex justify-content-between gap-2">
+                                        <Button 
+                                            as={Link} 
+                                            to={`/doctors/${d.id}`} 
+                                            variant="outline-primary" 
+                                            size="sm"
+                                            className="rounded-pill flex-grow-1"
+                                            style={{ transition: "background 0.2s" }}
+                                        >
+                                            Xem Chi Tiết
+                                        </Button>
+                                        <Button
+                                            as={Link}
+                                            to={`/doctors/${d.id}`}
+                                            variant="success"
+                                            size="sm"
+                                            className="rounded-pill flex-grow-1"
+                                            disabled={user && user.role === "DOCTOR" && !user.isVerified}
+                                            style={{ backgroundColor: "#20c997", borderColor: "#20c997" }}
+                                        >
+                                            Đặt Lịch
+                                        </Button>
                                     </div>
                                 </Card.Body>
                             </Card>
@@ -269,113 +370,167 @@ const Home = () => {
                     ))}
                 </Row>
 
-                {page > 0 && !loadingDoctors && !loadingAppointments && (
-                    <div className="text-center mb-4">
-                        <Button variant="primary" onClick={loadMore} className="px-4 py-2 rounded-pill shadow-sm">
-                            Xem thêm
+                {page > 0 && !loadingDoctors && !loadingAppointments && user?.role !== "DOCTOR" && (
+                    <div className="text-center my-5">
+                        <Button 
+                            variant="primary" 
+                            onClick={loadMore} 
+                            className="px-5 py-2 rounded-pill shadow-sm"
+                            style={{ 
+                                backgroundColor: "#0d6efd", 
+                                borderColor: "#0d6efd",
+                                transition: "transform 0.2s"
+                            }}
+                            onMouseEnter={(e) => e.target.style.transform = "scale(1.05)"}
+                            onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+                        >
+                            Xem Thêm
                         </Button>
                     </div>
                 )}
             </Container>
 
-            <Container>
+            <Container className="py-4">
                 {!user && (
-                    <Alert variant="warning" className="mt-2">
-                        Vui lòng đăng nhập để xem danh sách lịch hẹn!
-                        <Link to="/login" className="ms-2">Đăng nhập</Link>
+                    <Alert 
+                        variant="warning" 
+                        className="mt-3 shadow-sm rounded-pill px-4 py-3"
+                    >
+                        Vui lòng đăng nhập để xem danh sách lịch hẹn! 
+                        <Link to="/login" className="ms-2 text-decoration-none fw-semibold">
+                            Đăng Nhập
+                        </Link>
                     </Alert>
                 )}
 
                 {user && (
                     <>
                         {loadingAppointments && page === 1 && (
-                            <div className="text-center my-4">
-                                <Spinner animation="border" variant="primary" />
+                            <div className="text-center my-5">
+                                <Spinner 
+                                    animation="border" 
+                                    variant="primary" 
+                                    style={{ width: "3rem", height: "3rem" }}
+                                />
                             </div>
                         )}
 
                         {appointments.length === 0 && !loadingAppointments && (
-                            <Alert variant="info" className="mt-2">
+                            <Alert 
+                                variant="info" 
+                                className="mt-3 shadow-sm rounded-pill px-4 py-3"
+                            >
                                 Bạn chưa có lịch hẹn nào!
                             </Alert>
                         )}
 
                         {appointments.length > 0 && (
-                            <Table striped bordered hover responsive className="mt-4">
-                                <thead>
+                            <Table 
+                                striped 
+                                bordered 
+                                hover 
+                                responsive 
+                                className="mt-4 shadow-sm"
+                                style={{ borderRadius: "10px", overflow: "hidden" }}
+                            >
+                                <thead style={{ backgroundColor: "#0d6efd", color: "#fff" }}>
                                     <tr>
-                                        <th>#</th>
-                                        <th>Tên bác sĩ</th>
-                                        <th>Tên bệnh nhân</th>
-                                        <th>Ngày hẹn</th>
-                                        <th>Trạng thái</th>
-                                        <th>Hành động</th>
+                                        <th className="py-3 text-center">#</th>
+                                        <th className="py-3">Tên Bác Sĩ</th>
+                                        <th className="py-3">Tên Bệnh Nhân</th>
+                                        <th className="py-3">Ngày Hẹn</th>
+                                        <th className="py-3">Trạng Thái</th>
+                                        <th className="py-3">Hành Động</th>
+                                        <th className="py-3">Thanh Toán/Chat</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {appointments.map((appt, index) => (
                                         <tr key={appt.id}>
-                                            <td>{index + 1}</td>
-                                            <td>{`${appt.doctor.user.firstName} ${appt.doctor.user.lastName}`}</td>
-                                            <td>{`${appt.patient.user.firstName} ${appt.patient.user.lastName}`}</td>
-                                            <td>{formatDate(appt.appointmentDate)}</td>
-                                            <td>{appt.status}</td>
-                                            <td>
+                                            <td className="text-center align-middle">{index + 1}</td>
+                                            <td className="align-middle">{`${appt.doctor.user.firstName} ${appt.doctor.user.lastName}`}</td>
+                                            <td className="align-middle">{`${appt.patient.user.firstName} ${appt.patient.user.lastName}`}</td>
+                                            <td className="align-middle">{formatDate(appt.appointmentDate)}</td>
+                                            <td className="align-middle">{appt.status}</td>
+                                            <td className="align-middle">
                                                 <Button
                                                     variant="warning"
                                                     size="sm"
-                                                    className="me-2"
+                                                    className="me-2 rounded-pill px-3"
                                                     onClick={() => openRescheduleModal(appt)}
-                                                    disabled={appt.status !== 'PENDING'}
+                                                    disabled={
+                                                        appt.status !== "PENDING" ||
+                                                        (user && user.role === "DOCTOR" && !user.isVerified)
+                                                    }
+                                                    style={{ transition: "background 0.2s" }}
                                                 >
-                                                    Đổi lịch hẹn
+                                                    Đổi Lịch
                                                 </Button>
                                                 <Button
                                                     variant="danger"
                                                     size="sm"
+                                                    className="rounded-pill px-3"
                                                     onClick={() => cancelAppointment(appt.id)}
-                                                    disabled={appt.status !== 'PENDING' || loadingCancel}
+                                                    disabled={
+                                                        appt.status !== "PENDING" ||
+                                                        loadingCancel ||
+                                                        (user && user.role === "DOCTOR" && !user.isVerified)
+                                                    }
+                                                    style={{ transition: "background 0.2s" }}
                                                 >
                                                     {loadingCancel ? (
                                                         <>
                                                             <Spinner animation="border" size="sm" className="me-2" />
-                                                            Đang xử lý...
+                                                            Đang Xử Lý...
                                                         </>
                                                     ) : (
-                                                        'Hủy lịch hẹn'
+                                                        "Hủy Lịch"
                                                     )}
                                                 </Button>
                                             </td>
-                                            <td>
-                                                {user.role === 'DOCTOR' && appt.status === 'COMPLETED' && !appt.payment && (
+                                            <td className="align-middle">
+                                                {user.role === "DOCTOR" &&
+                                                    appt.status === "COMPLETED" &&
+                                                    !appt.payment && (
+                                                        <Button
+                                                            as={Link}
+                                                            to={`/payment/${appt.id}`}
+                                                            variant="primary"
+                                                            size="sm"
+                                                            className="rounded-pill px-3"
+                                                            disabled={!user.isVerified}
+                                                            style={{ backgroundColor: "#0d6efd", borderColor: "#0d6efd" }}
+                                                        >
+                                                            Tạo Hóa Đơn
+                                                        </Button>
+                                                    )}
+                                                {user.role === "PATIENT" &&
+                                                    appt.status === "COMPLETED" &&
+                                                    appt.payment && (
+                                                        <Button
+                                                            as={Link}
+                                                            to={`/payment/${appt.id}`}
+                                                            variant="success"
+                                                            size="sm"
+                                                            className="rounded-pill px-3"
+                                                            disabled={appt.payment.paymentStatus !== "PENDING"}
+                                                            style={{ backgroundColor: "#20c997", borderColor: "#20c997" }}
+                                                        >
+                                                            Thanh Toán
+                                                        </Button>
+                                                    )}
+                                                {appt.status === "PENDING" && (
                                                     <Button
                                                         as={Link}
-                                                        to={`/payment/${appt.id}`}
+                                                        to={`/chat/${user.role === "PATIENT" ? appt.doctor.id : appt.patient.id}`}
                                                         variant="primary"
                                                         size="sm"
-                                                        className="ms-2"
+                                                        className="rounded-pill px-3 ms-2"
+                                                        disabled={user && user.role === "DOCTOR" && !user.isVerified}
+                                                        style={{ backgroundColor: "#0d6efd", borderColor: "#0d6efd" }}
                                                     >
-                                                        Tạo hóa đơn
+                                                        Chat
                                                     </Button>
-                                                )}
-                                                {user.role === 'PATIENT' && appt.status === 'COMPLETED' && appt.payment && (
-                                                    <Button
-                                                        as={Link}
-                                                        to={`/payment/${appt.id}`}
-                                                        variant="success"
-                                                        size="sm"
-                                                        disabled={appt.payment.paymentStatus !== 'PENDING'}
-                                                        className="ms-2"
-                                                    >
-                                                        Thanh toán
-                                                    </Button>
-                                                )}
-                                            </td>
-                                            <td>
-                                                {appt.status === 'PENDING' && (
-                                                    <Link to={`/chat/${user.role === 'PATIENT' ? appt.doctor.id : appt.patient.id}`}>
-                                                        <Button variant="primary">Chat</Button>
-                                                    </Link>
                                                 )}
                                             </td>
                                         </tr>
@@ -384,14 +539,21 @@ const Home = () => {
                             </Table>
                         )}
 
-                        {page > 0 && !loadingAppointments && !loadingDoctors && (
-                            <div className="text-center mb-4">
-                                <Button
-                                    variant="primary"
-                                    onClick={loadMore}
-                                    className="px-4 py-2 rounded-pill shadow-sm"
+                        {page > 0 && !loadingDoctors && !loadingAppointments && user?.role !== "DOCTOR" && (
+                            <div className="text-center my-5">
+                                <Button 
+                                    variant="primary" 
+                                    onClick={loadMore} 
+                                    className="px-5 py-2 rounded-pill shadow-sm"
+                                    style={{ 
+                                        backgroundColor: "#0d6efd", 
+                                        borderColor: "#0d6efd",
+                                        transition: "transform 0.2s"
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.transform = "scale(1.05)"}
+                                    onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
                                 >
-                                    Xem thêm
+                                    Xem Thêm
                                 </Button>
                             </div>
                         )}
@@ -399,39 +561,56 @@ const Home = () => {
                 )}
 
                 {/* Modal đổi lịch hẹn */}
-                <Modal show={showRescheduleModal} onHide={closeRescheduleModal}>
-                    <Modal.Header closeButton>
-                        <Modal.Title>Đổi lịch hẹn</Modal.Title>
+                <Modal 
+                    show={showRescheduleModal} 
+                    onHide={closeRescheduleModal}
+                    centered
+                >
+                    <Modal.Header 
+                        closeButton 
+                        className="bg-primary text-white"
+                        style={{ borderTopLeftRadius: "10px", borderTopRightRadius: "10px" }}
+                    >
+                        <Modal.Title>Đổi Lịch Hẹn</Modal.Title>
                     </Modal.Header>
-                    <Modal.Body>
+                    <Modal.Body className="p-4">
                         <Form>
                             <Form.Group className="mb-3">
-                                <Form.Label>Chọn ngày giờ mới</Form.Label>
+                                <Form.Label className="fw-semibold">Chọn Ngày Giờ Mới</Form.Label>
                                 <Form.Control
                                     type="datetime-local"
                                     value={newDateTime}
                                     onChange={(e) => setNewDateTime(e.target.value)}
                                     min={new Date().toISOString().slice(0, 16)}
+                                    className="border-primary"
+                                    style={{ borderRadius: "10px" }}
                                 />
                             </Form.Group>
                         </Form>
                     </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={closeRescheduleModal}>
+                    <Modal.Footer className="border-0">
+                        <Button 
+                            variant="secondary" 
+                            onClick={closeRescheduleModal}
+                            className="rounded-pill px-4"
+                            style={{ transition: "background 0.2s" }}
+                        >
                             Đóng
                         </Button>
                         <Button
                             variant="primary"
                             onClick={rescheduleAppointment}
                             disabled={loadingReschedule || !newDateTime}
+                            className="rounded-pill px-4"
+                            style={{ backgroundColor: "#0d6efd", borderColor: "#0d6efd", transition: "background 0.2s" }}
                         >
                             {loadingReschedule ? (
                                 <>
                                     <Spinner animation="border" size="sm" className="me-2" />
-                                    Đang xử lý...
+                                    Đang Xử Lý...
                                 </>
                             ) : (
-                                'Lưu thay đổi'
+                                "Lưu Thay Đổi"
                             )}
                         </Button>
                     </Modal.Footer>

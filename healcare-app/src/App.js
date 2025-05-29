@@ -16,30 +16,29 @@ import Appointment from "./components/Appointment";
 
 
 const App = () => {
+    return (
+        <BrowserRouter>
+            <MyUserProvider>
+                <Header />
 
-  return (
-      <MyUserProvider>
-          <BrowserRouter>
-              <Header />
+                <Container>
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/doctors/:id" element={<DoctorDetail />} />
+                        <Route path="/appointment" element={<Appointment />} />
+                        <Route path="/appointments/new" element={<AppointmentForm />} />
+                        <Route path="/payment/:appointmentId" element={<Payment />} />
+                        <Route path="/chat/:otherUserId" element={<ChatRoom />} />
+                    </Routes>
+                </Container>
 
-              <Container>
-                  <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/register" element={<Register />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/doctors/:id" element={<DoctorDetail />} />
-                      <Route path="/appointment" element={<Appointment />} />
-                      <Route path="/appointments/new" element={<AppointmentForm />} />
-                      <Route path="/payment/:appointmentId" element={<Payment />} />
-                      <Route path="/chat/:otherUserId" element={<ChatRoom />} />
-                  </Routes>
-              </Container>
-
-              <Footer />
-          </BrowserRouter>
-      </MyUserProvider>
-  );
-}
+                <Footer />
+            </MyUserProvider>
+        </BrowserRouter>
+    );
+};
 
 export default App;

@@ -6,6 +6,8 @@ package com.can.pojo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -41,7 +43,11 @@ public class Doctor {
 
     @Column(name = "is_verified", columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean isVerified;
-
+    
+    @Column(name = "verification_status")
+    @Enumerated(EnumType.STRING)
+    private VerificationStatus verificationStatus;
+    
     @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;
 
@@ -56,14 +62,14 @@ public class Doctor {
     /**
      * @return the id
      */
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
     /**
      * @param id the id to set
      */
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -177,5 +183,19 @@ public class Doctor {
      */
     public void setHospital(Hospital hospital) {
         this.hospital = hospital;
+    }
+
+    /**
+     * @return the verificationStatus
+     */
+    public VerificationStatus getVerificationStatus() {
+        return verificationStatus;
+    }
+
+    /**
+     * @param verificationStatus the verificationStatus to set
+     */
+    public void setVerificationStatus(VerificationStatus verificationStatus) {
+        this.verificationStatus = verificationStatus;
     }
 }

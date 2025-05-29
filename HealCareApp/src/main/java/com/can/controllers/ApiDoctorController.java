@@ -79,4 +79,17 @@ public class ApiDoctorController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    
+    // API mới: Xác nhận giấy phép bác sĩ bởi quản trị viên
+    @PostMapping("/admin/verify-doctor/{doctorId}")
+    public ResponseEntity<String> verifyDoctor(@PathVariable("doctorId") int doctorId) {
+        try {
+            doctorService.verifyDoctor(doctorId);
+            return new ResponseEntity<>("Xác nhận giấy phép thành công!", HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>("Lỗi khi xác nhận giấy phép: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
