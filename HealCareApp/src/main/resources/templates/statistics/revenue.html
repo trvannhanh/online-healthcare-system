@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>Báo Cáo Doanh Thu</title>
+    <th:block th:replace="base :: styles"></th:block>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      .nav-tabs .nav-link.active {
+        font-weight: 600;
+      }
+      .form-container {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+        margin-bottom: 20px;
+      }
+      .result-container {
+        background: #e9ecef;
+        padding: 20px;
+        border-radius: 5px;
+        border-left: 5px solid #0d6efd;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="base :: header"></div>
+
+    <main>
+      <div class="d-flex bg-secondary">
+        <div th:replace="base :: sidebar" class="p-2"></div>
+        <div class="p-2 bg-light flex-grow-1">
+          <h1 class="text-center text-primary mb-4">Báo Cáo Doanh Thu</h1>
+
+          <button>
+            <a th:href="@{/statistics}">Xem thống kê số lượng bệnh nhân</a>
+          </button>
+          <!-- Tab Content -->
+          <div class="tab-content" id="revenueTabContent">
+            <!-- Form thống kê tab -->
+            <div class="form-container">
+              <!-- Form chung -->
+              <form id="dynamicRevenueForm" method="get">
+                <div class="mb-3">
+                  <label for="revenueType" class="form-label"
+                    >Loại báo cáo</label
+                  >
+                  <select
+                    class="form-select"
+                    id="revenueType"
+                    name="revenueType"
+                    required
+                  >
+                    <option value="quarter" selected>Thống Kê Theo Quý</option>
+                    <option value="month">Thống Kê Theo Tháng</option>
+                  </select>
+                </div>
+
+                <!-- Trường nhập năm (dùng chung) -->
+                <div class="mb-3">
+                  <label for="year" class="form-label">Năm</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="year"
+                    name="year"
+                    placeholder="Nhập năm (VD: 2025)"
+                    required
+                  />
+                </div>
+
+                <!-- Trường chọn quý -->
+                <div class="mb-3" id="quarterField">
+                  <label for="quarter" class="form-label">Quý</label>
+                  <select
+                    class="form-select"
+                    id="quarter"
+                    name="quarter"
+                    required
+                  >
+                    <option value="1">Quý 1 (Tháng 1 - Tháng 3)</option>
+                    <option value="2">Quý 2 (Tháng 4 - Tháng 6)</option>
+                    <option value="3">Quý 3 (Tháng 7 - Tháng 9)</option>
+                    <option value="4">Quý 4 (Tháng 10 - Tháng 12)</option>
+                  </select>
+                </div>
+
+                <!-- Trường chọn tháng -->
+                <div class="mb-3" id="monthField" style="display: none">
+                  <label for="month" class="form-label">Tháng</label>
+                  <select class="form-select" id="month" name="month">
+                    <option value="1">Tháng 1</option>
+                    <option value="2">Tháng 2</option>
+                    <option value="3">Tháng 3</option>
+                    <option value="4">Tháng 4</option>
+                    <option value="5">Tháng 5</option>
+                    <option value="6">Tháng 6</option>
+                    <option value="7">Tháng 7</option>
+                    <option value="8">Tháng 8</option>
+                    <option value="9">Tháng 9</option>
+                    <option value="10">Tháng 10</option>
+                    <option value="11">Tháng 11</option>
+                    <option value="12">Tháng 12</option>
+                  </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                  Xem báo cáo
+                </button>
+              </form>
+            </div>
+
+            <!-- Kết quả thống kê -->
+            <div th:if="${revenue != null}" class="result-container">
+              <h3>Kết Quả Thống Kê</h3>
+              <!-- Hiển thị kết quả theo quý -->
+              <div th:if="${year != null && quarter != null && month == null}">
+                <p><strong>Năm:</strong> <span th:text="${year}"></span></p>
+                <p><strong>Quý: </strong> <span th:text="${quarter}"></span></p>
+                <p>
+                  <strong>Tổng Doanh Thu:</strong>
+                  <span
+                    th:text="${#numbers.formatDecimal(revenue, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                    class="badge bg-primary fs-5"
+                  ></span>
+                </p>
+              </div>
+              <!-- Hiển thị kết quả theo tháng -->
+              <div th:if="${year != null && month != null}">
+                <p><strong>Năm:</strong> <span th:text="${year}"></span></p>
+                <p><strong>Tháng:</strong> <span th:text="${month}"></span></p>
+                <p>
+                  <strong>Tổng Doanh Thu:</strong>
+                  <span
+                    th:text="${#numbers.formatDecimal(revenue, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                    class="badge bg-primary fs-5"
+                  ></span>
+                </p>
+              </div>
+            </div>
+            <div id="chart-view" class="result-container">
+              <div class="form-container">
+                <div class="row">
+                  <div class="col-md-3">
+                    <label for="chartViewType" class="form-label"
+                      >Chế độ xem</label
+                    >
+                    <select class="form-select" id="chartViewType">
+                      <option value="year" selected>Thống kê theo năm</option>
+                      <option value="month">Thống kê tháng cụ thể</option>
+                    </select>
+                  </div>
+
+                  <!-- Các tùy chọn cho thống kê theo năm -->
+                  <div id="yearStatsOptions">
+                    <div class="row mt-2">
+                      <div class="col-md-4">
+                        <label for="chartDisplayType" class="form-label"
+                          >Kiểu biểu đồ</label
+                        >
+                        <select class="form-select" id="chartDisplayType">
+                          <option value="bar" selected>Biểu đồ cột</option>
+                          <option value="line">Biểu đồ đường</option>
+                        </select>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="chartType" class="form-label"
+                          >Thống kê theo</label
+                        >
+                        <select class="form-select" id="chartType">
+                          <option value="month" selected>Theo tháng</option>
+                          <option value="quarter">Theo quý</option>
+                        </select>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="chartYear" class="form-label">Năm</label>
+                        <div class="input-group">
+                          <input
+                            type="number"
+                            class="form-control"
+                            id="chartYear"
+                            placeholder="Nhập năm để xem biểu đồ"
+                            th:value="${chartYear != null ? chartYear : T(java.time.Year).now().getValue()}"
+                          />
+                          <button
+                            class="btn btn-primary"
+                            type="button"
+                            id="updateChartBtn"
+                          >
+                            Cập Nhật
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Các tùy chọn cho thống kê theo tháng -->
+                  <div
+                    id="monthStatsOptions"
+                    class="row mt-2"
+                    style="display: none"
+                  >
+                    <div class="col-md-4">
+                      <label for="pieChartMonth" class="form-label"
+                        >Tháng</label
+                      >
+                      <select class="form-select" id="pieChartMonth">
+                        <option value="1">Tháng 1</option>
+                        <option value="2">Tháng 2</option>
+                        <option value="3">Tháng 3</option>
+                        <option value="4">Tháng 4</option>
+                        <option value="5">Tháng 5</option>
+                        <option value="6">Tháng 6</option>
+                        <option value="7">Tháng 7</option>
+                        <option value="8">Tháng 8</option>
+                        <option value="9">Tháng 9</option>
+                        <option value="10">Tháng 10</option>
+                        <option value="11">Tháng 11</option>
+                        <option value="12">Tháng 12</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="pieChartYear" class="form-label">Năm</label>
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="pieChartYear"
+                        placeholder="Nhập năm"
+                        th:value="${chartYear != null ? chartYear : T(java.time.Year).now().getValue()}"
+                      />
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                      <button
+                        class="btn btn-primary"
+                        type="button"
+                        id="updatePieChartBtn"
+                      >
+                        Xem biểu đồ
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="height: 400px">
+                <canvas id="statisticsChart"></canvas>
+              </div>
+
+              <!-- Thống kê tổng quan -->
+              <div class="row mt-4">
+                <div class="col-md-3">
+                  <div class="card text-center">
+                    <div class="card-header bg-primary text-white">
+                      Tổng doanh thu
+                    </div>
+                    <div class="card-body">
+                      <h5 class="card-title" id="totalRevenue">0 VND</h5>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="card text-center">
+                    <div class="card-header bg-success text-white">
+                      Cao nhất
+                    </div>
+                    <div class="card-body">
+                      <h5 class="card-title" id="maxRevenue">0 VND</h5>
+                      <p class="card-text" id="maxRevenuePeriod">-</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="card text-center">
+                    <div class="card-header bg-info text-white">Trung bình</div>
+                    <div class="card-body">
+                      <h5 class="card-title" id="avgRevenue">0 VND</h5>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="card text-center">
+                    <div class="card-header bg-secondary text-white">Năm</div>
+                    <div class="card-body">
+                      <h5 class="card-title" id="chartYearDisplay">-</h5>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div th:replace="base :: footer"></div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Xử lý chuyển đổi form
+        const revenueTypeSelect = document.getElementById("revenueType");
+        const dynamicForm = document.getElementById("dynamicRevenueForm");
+        const quarterField = document.getElementById("quarterField");
+        const monthField = document.getElementById("monthField");
+        const quarterSelect = document.getElementById("quarter");
+        const monthSelect = document.getElementById("month");
+
+        // Khởi tạo form
+        updateFormAction();
+
+        // Xử lý khi người dùng chọn loại thống kê
+        revenueTypeSelect.addEventListener("change", function () {
+          updateFormAction();
+        });
+
+        // Hàm cập nhật form action và hiển thị các trường
+        function updateFormAction() {
+          const selectedType = revenueTypeSelect.value;
+
+          if (selectedType === "quarter") {
+            dynamicForm.action =
+              "/HealCareApp/statistics/revenue/payments-revenue-quarter";
+            quarterField.style.display = "block";
+            monthField.style.display = "none";
+            quarterSelect.setAttribute("required", "");
+            monthSelect.removeAttribute("required");
+          } else if (selectedType === "month") {
+            dynamicForm.action =
+              "/HealCareApp/statistics/revenue/payments-revenue-month";
+            quarterField.style.display = "none";
+            monthField.style.display = "block";
+            monthSelect.setAttribute("required", "");
+            quarterSelect.removeAttribute("required");
+          }
+        }
+
+        // Xử lý biểu đồ
+        const apiUrlMonthlyRevenue = "/HealCareApp/statistics/revenue/monthly-revenue-ajax";
+        const apiUrlQuarterlyRevenue = "/HealCareApp/statistics/revenue/quarterly-revenue-ajax";
+        const apiUrlMonthDetailRevenue =
+          "/HealCareApp/statistics/revenue/month-detail-revenue-ajax";
+        const chartCanvas = document.getElementById("statisticsChart");
+        let revenueChart;
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1;
+        const chartYearInput = document.getElementById("chartYear");
+        const pieChartYearInput = document.getElementById("pieChartYear");
+        const pieChartMonthSelect = document.getElementById("pieChartMonth");
+        const updateChartBtn = document.getElementById("updateChartBtn");
+        const updatePieChartBtn = document.getElementById("updatePieChartBtn");
+        const chartTypeSelect = document.getElementById("chartType");
+        const chartDisplayTypeSelect =
+          document.getElementById("chartDisplayType");
+        const chartViewTypeSelect = document.getElementById("chartViewType");
+
+        // Thiết lập giá trị mặc định
+        if (!chartYearInput.value) chartYearInput.value = currentYear;
+        if (!pieChartYearInput.value) pieChartYearInput.value = currentYear;
+        pieChartMonthSelect.value = currentMonth;
+
+        // Hiển thị năm
+        document.getElementById("chartYearDisplay").textContent =
+          chartYearInput.value;
+
+        // Xử lý chuyển đổi chế độ xem (năm/tháng)
+        chartViewTypeSelect.addEventListener("change", function () {
+          if (this.value === "year") {
+            document.getElementById("yearStatsOptions").style.display = "block";
+            document.getElementById("monthStatsOptions").style.display = "none";
+            updateYearChart();
+          } else {
+            document.getElementById("yearStatsOptions").style.display = "none";
+            document.getElementById("monthStatsOptions").style.display =
+              "block";
+            updateMonthPieChart();
+          }
+        });
+
+        // Cập nhật biểu đồ ban đầu
+        updateYearChart();
+
+        // Xử lý sự kiện cập nhật biểu đồ theo năm
+        updateChartBtn.addEventListener("click", updateYearChart);
+        chartTypeSelect.addEventListener("change", updateYearChart);
+        chartDisplayTypeSelect.addEventListener("change", updateYearChart);
+
+        // Xử lý sự kiện cập nhật biểu đồ tròn theo tháng
+        updatePieChartBtn.addEventListener("click", updateMonthPieChart);
+
+        // Xử lý khi người dùng nhấn Enter
+        chartYearInput.addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            updateYearChart();
+          }
+        });
+
+        pieChartYearInput.addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            updateMonthPieChart();
+          }
+        });
+
+        // Hàm cập nhật biểu đồ theo năm (dạng cột hoặc đường)
+        function updateYearChart() {
+          const year = chartYearInput.value;
+          const periodType = chartTypeSelect.value;
+          const chartType = chartDisplayTypeSelect.value;
+
+          const apiUrl =
+            periodType === "month"
+              ? `${apiUrlMonthlyRevenue}?year=${year}`
+              : `${apiUrlQuarterlyRevenue}?year=${year}`;
+
+          fetch(apiUrl)
+            .then((response) => {
+              if (!response.ok) throw new Error("Failed to fetch data");
+              return response.json();
+            })
+            .then((chartData) => {
+              let labels, backgroundColor, borderColor;
+
+              if (periodType === "month") {
+                labels = [
+                  "Tháng 1",
+                  "Tháng 2",
+                  "Tháng 3",
+                  "Tháng 4",
+                  "Tháng 5",
+                  "Tháng 6",
+                  "Tháng 7",
+                  "Tháng 8",
+                  "Tháng 9",
+                  "Tháng 10",
+                  "Tháng 11",
+                  "Tháng 12",
+                ];
+              } else {
+                labels = ["Quý 1", "Quý 2", "Quý 3", "Quý 4"];
+              }
+
+              if (chartType === "line") {
+                backgroundColor = "rgba(75, 192, 192, 0.2)";
+                borderColor = "rgba(75, 192, 192, 1)";
+              } else {
+                // bar
+                backgroundColor =
+                  periodType === "month"
+                    ? "rgba(54, 162, 235, 0.2)"
+                    : "rgba(153, 102, 255, 0.2)";
+                borderColor =
+                  periodType === "month"
+                    ? "rgba(54, 162, 235, 1)"
+                    : "rgba(153, 102, 255, 1)";
+              }
+
+              const data = {
+                labels: labels,
+                datasets: [
+                  {
+                    label: `Doanh Thu ${
+                      periodType === "month" ? "Theo Tháng" : "Theo Quý"
+                    } Năm ${year}`,
+                    data: chartData,
+                    backgroundColor: backgroundColor,
+                    borderColor: borderColor,
+                    borderWidth: 1,
+                    fill: chartType === "line" ? false : undefined,
+                    tension: 0.1,
+                  },
+                ],
+              };
+
+              const chartTitle =
+                periodType === "month"
+                  ? `Thống kê doanh thu theo tháng năm ${year}`
+                  : `Thống kê doanh thu theo quý năm ${year}`;
+
+              const config = {
+                type: chartType,
+                data: data,
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    title: {
+                      display: true,
+                      text: chartTitle,
+                      font: { size: 16 },
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: function (context) {
+                          return new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(context.parsed.y);
+                        },
+                      },
+                    },
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      title: {
+                        display: true,
+                        text: "Doanh thu (VND)",
+                      },
+                      ticks: {
+                        callback: function (value) {
+                          return (
+                            new Intl.NumberFormat("vi-VN").format(value) + " đ"
+                          );
+                        },
+                      },
+                    },
+                    x: {
+                      title: {
+                        display: true,
+                        text: periodType === "month" ? "Tháng" : "Quý",
+                      },
+                    },
+                  },
+                },
+              };
+
+              renderChart(config);
+              updateChartSummary(chartData, periodType);
+              document.getElementById("chartYearDisplay").textContent = year;
+            })
+            .catch((error) => {
+              console.error("Error loading chart data:", error);
+            });
+        }
+
+        // Hàm cập nhật biểu đồ theo tháng (dạng tròn)
+        function updateMonthPieChart() {
+          const month = pieChartMonthSelect.value;
+          const year = pieChartYearInput.value;
+
+          // API gọi thống kê chi tiết theo tháng (cần thêm vào controller)
+          fetch(`${apiUrlMonthDetailRevenue}?year=${year}&month=${month}`)
+            .then((response) => {
+              if (!response.ok) throw new Error("Failed to fetch data");
+              return response.json();
+            })
+            .then((pieData) => {
+              // Giả sử API trả về dữ liệu có cấu trúc:
+              // {labels: ["Khám bệnh", "Xét nghiệm", "Thuốc"], values: [1000000, 2000000, 3000000]}
+
+              const config = {
+                type: "pie",
+                data: {
+                  labels: pieData.labels,
+                  datasets: [
+                    {
+                      data: pieData.values,
+                      backgroundColor: [
+                        "rgba(255, 99, 132, 0.6)",
+                        "rgba(54, 162, 235, 0.6)",
+                        "rgba(255, 206, 86, 0.6)",
+                        "rgba(75, 192, 192, 0.6)",
+                        "rgba(153, 102, 255, 0.6)",
+                        "rgba(255, 159, 64, 0.6)",
+                      ],
+                      borderColor: [
+                        "rgba(255, 99, 132, 1)",
+                        "rgba(54, 162, 235, 1)",
+                        "rgba(255, 206, 86, 1)",
+                        "rgba(75, 192, 192, 1)",
+                        "rgba(153, 102, 255, 1)",
+                        "rgba(255, 159, 64, 1)",
+                      ],
+                      borderWidth: 1,
+                    },
+                  ],
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    title: {
+                      display: true,
+                      text: `Chi tiết doanh thu tháng ${month} năm ${year}`,
+                      font: { size: 16 },
+                    },
+                    legend: {
+                      position: "right",
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: function (context) {
+                          const label = context.label || "";
+                          const value = context.parsed || 0;
+                          const total = context.dataset.data.reduce(
+                            (acc, data) => acc + data,
+                            0
+                          );
+                          const percentage = Math.round((value / total) * 100);
+                          return `${label}: ${new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(value)} (${percentage}%)`;
+                        },
+                      },
+                    },
+                  },
+                },
+              };
+
+              if (revenueChart) {
+        revenueChart.destroy();
+      }
+      revenueChart = new Chart(chartCanvas, config);
+
+              // Cập nhật thống kê tổng quan cho biểu đồ tròn
+              updatePieChartSummary(pieData.values, pieData.labels);
+                    document.getElementById("chartYearDisplay").textContent = `${year} - Tháng ${month}`;
+
+            })
+            .catch((error) => {
+              console.error("Error loading monthly detail data:", error);
+            });
+        }
+
+        // Render biểu đồ
+        function renderChart(config) {
+          if (revenueChart) {
+            revenueChart.destroy();
+          }
+          revenueChart = new Chart(chartCanvas, config);
+        }
+
+        // Hàm cập nhật thống kê tổng quan cho biểu đồ theo năm
+        function updateChartSummary(data, periodType) {
+          const total = data.reduce((sum, value) => sum + value, 0);
+          const max = Math.max(...data);
+          const maxIndex = data.indexOf(max);
+          const avg = total / data.length;
+
+          // Định dạng tiền tệ
+          const formatter = new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+            maximumFractionDigits: 0,
+          });
+
+          document.getElementById("totalRevenue").textContent =
+            formatter.format(total);
+          document.getElementById("maxRevenue").textContent =
+            formatter.format(max);
+          document.getElementById("maxRevenuePeriod").textContent =
+            periodType === "month"
+              ? `Tháng ${maxIndex + 1}`
+              : `Quý ${maxIndex + 1}`;
+          document.getElementById("avgRevenue").textContent = formatter.format(
+            Math.round(avg)
+          );
+        }
+
+        // Hàm cập nhật thống kê tổng quan cho biểu đồ tròn
+        function updatePieChartSummary(data, labels) {
+          const total = data.reduce((sum, value) => sum + value, 0);
+          const max = Math.max(...data);
+          const maxIndex = data.indexOf(max);
+          const avg = total / data.length;
+
+          // Định dạng tiền tệ
+          const formatter = new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+            maximumFractionDigits: 0,
+          });
+
+          document.getElementById("totalRevenue").textContent =
+            formatter.format(total);
+          document.getElementById("maxRevenue").textContent =
+            formatter.format(max);
+          document.getElementById("maxRevenuePeriod").textContent =
+            labels[maxIndex];
+          document.getElementById("avgRevenue").textContent = formatter.format(
+            Math.round(avg)
+          );
+        }
+      });
+    </script>
+  </body>
+</html>

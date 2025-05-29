@@ -1,18 +1,16 @@
 package com.can.controllers;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-import com.can.pojo.Appointment;
-import com.can.pojo.AppointmentStatus;
-import com.can.services.AppointmentService;
+
+import com.can.pojo.Payment;
+import com.can.services.StatisticService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -29,13 +27,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.view.RedirectView;
-
-import com.can.services.AppointmentService;
+import org.springframework.ui.Model;
 
 @Controller
 public class StatisticsController {
     @Autowired
-    private AppointmentService appointmentService;
+    private StatisticService statisticService;
 
     @GetMapping("/statistics")
     public String showStatisticsPage() {
@@ -47,9 +44,9 @@ public class StatisticsController {
     public String countPatientsByQuarter(
             @RequestParam(name = "year") Integer year,
             @RequestParam(name = "quarter") Integer quarter,
-            org.springframework.ui.Model model) {
+            Model model) {
         try {
-            int count = appointmentService.countDistinctPatientsByQuarter(year, quarter);
+            int count = statisticService.countDistinctPatientsByQuarter(year, quarter);
             model.addAttribute("year", year);
             model.addAttribute("quarter", quarter);
             model.addAttribute("count", count);
@@ -65,9 +62,9 @@ public class StatisticsController {
     public String countPatientsByMonth(
             @RequestParam(name = "year") Integer year,
             @RequestParam(name = "month") Integer month,
-            org.springframework.ui.Model model) {
+            Model model) {
         try {
-            int count = appointmentService.countDistinctPatientsByMonth(year, month);
+            int count = statisticService.countDistinctPatientsByMonth(year, month);
             model.addAttribute("year", year);
             model.addAttribute("month", month);
             model.addAttribute("count", count);
@@ -84,7 +81,7 @@ public class StatisticsController {
     public List<Integer> getMonthlyDataAjax(@RequestParam(name = "year") Integer year) {
         try {
             // Lấy dữ liệu thống kê theo từng tháng
-            return appointmentService.getMonthlyStatistics(year);
+            return statisticService.getMonthlyStatistics(year);
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Error fetching monthly statistics for year: " + year);
@@ -92,4 +89,172 @@ public class StatisticsController {
         }
     }
 
+    @GetMapping("statistics/quarterly-data-ajax")
+    @ResponseBody
+    public List<Integer> getQuarterlyDataAjax(@RequestParam(name = "year") Integer year) {
+        try {
+            // Lấy dữ liệu thống kê theo từng tháng
+            return statisticService.getQuarterlyStatistics(year);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error fetching monthly statistics for year: " + year);
+            return List.of(); // Trả về danh sách rỗng nếu có lỗi
+        }
+    }
+
+    @GetMapping("statistics/revenue")
+    public String showRevenueStatisticsPage(Model model) {
+        // Add any default data you want to show
+        return "statistics/revenue";
+    }
+
+    @GetMapping("statistics/revenue/payments")
+    public String getPaymentsByDateRange(
+            @RequestParam(name = "fromDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
+            @RequestParam(name = "toDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate,
+            Model model) {
+        try {
+            List<Payment> payments = statisticService.getPaymentCompleteByDateRange(fromDate, toDate);
+            model.addAttribute("payments", payments);
+            model.addAttribute("fromDate", fromDate);
+            model.addAttribute("toDate", toDate);
+            return "statistics/revenue";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "errorPage";
+        }
+    }
+
+    // Doanh thu theo khoảng thời gian
+    @GetMapping("statistics/revenue/payments-date-range")
+    public String getRevenueByDateRange(
+            @RequestParam(name = "fromDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
+            @RequestParam(name = "toDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate,
+            Model model) {
+        try {
+            Double revenue = statisticService.getRevenueByDateRange(fromDate, toDate);
+            model.addAttribute("revenue", revenue);
+            model.addAttribute("fromDate", fromDate);
+            model.addAttribute("toDate", toDate);
+            return "statistics/revenue";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "errorPage";
+        }
+    }
+
+    // Doanh thu theo quý
+    @GetMapping("statistics/revenue/payments-revenue-quarter")
+    public String getRevenueByQuarter(
+            @RequestParam(name = "year") Integer year,
+            @RequestParam(name = "quarter") Integer quarter,
+            Model model) {
+        try {
+            Double revenue = statisticService.getRevenueByQuarter(year, quarter);
+            model.addAttribute("year", year);
+            model.addAttribute("quarter", quarter);
+            model.addAttribute("revenue", revenue);
+            return "statistics/revenue";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "errorPage";
+        }
+    }
+
+    // Doanh thu theo tháng
+    @GetMapping("statistics/revenue/payments-revenue-month")
+    public String getRevenueByMonth(
+            @RequestParam(name = "year") Integer year,
+            @RequestParam(name = "month") Integer month,
+            Model model) {
+        try {
+            Double revenue = statisticService.getRevenueByMonth(year, month);
+            model.addAttribute("year", year);
+            model.addAttribute("month", month);
+            model.addAttribute("revenue", revenue);
+            return "statistics/revenue";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "errorPage";
+        }
+    }
+
+    // Lấy dữ liệu doanh thu theo tháng trong năm
+    @GetMapping("statistics/revenue/monthly-revenue-ajax")
+    @ResponseBody
+    public List<Double> getMonthlyRevenueAjax(@RequestParam(name = "year") Integer year) {
+        try {
+            return statisticService.getMonthlyRevenue(year);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of(); // Trả về danh sách rỗng nếu có lỗi
+        }
+    }
+
+    // Lấy dữ liệu doanh thu theo quý trong năm
+    @GetMapping("statistics/revenue/quarterly-revenue-ajax")
+    @ResponseBody
+    public List<Double> getQuarterlyRevenueAjax(@RequestParam(name = "year") Integer year) {
+        try {
+            return statisticService.getQuarterlyRevenue(year);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of(); // Trả về danh sách rỗng nếu có lỗi
+        }
+    }
+
+    // Thống kê chi tiết theo phương thức thanh toán
+    @GetMapping("statistics/revenue/payment-method/stats")
+    public String getPaymentMethodStats(
+            @RequestParam(name = "fromDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
+            @RequestParam(name = "toDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate,
+            Model model) {
+        try {
+            Map<String, Map<String, Object>> stats = statisticService.getPaymentMethodStats(fromDate, toDate);
+            model.addAttribute("paymentMethodStats", stats);
+            model.addAttribute("fromDate", fromDate);
+            model.addAttribute("toDate", toDate);
+            return "statistics/revenue";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "errorPage";
+        }
+    }
+
+    // Thống kê doanh thu theo tháng và phương thức thanh toán
+    @GetMapping("statistics/revenue/monthly-by-method")
+    public String getMonthlyRevenueByPaymentMethod(
+            @RequestParam(name = "year") Integer year,
+            Model model) {
+        try {
+            Map<Integer, Map<String, Double>> monthlyData = statisticService.getMonthlyRevenueByPaymentMethod(year);
+            model.addAttribute("monthlyRevenueByMethod", monthlyData);
+            model.addAttribute("year", year);
+            return "statistics/revenue";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "errorPage";
+        }
+    }
+
+    @GetMapping("statistics/revenue/month-detail-revenue-ajax")
+    @ResponseBody
+    public Map<String, Object> getMonthDetailRevenueAjax(
+            @RequestParam(name = "year") Integer year,
+            @RequestParam(name = "month") Integer month) {
+        try {
+            // Sử dụng phương thức bạn đã có sẵn
+            Map<String, Double> revenueByMethod = statisticService.getRevenueByPaymentMethodAndMonth(year, month);
+
+            // Chuyển đổi sang format phù hợp với biểu đồ tròn
+            Map<String, Object> result = new HashMap<>();
+            result.put("labels", new ArrayList<>(revenueByMethod.keySet()));
+            result.put("values", new ArrayList<>(revenueByMethod.values()));
+
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Map.of("labels", List.of(), "values", List.of());
+        }
+    }
 }

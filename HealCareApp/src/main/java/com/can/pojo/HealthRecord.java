@@ -6,11 +6,13 @@ package com.can.pojo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 /**
@@ -24,20 +26,19 @@ public class HealthRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "patient_id", nullable = false)
-    private Patient patient;
-
-    @ManyToOne
-    @JoinColumn(name = "doctor_id", nullable = false)
-    private Doctor doctor;
-
     @Column(name = "medical_history", columnDefinition = "TEXT")
     private String medicalHistory;
 
     @Column(name = "examination_results", columnDefinition = "TEXT")
     private String examinationResults;
 
+    @Column(name = "disease_type")
+    private String diseaseType;
+    
+    // Thêm liên kết với cuộc hẹn
+    @OneToOne
+    @JoinColumn(name = "appointment_id", nullable = false)
+    private Appointment appointment;
     // Getters and Setters
 
     /**
@@ -52,34 +53,6 @@ public class HealthRecord {
      */
     public void setId(int id) {
         this.id = id;
-    }
-
-    /**
-     * @return the patient
-     */
-    public Patient getPatient() {
-        return patient;
-    }
-
-    /**
-     * @param patient the patient to set
-     */
-    public void setPatient(Patient patient) {
-        this.patient = patient;
-    }
-
-    /**
-     * @return the doctor
-     */
-    public Doctor getDoctor() {
-        return doctor;
-    }
-
-    /**
-     * @param doctor the doctor to set
-     */
-    public void setDoctor(Doctor doctor) {
-        this.doctor = doctor;
     }
 
     /**
@@ -108,6 +81,34 @@ public class HealthRecord {
      */
     public void setExaminationResults(String examinationResults) {
         this.examinationResults = examinationResults;
+    }
+
+    /**
+     * @return the diseaseType
+     */
+     public String getDiseaseType() {
+        return diseaseType;
+    }
+    
+    /**
+     * @param diseaseType the diseaseType to set
+     */
+    public void setDiseaseType(String diseaseType) {
+        this.diseaseType = diseaseType;
+    }
+    
+    /**
+     * @return the appointment
+     */
+    public Appointment getAppointment() {
+        return appointment;
+    }
+    
+    /**
+     * @param appointment the appointment to set
+     */
+    public void setAppointment(Appointment appointment) {
+        this.appointment = appointment;
     }
 }
 

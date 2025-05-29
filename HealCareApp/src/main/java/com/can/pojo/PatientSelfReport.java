@@ -46,6 +46,22 @@ public class PatientSelfReport {
     // Tiểu sử thai sản
     @Column(name = "pregnancy_history", columnDefinition = "TEXT")
     private String pregnancyHistory;
+
+        // Nhóm máu (A, B, AB, O với RH+ hoặc RH-)
+    @Column(name = "blood_type", length = 5)
+    private String bloodType;
+    
+    // Dị ứng thuốc
+    @Column(name = "medication_allergies", columnDefinition = "TEXT")
+    private String medicationAllergies;
+    
+    // Thuốc đang sử dụng
+    @Column(name = "current_medications", columnDefinition = "TEXT")
+    private String currentMedications;
+    
+    // Đang điều trị bệnh gì
+    @Column(name = "current_treatments", columnDefinition = "TEXT")
+    private String currentTreatments;
     
     // Ngày tạo báo cáo
     @Column(name = "created_at")
@@ -111,6 +127,38 @@ public class PatientSelfReport {
     
     public void setPregnancyHistory(String pregnancyHistory) {
         this.pregnancyHistory = pregnancyHistory;
+    }
+
+        public String getBloodType() {
+        return bloodType;
+    }
+    
+    public void setBloodType(String bloodType) {
+        this.bloodType = bloodType;
+    }
+    
+    public String getMedicationAllergies() {
+        return medicationAllergies;
+    }
+    
+    public void setMedicationAllergies(String medicationAllergies) {
+        this.medicationAllergies = medicationAllergies;
+    }
+    
+    public String getCurrentMedications() {
+        return currentMedications;
+    }
+    
+    public void setCurrentMedications(String currentMedications) {
+        this.currentMedications = currentMedications;
+    }
+    
+    public String getCurrentTreatments() {
+        return currentTreatments;
+    }
+    
+    public void setCurrentTreatments(String currentTreatments) {
+        this.currentTreatments = currentTreatments;
     }
     
     public Date getCreatedAt() {

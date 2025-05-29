@@ -157,6 +157,14 @@ const Header = () => {
                         >
                             Lịch Hẹn
                         </Link>
+                        {user && user.role === 'DOCTOR' && (
+                            <Link to="/doctor/statistic" 
+                            className="nav-link fs-6 text-dark fw-semibold"
+                            onClick={(e) => checkVerified(e)}
+                        >
+                            Thống kê bệnh nhân
+                        </Link>
+                        )}
                     </Nav>
 
                     {/* Search bar */}
