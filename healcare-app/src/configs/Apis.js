@@ -35,7 +35,8 @@ export const endpoints = {
     'patients': '/patients', 
 
 
-
+    // STATISTICS
+    'doctorStatistics': '/secure/statistics', // Thống kê của bác sĩ
     
 
     

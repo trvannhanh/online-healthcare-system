@@ -13,7 +13,7 @@ import Profile from "./components/Profile";
 import Payment from "./components/Payment";
 import ChatRoom from "./components/ChatRoom";
 import Appointment from "./components/Appointment";
-
+import Statistic from './components/Statistic';
 
 const App = () => {
 
@@ -33,6 +33,7 @@ const App = () => {
                       <Route path="/appointments/new" element={<AppointmentForm />} />
                       <Route path="/payment/:appointmentId" element={<Payment />} />
                       <Route path="/chat/:otherUserId" element={<ChatRoom />} />
+                      <Route path="/doctor/statistic" element={<Statistic />} />
                   </Routes>
               </Container>
 
