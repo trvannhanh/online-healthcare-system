@@ -13,6 +13,8 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.util.Date;
 
 
@@ -33,9 +35,11 @@ public class Patient {
 
     @Column(name = "date_of_birth")
     @Temporal(TemporalType.DATE)
+    @NotNull(message = "Ngày sinh không được để trống")
     private Date dateOfBirth;
 
     @Column(name = "insurance_number", length = 20)
+    @Pattern(regexp = "^[A-Za-z0-9]{10,20}$", message = "Số bảo hiểm phải từ 10-20 ký tự, chỉ chứa chữ và số")
     private String insuranceNumber;
 
     // Getters and Setters

@@ -38,34 +38,64 @@ public class ApiUserController {
     @Autowired
     private UserService userService;
 
-//    @PostMapping("/users")
-//    public ResponseEntity<User> create(@RequestParam Map<String, String> params,
-//            @RequestParam("avatar") MultipartFile avatar) {
-//        User u = this.userService.addUser(params, avatar);
-//
-//        return new ResponseEntity<>(u, HttpStatus.CREATED);
-//    }
-    @PostMapping(path = "/users",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<User> create(@RequestParam Map<String, String> params,
-            @RequestParam(value = "avatar") MultipartFile avatar) {
-        return new ResponseEntity<>(this.userService.addUser(params, avatar), HttpStatus.CREATED);
+    @PostMapping(path = "/users", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> create(@RequestParam Map<String, String> params, 
+                                   @RequestParam(value = "avatar") MultipartFile avatar) {
+        try {
+            // Kiểm tra cơ bản trong controller
+            if (params.get("firstName") == null || params.get("firstName").isBlank()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Họ không được để trống");
+            }
+            if (params.get("lastName") == null || params.get("lastName").isBlank()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Tên không được để trống");
+            }
+            if (params.get("username") == null || params.get("username").isBlank()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Tên đăng nhập không được để trống");
+            }
+            if (params.get("password") == null || params.get("password").isBlank()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mật khẩu không được để trống");
+            }
+            if (params.get("email") == null || params.get("email").isBlank()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email không được để trống");
+            }
+            if (params.get("phoneNumber") == null || params.get("phoneNumber").isBlank()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Số điện thoại không được để trống");
+            }
+            if (avatar == null || avatar.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ảnh đại diện là bắt buộc");
+            }
+
+            User user = userService.addUser(params, avatar);
+            return new ResponseEntity<>(user, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi hệ thống, vui lòng thử lại sau");
+        }
     }
 
     @PostMapping("/login")
     @CrossOrigin
     public ResponseEntity<?> login(@RequestBody User u) {
+        try {
+            if (userService.isAccountLocked(u.getUsername())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Tài khoản đã bị khóa do quá nhiều lần đăng nhập thất bại. Vui lòng liên hệ quản trị viên.");
+            }
 
-        if (this.userService.authenticate(u.getUsername(), u.getPassword())) {
-            try {
+            if (userService.authenticate(u.getUsername(), u.getPassword())) {
                 String token = JwtUtils.generateToken(u.getUsername());
                 return ResponseEntity.ok().body(Collections.singletonMap("token", token));
-            } catch (Exception e) {
-                return ResponseEntity.status(500).body("Lỗi khi tạo JWT");
+            } else {
+                userService.incrementFailedLoginAttempts(u.getUsername());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Tên đăng nhập hoặc mật khẩu không đúng");
             }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi hệ thống, vui lòng thử lại sau");
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Sai thông tin đăng nhập");
+        
     }
 
     @RequestMapping("/secure/profile")

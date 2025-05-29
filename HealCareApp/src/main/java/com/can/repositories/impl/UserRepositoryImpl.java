@@ -141,4 +141,29 @@ public class UserRepositoryImpl implements UserRepository{
         query.setParameter("role", roleEnum);
         return query.getResultList(); // Trả về danh sách người dùng theo vai trò
     }
+    
+
+    @Override
+    public User findByEmail(String email) {
+        Session s = this.sessionFactory.getObject().getCurrentSession();
+        return s.createQuery("FROM User WHERE email = :email", User.class)
+                .setParameter("email", email)
+                .uniqueResult();
+    }
+
+    @Override
+    public User findByPhoneNumber(String phoneNumber) {
+        Session s = this.sessionFactory.getObject().getCurrentSession();
+        return s.createQuery("FROM User WHERE phoneNumber = :phoneNumber", User.class)
+                .setParameter("phoneNumber", phoneNumber)
+                .uniqueResult();
+    }
+
+    @Override
+    public User findByIdentityNumber(String identityNumber) {
+        Session s = this.sessionFactory.getObject().getCurrentSession();
+        return s.createQuery("FROM User WHERE identityNumber = :identityNumber", User.class)
+                .setParameter("identityNumber", identityNumber)
+                .uniqueResult();
+    }
 }

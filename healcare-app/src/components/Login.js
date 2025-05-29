@@ -12,39 +12,56 @@ const Login = () => {
         { title: "Mật khẩu", field: "password", type: "password" }
     ];
     const [user, setUser] = useState({});
-    const [msg, setMsg] = useState();
+    const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const nav = useNavigate();
     const dispatch = useMyDispatcher();
 
+    const validateInput = () => {
+        const newErrors = {};
+        const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
+        const passwordRegex = /^.{8,50}$/;
+
+        if (!user.username || !usernameRegex.test(user.username)) {
+            newErrors.username = "Tên đăng nhập phải từ 3-30 ký tự, chỉ chứa chữ, số hoặc dấu gạch dưới.";
+        }
+        if (!user.password || !passwordRegex.test(user.password)) {
+            newErrors.password = "Mật khẩu phải dài ít nhất 8 ký tự.";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const setState = (value, field) => {
         setUser({ ...user, [field]: value });
+        setErrors({ ...errors, [field]: null });
     };
 
     const login = async (e) => {
         e.preventDefault();
+        if (!validateInput()) return;
+
         try {
             setLoading(true);
             let res = await Apis.post(endpoints["login"], { ...user });
             cookie.save("token", res.data.token);
 
-            // Lấy thông tin người dùng cơ bản
             let userRes = await authApis().get(endpoints["current-user"]);
             let baseUser = userRes.data;
 
-            // Nếu là bác sĩ, lấy thông tin chi tiết bao gồm isVerified
-            let fullUser = baseUser;
             if (baseUser.role === "DOCTOR") {
                 const doctorRes = await authApis().get(`${endpoints["doctors"]}/${baseUser.id}`);
-                fullUser = { ...baseUser, ...doctorRes.data, isVerified: doctorRes.data.isVerified };
+                baseUser = { ...baseUser, ...doctorRes.data, isVerified: doctorRes.data.isVerified };
             }
 
-            dispatch({ type: "login", payload: fullUser });
-            setMsg(null);
+            dispatch({ type: "login", payload: baseUser });
+            setErrors({});
             nav("/");
         } catch (ex) {
             console.error(ex);
-            setMsg("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+            const errorMsg = ex.response?.data || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.";
+            setErrors({ general: errorMsg });
         } finally {
             setLoading(false);
         }
@@ -67,7 +84,7 @@ const Login = () => {
                             <Card.Body>
                                 <h3 className="text-center text-primary mb-4">ĐĂNG NHẬP</h3>
 
-                                {msg && <Alert variant="danger">{msg}</Alert>}
+                                {errors.general && <Alert variant="danger">{errors.general}</Alert>}
 
                                 <Form onSubmit={login}>
                                     {info.map(i => (
@@ -78,8 +95,14 @@ const Login = () => {
                                                 placeholder={i.title}
                                                 value={user[i.field] || ""}
                                                 onChange={e => setState(e.target.value, i.field)}
+                                                maxLength={i.field === "username" ? 30 : 50}
                                                 required
                                             />
+                                            {errors[i.field] && (
+                                                <Form.Text className="text-danger">
+                                                    {errors[i.field]}
+                                                </Form.Text>
+                                            )}
                                         </Form.Group>
                                     ))}
 
