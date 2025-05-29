@@ -24,6 +24,11 @@ public interface UserService extends UserDetailsService{
     boolean authenticate(String username, String password);
     List<User> getUsersByRole(String role);
     String updateAvatar(int id, MultipartFile avatar);
+    
+    public boolean isAccountLocked(String username);
+    public void incrementFailedLoginAttempts(String username);
+    public void resetFailedLoginAttempts(String username);
+    
     boolean changePassword(String username, String password, String newPassword);
 
     String updateUserAvatar(String username, MultipartFile avatar);

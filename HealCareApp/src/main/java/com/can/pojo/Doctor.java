@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Pattern;
 
 /**
  *
@@ -31,23 +32,24 @@ public class Doctor {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "specialization")
+    @JoinColumn(name = "specialization", nullable = false)
     private Specialization specialization;
 
     @ManyToOne
-    @JoinColumn(name = "hospital")
+    @JoinColumn(name = "hospital", nullable = false)
     private Hospital hospital;
 
     @Column(name = "license_number", unique = true, length = 20)
+    @Pattern(regexp = "^[A-Za-z0-9]{8,20}$", message = "Số giấy phép phải từ 8-20 ký tự, chỉ chứa chữ và số")
     private String licenseNumber;
 
     @Column(name = "is_verified", columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean isVerified;
-    
+
     @Column(name = "verification_status")
     @Enumerated(EnumType.STRING)
     private VerificationStatus verificationStatus;
-    
+
     @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;
 
