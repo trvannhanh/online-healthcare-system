@@ -17,5 +17,5 @@ public interface EmailService {
     //Gửi email quảng cáo, ưu đãi đến bệnh nhân
     void sendPromotionalEmailToPatients(String promoContent);
     //Gửi email hóa đơn thanh toán
-//    void sendInvoiceEmail(Payment payment);
+    void sendPaymentSuccessEmail(Payment payment);
 }
