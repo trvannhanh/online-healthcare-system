@@ -519,6 +519,21 @@ const Home = () => {
                                                             Thanh Toán
                                                         </Button>
                                                     )}
+
+                                                {user.role === "DOCTOR" && appt.status === "PENDING" && (
+                                                    <Button
+                                                    as={Link}
+                                                    to={`/health-record/create/${appt.id}`}
+                                                    variant="info"
+                                                    size="sm"
+                                                    className="rounded-pill px-3"
+                                                    disabled={!user.isVerified}
+                                                    style={{ backgroundColor: "#0dcaf0", borderColor: "#0dcaf0" }}
+                                                    >
+                                                    Tạo Kết Quả Khám
+                                                    </Button>
+                                                )}
+                                                                                                
                                                 {appt.status === "PENDING" && (
                                                     <Button
                                                         as={Link}

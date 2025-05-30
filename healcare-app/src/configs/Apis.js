@@ -20,6 +20,7 @@ export const endpoints = {
     'appointmentsFilter': '/appointments/filter', //Lọc danh sách lịch hẹn
     'cancelAppointment': (id) => `/secure/appointments/${id}/cancel`, //Hủy lịch hẹn
     'confirmAppointment': (id) => `/secure/appointments/${id}/confirm`, // Xác nhận lịch hẹn
+    'createHealthRecord': (id) => `/secure/appointments/${id}/health-record`,
 
 
     //DOCTOR
