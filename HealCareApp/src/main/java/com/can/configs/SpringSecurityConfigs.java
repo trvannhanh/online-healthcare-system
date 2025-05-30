@@ -74,24 +74,6 @@ public class SpringSecurityConfigs {
         return cloudinary;
     }
 
-    @Bean
-    public JavaMailSender javaMailSender() {
-        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost("smtp.gmail.com");
-        mailSender.setPort(587);
-//        mailSender.setUsername("trvannhanh@gmail.com");
-//        mailSender.setPassword("your-app-password");
-
-// Có thể dùng cái này thay thế cái trên 
-        mailSender.setUsername("nhatkhanhtran117@gmail.com");
-        mailSender.setPassword("holvedrmbrlaabyx");
-
-        Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-
-        return mailSender;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws
@@ -106,6 +88,7 @@ public class SpringSecurityConfigs {
                 .requestMatchers("/appointments/**").hasRole("ADMIN")
                 .requestMatchers("/statistics/**").hasRole("ADMIN")
                 .requestMatchers("/notifications/**").hasRole("ADMIN")
+                .requestMatchers("/api/secure/appointments/**").hasRole("PATIENT")
                 .requestMatchers("/api/appointments/**").access(new DoctorAuthorizationManager())
                 .anyRequest().authenticated()
         )

@@ -176,16 +176,32 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         Session s = this.factory.getObject().getCurrentSession();
 
         if (appointment.getPatient() == null || appointment.getDoctor() == null) {
-            throw new RuntimeException("Patient and Doctor are required for an Appointment");
+            throw new RuntimeException("Bệnh nhân và bác sĩ là bắt buộc");
         }
 
         Patient patient = s.get(Patient.class, appointment.getPatient().getId());
         Doctor doctor = s.get(Doctor.class, appointment.getDoctor().getId());
         if (patient == null) {
-            throw new RuntimeException("Patient with ID " + appointment.getPatient().getId() + " not found");
+            throw new RuntimeException("Bệnh nhân với ID " + appointment.getPatient().getId() + " not found");
         }
         if (doctor == null) {
-            throw new RuntimeException("Doctor with ID " + appointment.getDoctor().getId() + " not found");
+            throw new RuntimeException("Bác sĩ với ID " + appointment.getDoctor().getId() + " not found");
+        }
+        
+        // Kiểm tra slot 30 phút
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(appointment.getAppointmentDate());
+        int minutes = cal.get(Calendar.MINUTE);
+        int seconds = cal.get(Calendar.SECOND);
+        int millis = cal.get(Calendar.MILLISECOND);
+        if (minutes % 30 != 0 || seconds != 0 || millis != 0) {
+            throw new IllegalArgumentException("Thời gian đặt lịch phải theo khung 30 phút (ví dụ: 09:00, 09:30)");
+        }
+
+        // Kiểm tra khung giờ làm việc (8:00-17:00)
+        int hour = cal.get(Calendar.HOUR_OF_DAY);
+        if (hour < 8 || (hour >= 17 && minutes > 0) || hour > 17) {
+            throw new IllegalArgumentException("Lịch hẹn phải trong khung giờ làm việc (8:00-17:00)");
         }
 
         CriteriaBuilder b = s.getCriteriaBuilder();
@@ -199,7 +215,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                 b.notEqual(root.get("status"), AppointmentStatus.CANCELLED));
         Long count = s.createQuery(q).getSingleResult();
         if (count > 0) {
-            throw new RuntimeException("Doctor is already booked at this time");
+            throw new RuntimeException("Bác sĩ đã có lịch hẹn vào thời gian này");
         }
 
         s.persist(appointment);
