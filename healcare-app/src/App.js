@@ -14,6 +14,7 @@ import Payment from "./components/Payment";
 import ChatRoom from "./components/ChatRoom";
 import Appointment from "./components/Appointment";
 import Statistic from './components/Statistic';
+import CreateHealthRecord from "./components/CreateHealthRecord";
 
 const App = () => {
     return (
@@ -33,6 +34,7 @@ const App = () => {
                         <Route path="/payment/:appointmentId" element={<Payment />} />
                         <Route path="/chat/:otherUserId" element={<ChatRoom />} />
                         <Route path="/doctor/statistic" element={<Statistic />} />
+                        <Route path="/health-record/create/:appointmentId" element={<CreateHealthRecord />} />
                     </Routes>
                 </Container>
 
