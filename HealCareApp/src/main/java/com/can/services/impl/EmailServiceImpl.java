@@ -47,14 +47,20 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendEmail(String to, String subject, String body) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(body);
-
-        // Gửi email
-        javaMailSender.send(message);
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, true);
+            javaMailSender.send(message);
+            System.out.println("Email sent successfully to: " + to + " with subject: " + subject);
+        } catch (MessagingException e) {
+            System.out.println("Failed to send email to: " + to + ". Error: " + e.getMessage());
+            throw new RuntimeException("Không thể gửi email: " + e.getMessage());
+        }
     }
+
     @Value("${app.frontend.url:http://localhost:3000}")
     private String frontendUrl;
 
@@ -196,6 +202,32 @@ public class EmailServiceImpl implements EmailService {
         // Gửi email
         sendEmail(to, subject, content);
     }
+    
+    
+    @Override
+    public void sendPaymentSuccessEmail(Payment payment) {
+        try {
+            String patientEmail = payment.getAppointment().getPatient().getUser().getEmail();
+            String subject = "Xác nhận thanh toán thành công - HealCareApp";
+            String body = "<h2>Thanh toán thành công</h2>"
+                    + "<p>Kính gửi Quý khách,</p>"
+                    + "<p>Chúng tôi xin xác nhận thanh toán của bạn đã hoàn tất. Dưới đây là chi tiết:</p>"
+                    + "<ul>"
+                    + "<li><b>Mã hóa đơn:</b> " + payment.getId() + "</li>"
+                    + "<li><b>Mã giao dịch:</b> " + payment.getTransactionId() + "</li>"
+                    + "<li><b>Số tiền:</b> " + String.format("%,.0f VNĐ", payment.getAmount()) + "</li>"
+                    + "<li><b>Phương thức:</b> " + payment.getPaymentMethod() + "</li>"
+                    + "<li><b>Ngày thanh toán:</b> " + new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(payment.getCreateAt()) + "</li>"
+                    + "<li><b>Lịch hẹn:</b> " + payment.getAppointment().getId() + "</li>"
+                    + "</ul>"
+                    + "<p>Cảm ơn bạn đã sử dụng dịch vụ của HealCareApp!</p>"
+                    + "<p>Trân trọng,<br>Đội ngũ HealCareApp</p>";
+
+            this.sendEmail(patientEmail, subject, body);
+        } catch (Exception e) {
+            System.out.println("Failed to send payment success email for payment ID: " + payment.getId() + ". Error: " + e.getMessage());
+        }
+    }
 
     // Gửi email khuyến mãi đến tất cả bệnh nhân
     @Override
@@ -285,5 +317,4 @@ public class EmailServiceImpl implements EmailService {
 //        // Gửi email HTML
 //        sendHtmlEmail(to, subject, htmlContent);
 //    }
-
 }

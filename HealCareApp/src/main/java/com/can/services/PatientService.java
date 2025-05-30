@@ -39,5 +39,5 @@ public interface PatientService {
 
     // String updatePatientAvatar(String username, MultipartFile avatar) throws IOException;
 
-    List<HealthRecord> getCurrentPatientHealthRecords(String username);
+//    List<HealthRecord> getCurrentPatientHealthRecords(String username);
 }
