@@ -30,7 +30,27 @@ public class PatientSelfReportServiceImpl implements PatientSelfReportService {
     // Bác sĩ dùng để lấy báo cáo tự đánh giá của bệnh nhân theo ID bệnh nhân
     @Override
     public PatientSelfReport getPatientSelfReportByPatientId(int patientId, String username) {
-        return patientSelfReportRepository.getPatientSelfReportByPatientId(patientId, username);
+        // Xác thực người dùng
+        User currentUser = userService.getUserByUsername(username);
+        if (currentUser == null) {
+            throw new RuntimeException("Người dùng không tồn tại");
+        }
+
+        // Phân quyền dựa trên vai trò
+        if (currentUser.getRole().name().equals("PATIENT")) {
+            // Bệnh nhân chỉ được xem báo cáo của chính mình
+            if (currentUser.getId() != patientId) {
+                throw new RuntimeException("Bạn chỉ được xem báo cáo tự đánh giá của chính mình");
+            }
+            // Bệnh nhân có quyền xem báo cáo của mình
+            return patientSelfReportRepository.getPatientSelfReportByPatientId(patientId, username);
+        } else if (currentUser.getRole().name().equals("DOCTOR")) {
+            // Bác sĩ được phép xem báo cáo của bất kỳ bệnh nhân nào
+            return patientSelfReportRepository.getPatientSelfReportByPatientId(patientId, username);
+        } else {
+            // Các vai trò khác không được phép xem
+            throw new RuntimeException("Không có quyền truy cập báo cáo tự đánh giá của bệnh nhân");
+        }
     }
 
     @Override
@@ -101,10 +121,6 @@ public class PatientSelfReportServiceImpl implements PatientSelfReportService {
 
             // Giữ lại patient object và id
             patientSelfReport.setId(existingReport.getId());
-
-            // Giữ lại các trường chỉ bệnh nhân được phép cập nhật nếu cần
-            // (Ví dụ: nếu bác sĩ không được phép cập nhật một số thông tin cá nhân)
-            // Trong trường hợp này, tôi giả định bác sĩ có thể cập nhật tất cả các trường
         } else {
             throw new RuntimeException("Access denied. Only patients and doctors can update self reports");
         }

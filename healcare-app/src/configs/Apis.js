@@ -61,6 +61,7 @@ export const endpoints = {
     'isRatingResponsed': (ratingId) => `/response/rating/${ratingId}`,
 
 
+    //SELF REPORT
     'patientProfile': '/secure/patient/profile',
     'createPatientSelfReport': '/secure/patient-self-report/add',
     'updatePatientSelfReport': '/secure/patient-self-report',
@@ -68,6 +69,11 @@ export const endpoints = {
     'userAvatar': '/secure/avatar',
     'changePassword': '/secure/change-password',
 
+    //NOTIFICATION
+    'notificationById': (id) => `/notification/${id}`,
+    'allNotifications': '/secure/notifications/all',
+    'upcomingNotifications': '/secure/notifications/upcoming',
+    'markNotificationAsRead': (id) => `/secure/notifications/${id}/mark-read`,
 
     // 'healthRecord': (id) => `/secure/health-records/${id}`,
     // 'createHealthRecord': '/secure/health-records/add',

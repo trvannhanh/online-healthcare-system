@@ -1,6 +1,7 @@
 package com.can.repositories.impl;
 
 import com.can.pojo.Appointment;
+import com.can.pojo.NotificationType;
 import com.can.pojo.Notifications;
 import com.can.pojo.User;
 import com.can.repositories.NotificationRepository;
@@ -100,7 +101,13 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
         Root<Notifications> root = query.from(Notifications.class);
 
-        query.where(builder.equal(root.get("userId"), userId));
+        // Join với bảng user để lọc theo userId
+        Join<Notifications, User> userJoin = root.join("user");
+
+        // Thiết lập điều kiện where và sắp xếp
+        query.where(builder.equal(userJoin.get("id"), userId));
+        query.orderBy(builder.desc(root.get("sentAt"))); // Thông báo mới nhất trước
+
         Query hqlQuery = session.createQuery(query);
         return hqlQuery.getResultList();
     }
@@ -145,23 +152,27 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         return hqlQuery.getResultList();
     }
 
-    @Override
-    public List<Notifications> getNotificationsByUserId(int userId, int page) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
-        Root<Notifications> root = query.from(Notifications.class);
-
-        query.where(builder.equal(root.get("userId"), userId));
-        query.orderBy(builder.asc(root.get("id")));
-
-        Query hqlQuery = session.createQuery(query);
-        int start = (page - 1) * PAGE_SIZE;
-        hqlQuery.setFirstResult(start);
-        hqlQuery.setMaxResults(PAGE_SIZE);
-
-        return hqlQuery.getResultList();
-    }
+@Override
+public List<Notifications> getNotificationsByUserId(int userId, int page) {
+    Session session = this.factory.getObject().getCurrentSession();
+    CriteriaBuilder builder = session.getCriteriaBuilder();
+    CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
+    Root<Notifications> root = query.from(Notifications.class);
+    
+    // Join với bảng user để lọc theo userId
+    Join<Notifications, User> userJoin = root.join("user");
+    
+    // Thiết lập điều kiện where và sắp xếp
+    query.where(builder.equal(userJoin.get("id"), userId));
+    query.orderBy(builder.desc(root.get("sentAt"))); // Thông báo mới nhất trước
+    
+    Query hqlQuery = session.createQuery(query);
+    int start = (page - 1) * PAGE_SIZE;
+    hqlQuery.setFirstResult(start);
+    hqlQuery.setMaxResults(PAGE_SIZE);
+    
+    return hqlQuery.getResultList();
+}
 
     @Override
     public List<Notifications> getNotificationsByDateRange(Date startDate, Date endDate) {
@@ -216,26 +227,37 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         // Join với bảng user để lọc theo userId
         Join<Notifications, User> userJoin = root.join("user");
 
-        // Lấy các thông báo lịch hẹn trong 1-2 ngày tới
+        // Lấy thời gian hiện tại và đặt thời gian bắt đầu/kết thúc ngày
         Calendar cal = Calendar.getInstance();
-        Date today = new Date();
-        cal.setTime(today);
+        Date now = new Date();
 
-        cal.add(Calendar.DAY_OF_MONTH, 2); // Lấy thông báo đến 2 ngày sau
-        Date twoDaysLater = cal.getTime();
+        // Đặt thời gian bắt đầu của ngày hiện tại (00:00:00)
+        Calendar startCal = Calendar.getInstance();
+        startCal.setTime(now);
+        startCal.set(Calendar.HOUR_OF_DAY, 0);
+        startCal.set(Calendar.MINUTE, 0);
+        startCal.set(Calendar.SECOND, 0);
+        startCal.set(Calendar.MILLISECOND, 0);
+        Date startOfDay = startCal.getTime();
+
+        // Đặt thời gian kết thúc của ngày hiện tại (23:59:59)
+        Calendar endCal = Calendar.getInstance();
+        endCal.setTime(now);
+        endCal.set(Calendar.HOUR_OF_DAY, 23);
+        endCal.set(Calendar.MINUTE, 59);
+        endCal.set(Calendar.SECOND, 59);
+        endCal.set(Calendar.MILLISECOND, 999);
+        Date endOfDay = endCal.getTime();
 
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(builder.equal(userJoin.get("id"), userId));
-        predicates.add(builder.equal(root.get("type"), "APPOINTMENT")); // Giả sử có field type để phân loại thông báo
         predicates.add(builder.equal(root.get("isRead"), false)); // Chưa đọc
 
-        // Lọc thông báo có ngày hẹn nằm trong khoảng từ hiện tại đến 2 ngày sau
-        // Giả sử có field appointmentDate lưu ngày hẹn, hoặc có thể dùng field khác tùy
-        // vào cấu trúc dữ liệu
-        predicates.add(builder.between(root.get("appointmentDate"), today, twoDaysLater));
+        // Lọc thông báo có ngày gửi (sentAt) trong ngày hiện tại
+        predicates.add(builder.between(root.get("sentAt"), startOfDay, endOfDay));
 
         q.where(predicates.toArray(new Predicate[0]));
-        q.orderBy(builder.asc(root.get("appointmentDate"))); // Sắp xếp theo thời gian lịch hẹn
+        q.orderBy(builder.asc(root.get("sentAt"))); // Sắp xếp theo thời gian gửi thông báo
 
         Query query = session.createQuery(q);
         return query.getResultList();
