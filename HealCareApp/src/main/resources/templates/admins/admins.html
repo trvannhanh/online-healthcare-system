@@ -1,0 +1,97 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Quản Trị Quản Trị Viên</title>
+    <th:block th:replace="base :: styles"></th:block>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .table th, .table td { vertical-align: middle; }
+        .pagination { justify-content: center; margin-top: 20px; }
+        .form-control { max-width: 300px; }
+        .btn-sm { margin: 0 5px; }
+    </style>
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    <main>
+        <div class="d-flex bg-secondary">
+            <div th:replace="base :: sidebar" class="p-2"></div>
+            <div class="p-2 bg-light flex-grow-1">
+                <h1 class="text-center text-info mt-3 mb-4">Quản Trị Quản Trị Viên</h1>
+                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+                
+                <!-- Form tìm kiếm -->
+                <form th:action="@{/admins}" method="get" class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" placeholder="Tên quản trị viên" name="adminName" th:value="${param.adminName}"/>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" placeholder="Email" name="email" th:value="${param.email}"/>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                            <a th:href="@{/admins/add}" class="btn btn-success">Thêm quản trị viên</a>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Bảng danh sách quản trị viên -->
+                <table class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Họ</th>
+                            <th>Tên</th>
+                            <th>Số điện thoại</th>
+                            <th>Email</th>
+                            <th>Số CMND/CCCD</th>
+                            <th>Username</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="admin : ${admins}">
+                            <td th:text="${admin.id}"></td>
+                            <td th:text="${admin.firstName}"></td>
+                            <td th:text="${admin.lastName}"></td>
+                            <td th:text="${admin.phoneNumber} ?: 'N/A'"></td>
+                            <td th:text="${admin.email} ?: 'N/A'"></td>
+                            <td th:text="${admin.identityNumber} ?: 'N/A'"></td>
+                            <td th:text="${admin.username} ?: 'N/A'"></td>
+                            <td>
+                                <a th:href="@{/admins/edit/{id}(id=${admin.id})}" class="btn btn-info btn-sm">Sửa</a>
+                                <form th:action="@{/admins/delete/{id}(id=${admin.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa quản trị viên này?')">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${admins.isEmpty()}">
+                            <td colspan="8" class="text-center">Không tìm thấy quản trị viên</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Phân trang -->
+                <nav th:if="${totalPages > 1}">
+                    <ul class="pagination">
+                        <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admins(page=${currentPage - 1}, adminName=${param.adminName}, email=${param.email})}">Trước</a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}" th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" th:href="@{/admins(page=${i}, adminName=${param.adminName}, email=${param.email})}" th:text="${i}"></a>
+                        </li>
+                        <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admins(page=${currentPage + 1}, adminName=${param.adminName}, email=${param.email})}">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </main>
+    <div th:replace="base :: footer"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

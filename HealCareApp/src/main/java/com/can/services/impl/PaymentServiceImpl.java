@@ -10,6 +10,7 @@ import com.can.pojo.User;
 import com.can.repositories.AppointmentRepository;
 import com.can.repositories.PaymentRepository;
 import com.can.repositories.UserRepository;
+import com.can.services.EmailService;
 import com.can.services.PaymentService;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -40,15 +41,19 @@ import org.apache.commons.codec.binary.Hex;
  */
 @Service
 public class PaymentServiceImpl implements PaymentService {
+
     @Autowired
     private PaymentRepository paymentRepository;
-    
+
     @Autowired
     private AppointmentRepository appRepo;
-    
+
     @Autowired
     private UserRepository uServ;
     
+    @Autowired
+    private EmailService emailService;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
@@ -95,41 +100,39 @@ public class PaymentServiceImpl implements PaymentService {
     public List<Payment> getPaymentByPaymentDate(String createAt) {
         return this.paymentRepository.getPaymentByPaymentDate(createAt);
     }
-    
-    @Override
-    public Payment createPaymentForAppointment(int appointmentId, double amount, String username){
 
-        
+    @Override
+    public Payment createPaymentForAppointment(int appointmentId, double amount, String username) {
+
         User u = this.uServ.getUserByUsername(username);
         String role = u.getRole().toString().toUpperCase();
-        
+
         Appointment appointment = appRepo.getAppointmentById(appointmentId);
         if (appointment == null) {
             throw new RuntimeException("Appointment not found");
         }
-        
-        if(!"DOCTOR".equalsIgnoreCase(role)){
+
+        if (!"DOCTOR".equalsIgnoreCase(role)) {
             try {
                 throw new AccessDeniedException("Chỉ bác sĩ mới có thể tạo thanh toán");
             } catch (AccessDeniedException ex) {
                 Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
-        if(!(u.getId() == appointment.getDoctor().getId()) ){
+
+        if (!(u.getId() == appointment.getDoctor().getId())) {
             try {
                 throw new AccessDeniedException("Bạn không có quyền tạo thanh toán cho lịch hẹn này");
             } catch (AccessDeniedException ex) {
                 Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
         //Tạo Payment
         return paymentRepository.createPaymentForAppointment(appointmentId, amount);
-        
-        
+
     }
-    
+
     // Bệnh nhân chọn phương thức thanh toán và nhận URL/mã thanh toán
     @Override
     public String processPayment(int paymentId, PaymentMethod paymentMethod, Principal principal) throws Exception {
@@ -141,15 +144,15 @@ public class PaymentServiceImpl implements PaymentService {
             throw new RuntimeException("Payment not found");
         }
 
-        if(!"PATIENT".equalsIgnoreCase(role)){
+        if (!"PATIENT".equalsIgnoreCase(role)) {
             try {
                 throw new AccessDeniedException("Chỉ bệnh mới có quyền thực hiện thanh toán");
             } catch (AccessDeniedException ex) {
                 Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
-        if(!(u.getId() == payment.getAppointment().getPatient().getId()) ){
+
+        if (!(u.getId() == payment.getAppointment().getPatient().getId())) {
             try {
                 throw new AccessDeniedException("Bạn không có quyền thực hiện thanh toán cho lịch hẹn này");
             } catch (AccessDeniedException ex) {
@@ -185,12 +188,11 @@ public class PaymentServiceImpl implements PaymentService {
         String rawData = String.format("accessKey=%s&amount=%d&extraData=%s&ipnUrl=%s&orderId=%s&orderInfo=%s&partnerCode=%s&redirectUrl=%s&requestId=%s&requestType=%s",
                 PaymentConfig.MOMO_ACCESS_KEY, amount, extraData, ipnUrl, orderId, orderInfo,
                 PaymentConfig.MOMO_PARTNER_CODE, redirectUrl, requestId, "captureWallet");
-        
+
         System.out.println("rawData" + rawData);
         byte[] hmacSha256 = HmacUtils.hmacSha256(PaymentConfig.MOMO_SECRET_KEY, rawData);
         String signature = Hex.encodeHexString(hmacSha256);
-        
-        
+
         // Tạo body yêu cầu
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("partnerCode", PaymentConfig.MOMO_PARTNER_CODE);
@@ -257,9 +259,9 @@ public class PaymentServiceImpl implements PaymentService {
         StringBuilder query = new StringBuilder(PaymentConfig.VNPAY_ENDPOINT).append("?");
         for (Map.Entry<String, String> entry : vnpParams.entrySet()) {
             query.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8))
-                 .append("=")
-                 .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8))
-                 .append("&");
+                    .append("=")
+                    .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8))
+                    .append("&");
         }
         query.deleteCharAt(query.length() - 1);
 
@@ -274,24 +276,74 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public void handlePaymentCallback(String paymentMethod, Map<String, String> params) {
         String transactionId = params.get("orderId");
+        if (transactionId == null) {
+            System.out.println("Invalid callback: Missing orderId");
+            throw new RuntimeException("Thiếu orderId trong callback");
+        }
+
         Payment payment = paymentRepository.getPaymentByTransactionId(transactionId);
         if (payment == null) {
-            throw new RuntimeException("Payment not found");
+            System.out.println("Payment not found for transactionId: " + transactionId);
+            throw new RuntimeException("Không tìm thấy hóa đơn cho transactionId: " + transactionId);
         }
 
         if ("MOMO".equalsIgnoreCase(paymentMethod)) {
+            String signature = params.get("signature");
+            if (signature == null) {
+                System.out.println("Invalid MoMo callback: Missing signature for transactionId: " + transactionId);
+                throw new RuntimeException("Callback MoMo thiếu chữ ký");
+            }
+
             String resultCode = params.get("resultCode");
             if ("0".equals(resultCode)) { // Thanh toán thành công
                 payment.setPaymentStatus(PaymentStatus.SUCCESSFUL);
+
+                System.out.println("MoMo payment successful for transactionId: " + transactionId);
+                // Gửi email thông báo
+                emailService.sendPaymentSuccessEmail(payment);
             } else {
                 payment.setPaymentStatus(PaymentStatus.FAILED);
+                System.out.println("MoMo payment failed for transactionId: " + transactionId + ". ResultCode: " + resultCode);
             }
         } else if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
+
+            String secureHash = params.get("vnp_SecureHash");
+            if (secureHash == null) {
+                System.out.println("Invalid VNPAY callback: Missing vnp_SecureHash for transactionId: " + transactionId);
+                throw new RuntimeException("Callback VNPAY thiếu chữ ký");
+            }
+
+            Map<String, String> signedParams = new TreeMap<>();
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                if (entry.getKey().startsWith("vnp_") && !entry.getKey().equals("vnp_SecureHash")) {
+                    signedParams.put(entry.getKey(), entry.getValue() != null ? entry.getValue() : "");
+                }
+            }
+
+            StringBuilder signData = new StringBuilder();
+            for (Map.Entry<String, String> entry : signedParams.entrySet()) {
+                signData.append(entry.getKey()).append("=").append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8)).append("&");
+            }
+            signData.deleteCharAt(signData.length() - 1);
+            System.out.println("VNPAY callback signData: " + signData);
+
+            byte[] hmacSha512 = HmacUtils.hmacSha512(PaymentConfig.VNPAY_HASH_SECRET, signData.toString());
+            String expectedSecureHash = Hex.encodeHexString(hmacSha512);
+
+            if (!expectedSecureHash.equalsIgnoreCase(secureHash)) {
+                System.out.println("Invalid VNPAY signature for transactionId: " + transactionId + ". Expected: " + expectedSecureHash + ", Received: " + secureHash);
+                throw new RuntimeException("Chữ ký VNPAY không hợp lệ");
+            }
+
             String responseCode = params.get("vnp_ResponseCode");
             if ("00".equals(responseCode)) { // Thanh toán thành công
                 payment.setPaymentStatus(PaymentStatus.SUCCESSFUL);
+                System.out.println("VNPAY payment successful for transactionId: " + transactionId);
+                // Gửi email thông báo
+                emailService.sendPaymentSuccessEmail(payment);
             } else {
                 payment.setPaymentStatus(PaymentStatus.FAILED);
+                System.out.println("VNPAY payment failed for transactionId: " + transactionId + ". ResponseCode: " + responseCode);
             }
         }
 

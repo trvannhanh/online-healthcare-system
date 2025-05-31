@@ -24,4 +24,7 @@ public interface UserRepository {
     String getEmailByUserId(int userId);
     List<String> getAllEmails();
     List<User> getUsersByRole(String role);
+    public User findByEmail(String email);
+    public User findByPhoneNumber(String phoneNumber);
+    public User findByIdentityNumber(String identityNumber);
 }

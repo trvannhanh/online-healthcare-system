@@ -34,7 +34,7 @@ const DoctorDetail = () => {
             fetchDoctorRatings(id);
         } catch (ex) {
             console.error(ex);
-            setError('Không thể tải thông tin bác sĩ. Vui lòng thử lại sau.');
+            setError(ex.response?.data || 'Không thể tải thông tin bác sĩ. Vui lòng thử lại sau.');
         } finally {
             setLoading(false);
         }
@@ -46,10 +46,16 @@ const DoctorDetail = () => {
             setSlotsLoading(true);
             let res = await Apis.get(`${endpoints['doctors']}/${id}/available-slots?date=${selectedDate}`);
             setAvailableSlots(res.data);
-            setSelectedSlot(''); // Reset khung giờ khi đổi ngày
+            setSelectedSlot('');
         } catch (ex) {
             console.error(ex);
-            setError('Không thể tải lịch trống. Vui lòng thử lại sau.');
+            let errorMessage = ex.response?.data || 'Không thể tải khung giờ trống. Vui lòng thử lại sau.';
+            if (ex.response?.status === 401) {
+                errorMessage = 'Bạn cần đăng nhập để xem khung giờ trống.';
+            } else if (ex.response?.status === 403) {
+                errorMessage = 'Bạn không có quyền truy cập khung giờ trống.';
+            }
+            setError(errorMessage);
         } finally {
             setSlotsLoading(false);
         }
@@ -66,23 +72,40 @@ const DoctorDetail = () => {
             return;
         }
 
+        // Xác nhận trước khi đặt lịch
+        if (!window.confirm(`Xác nhận đặt lịch hẹn với BS. ${doctor.user.firstName} ${doctor.user.lastName} vào ${selectedDate} lúc ${selectedSlot}?`)) {
+            return;
+        }
+
         try {
             setLoading(true);
             const appointmentDateTime = new Date(`${selectedDate}T${selectedSlot}:00`);
             const appointment = {
                 patient: { id: user.id },
                 doctor: { id: parseInt(id) },
-                appointmentDate: appointmentDateTime.toISOString(), // Định dạng "2025-05-12T09:00:00"
+                appointmentDate: appointmentDateTime.toISOString(),
                 status: 'PENDING',
-                createdAt: new Date().toISOString() // Định dạng "2025-05-11T10:00:00"
+                createdAt: new Date().toISOString()
             };
 
-            let res = await authApis().post(endpoints['appointments'], appointment);
+            let res = await authApis().post(endpoints['bookAppointment'], appointment);
             setSuccess('Đặt lịch hẹn thành công! Bạn sẽ được chuyển hướng về trang chủ.');
-            setTimeout(() => navigate('/'), 2000);
+            setTimeout(() => {
+                setSuccess(null);
+                navigate('/');
+            }, 3000);
         } catch (ex) {
             console.error(ex);
-            setError('Đặt lịch hẹn thất bại. Vui lòng thử lại sau.');
+            let errorMessage = ex.response?.data || 'Đặt lịch hẹn thất bại. Vui lòng thử lại sau.';
+            if (ex.response?.status === 401) {
+                errorMessage = 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
+            } else if (ex.response?.status === 403) {
+                errorMessage = 'Bạn không có quyền đặt lịch hẹn.';
+            } else if (ex.response?.status === 400) {
+                errorMessage = ex.response.data; // Hiển thị lỗi từ backend (ví dụ: "Thời gian đặt lịch phải trong tương lai")
+            }
+            setError(errorMessage);
+            setTimeout(() => setError(null), 5000); // Tự xóa lỗi sau 5 giây
         } finally {
             setLoading(false);
         }
@@ -172,6 +195,16 @@ const DoctorDetail = () => {
         }
 
         return stars;
+
+    };
+    // Xử lý khi chọn slot (kiểm tra đăng nhập)
+    const handleSelectSlot = (slot) => {
+        if (!user) {
+            setError('Bạn cần đăng nhập để chọn khung giờ.');
+            setTimeout(() => setError(null), 5000);
+            return;
+        }
+        setSelectedSlot(slot);
     };
 
     useEffect(() => {
@@ -184,117 +217,235 @@ const DoctorDetail = () => {
         }
     }, [doctor, selectedDate]);
 
+    // Xử lý trường hợp đang tải
     if (loading && !doctor) {
         return (
             <Container className="my-5 text-center">
-                <Spinner animation="border" variant="primary" />
-                <p className="mt-2">Đang tải thông tin bác sĩ...</p>
+                <Spinner
+                    animation="border"
+                    variant="primary"
+                    style={{ width: '3rem', height: '3rem' }}
+                />
+                <p className="mt-3 fw-semibold" style={{ color: '#0d6efd' }}>
+                    Đang tải thông tin bác sĩ...
+                </p>
             </Container>
         );
     }
 
-    if (error) {
+    // Xử lý trường hợp lỗi
+    if (error && !doctor) {
         return (
             <Container className="my-5">
-                <Alert variant="danger">{error}</Alert>
+                <Alert
+                    variant="danger"
+                    className="shadow-sm rounded-pill px-4 py-3"
+                    onClose={() => setError(null)}
+                    dismissible
+                >
+                    {error}
+                </Alert>
             </Container>
         );
     }
 
+    // Xử lý trường hợp không tìm thấy bác sĩ
     if (!doctor) {
         return (
             <Container className="my-5">
-                <Alert variant="info">Không tìm thấy bác sĩ!</Alert>
+                <Alert
+                    variant="info"
+                    className="shadow-sm rounded-pill px-4 py-3"
+                >
+                    Không tìm thấy bác sĩ!
+                </Alert>
             </Container>
         );
     }
 
     return (
-        <Container className="my-5">
+        <Container className="my-5 py-4">
             {/* Thông báo */}
-            {error && <Alert variant="danger">{error}</Alert>}
-            {success && <Alert variant="success">{success}</Alert>}
+            {error && (
+                <Alert
+                    variant="danger"
+                    className="shadow-sm rounded-pill px-4 py-3 mb-4"
+                    onClose={() => setError(null)}
+                    dismissible
+                >
+                    {error}
+                </Alert>
+            )}
+            {success && (
+                <Alert
+                    variant="success"
+                    className="shadow-sm rounded-pill px-4 py-3 mb-4"
+                    onClose={() => setSuccess(null)}
+                    dismissible
+                >
+                    {success}
+                </Alert>
+            )}
 
             {/* Phần thông tin bác sĩ */}
-            <Row className="align-items-center mb-5">
-                <Col md={4} className="text-center">
+            <Row
+                className="align-items-center mb-5 shadow-lg p-4"
+                style={{
+                    borderRadius: '20px',
+                    background: 'linear-gradient(to right, #f8f9fa, #e9ecef)',
+                    transition: 'box-shadow 0.3s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.15)'}
+                onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+            >
+                <Col md={4} className="text-center mb-4 mb-md-0">
                     <img
                         src={doctor.user.avatar || '/images/doctor-placeholder.jpg'}
                         alt="Doctor Avatar"
                         style={{
-                            width: '200px',
-                            height: '200px',
+                            width: '220px',
+                            height: '220px',
                             borderRadius: '50%',
                             objectFit: 'cover',
-                            border: '3px solid #007bff',
+                            border: '4px solid #0d6efd',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            transition: 'transform 0.3s'
                         }}
+                        onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                     />
                 </Col>
                 <Col md={8}>
-                    <h1 className="text-primary" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                    <h1
+                        className="text-primary fw-bold"
+                        style={{
+                            fontSize: '2.2rem',
+                            textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
+                        }}
+                    >
                         BS. {doctor.user.firstName} {doctor.user.lastName}
                     </h1>
-                    <p style={{ color: '#007bff', fontSize: '1.2rem' }}>
+                    <p
+                        className="fw-semibold"
+                        style={{
+                            color: '#20c997',
+                            fontSize: '1.3rem',
+                            marginBottom: '1rem'
+                        }}
+                    >
                         {doctor.specialization.name}
                     </p>
-                    <p style={{ color: '#666', fontSize: '1rem' }}>
-                        <FaHospital className="me-2" /> {doctor.hospital.name}
+                    <p style={{ color: '#333', fontSize: '1.1rem' }}>
+                        <FaHospital className="me-2 text-primary" /> {doctor.hospital.name}
                     </p>
                     <div className="d-flex align-items-center mb-3">
                         {/* Trung bình đánh giá của bác sĩ */}
                         {renderStars(rating)}
                         <span className="fw-semibold ms-2" style={{ color: '#333' }}>
                             {rating ? rating.toFixed(1) : "N/A"} ({doctor?.experienceYears} năm kinh nghiệm)
+
                         </span>
                     </div>
                 </Col>
             </Row>
 
             {/* Phần thông tin chi tiết và lịch trống */}
-            <Row>
+            <Row className="g-4">
                 <Col md={6}>
-                    <h3 style={{ color: '#1a3c34', fontWeight: 'bold' }}>Giới thiệu</h3>
-                    <p style={{ color: '#666', lineHeight: '1.6' }}>{doctor.bio || 'Chưa có thông tin giới thiệu.'}</p>
-                    <h3 style={{ color: '#1a3c34', fontWeight: 'bold', marginTop: '20px' }}>Kinh nghiệm</h3>
-                    <p style={{ color: '#666' }}>{doctor.experienceYears} năm kinh nghiệm trong lĩnh vực {doctor.specialization.name}.</p>
+                    <h3
+                        className="fw-bold mb-4"
+                        style={{
+                            color: '#0d6efd',
+                            borderBottom: '2px solid #0d6efd',
+                            paddingBottom: '0.5rem'
+                        }}
+                    >
+                        Giới Thiệu
+                    </h3>
+                    <p style={{ color: '#555', lineHeight: '1.7', fontSize: '1rem' }}>
+                        {doctor.bio || 'Chưa có thông tin giới thiệu.'}
+                    </p>
+                    <h3
+                        className="fw-bold mt-4 mb-4"
+                        style={{
+                            color: '#0d6efd',
+                            borderBottom: '2px solid #0d6efd',
+                            paddingBottom: '0.5rem'
+                        }}
+                    >
+                        Kinh Nghiệm
+                    </h3>
+                    <p style={{ color: '#555', fontSize: '1rem' }}>
+                        {doctor.experienceYears} năm kinh nghiệm trong lĩnh vực {doctor.specialization.name}.
+                    </p>
                 </Col>
                 <Col md={6}>
-                    <h3 style={{ color: '#1a3c34', fontWeight: 'bold' }}>Đặt lịch hẹn</h3>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Chọn ngày</Form.Label>
+                    <h3
+                        className="fw-bold mb-4"
+                        style={{
+                            color: '#0d6efd',
+                            borderBottom: '2px solid #0d6efd',
+                            paddingBottom: '0.75rem'
+                        }}
+                    >
+                        Đặt Lịch Hẹn
+                    </h3>
+                    <Form.Group className="mb-4">
+                        <Form.Label className="fw-semibold">Chọn ngày</Form.Label>
                         <Form.Control
                             type="date"
                             value={selectedDate}
                             onChange={(e) => setSelectedDate(e.target.value)}
                             min={new Date().toISOString().split('T')[0]}
+                            required
+                            className="border-primary rounded-pill"
+                            style={{ padding: '0.75rem' }}
                         />
                     </Form.Group>
                     {slotsLoading ? (
-                        <div className="text-center">
-                            <Spinner animation="border" variant="primary" />
-                            <p>Đang tải lịch trống...</p>
+                        <div className="text-center my-4">
+                            <Spinner
+                                animation="border"
+                                variant="primary"
+                                style={{ width: '3rem', height: '3rem' }}
+                            />
+                            <p className="mt-3 fw-semibold" style={{ color: '#0d6efd' }}>
+                                Đang tải khung giờ trống...
+                            </p>
                         </div>
                     ) : availableSlots.length > 0 ? (
                         <>
-                            <div className="d-flex flex-wrap mb-3">
+                            <div className="d-flex flex-wrap mb-4 gap-3">
                                 {availableSlots.map((slot, index) => (
                                     <Button
                                         key={index}
                                         variant={selectedSlot === slot ? 'primary' : 'outline-primary'}
-                                        className="m-1 rounded-pill"
-                                        style={{ minWidth: '120px' }}
-                                        onClick={() => setSelectedSlot(slot)}
+                                        className="rounded-pill px-3 py-2"
+                                        style={{
+                                            minWidth: '130px',
+                                            transition: 'background 0.2s, transform 0.2s'
+                                        }}
+                                        onClick={() => handleSelectSlot(slot)}
+                                        onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                                        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                                     >
-                                        <FaCalendarAlt className="me-1" /> {slot}
+                                        <FaCalendarAlt className="me-2" /> {slot}
                                     </Button>
                                 ))}
                             </div>
                             <div className="text-center">
                                 <Button
                                     variant="success"
-                                    className="rounded-pill px-4 py-2"
+                                    className="rounded-pill px-5 py-2 shadow-sm"
                                     onClick={bookAppointment}
                                     disabled={loading || !selectedSlot}
+                                    style={{
+                                        backgroundColor: '#20c997',
+                                        borderColor: '#20c997',
+                                        transition: 'transform 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                                 >
                                     {loading ? (
                                         <>
@@ -308,7 +459,12 @@ const DoctorDetail = () => {
                             </div>
                         </>
                     ) : (
-                        <Alert variant="info">Không có khung giờ trống vào ngày này.</Alert>
+                        <Alert
+                            variant="info"
+                            className="shadow-sm rounded-pill px-4 py-3"
+                        >
+                            Không có khung giờ trống vào ngày này.
+                        </Alert>
                     )}
                 </Col>
             </Row>

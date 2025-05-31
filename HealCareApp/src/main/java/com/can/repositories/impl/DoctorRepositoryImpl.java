@@ -8,6 +8,7 @@ import com.can.pojo.Doctor;
 import com.can.pojo.Hospital;
 import com.can.pojo.Specialization;
 import com.can.pojo.User;
+import com.can.pojo.VerificationStatus;
 import com.can.repositories.DoctorRepository;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -155,37 +156,37 @@ public class DoctorRepositoryImpl implements DoctorRepository {
 
     @Override
     public Doctor updateDoctor(Doctor doctor) {
-        Transaction transaction = null;
         Session s = this.factory.getObject().getCurrentSession();
-        transaction = s.beginTransaction();
-
-        Doctor existingDoctor = s.get(Doctor.class, doctor.getId());
-        if (existingDoctor == null) {
-            throw new RuntimeException("Doctor with ID " + doctor.getId() + "not found");
+        try {
+            Doctor existingDoctor = s.get(Doctor.class, doctor.getId());
+            if (existingDoctor == null) {
+                throw new RuntimeException("Doctor with ID " + doctor.getId() + " not found");
+            }
+            if (doctor.getUser() == null) {
+                throw new RuntimeException("Thông tin user cần thiết cho một Bác sĩ");
+            }
+            if (doctor.getUser().getId() != doctor.getId()) {
+                throw new RuntimeException("Id User và Id bác sĩ không trùng khớp");
+            }
+            if (doctor.getHospital() == null || doctor.getSpecialization() == null) {
+                throw new RuntimeException("Bệnh viện và chuyên khoa là bắt buộc");
+            }
+            // Giữ nguyên verificationStatus nếu không được cung cấp
+            if (doctor.getVerificationStatus() == null) {
+                doctor.setVerificationStatus(existingDoctor.getVerificationStatus());
+            }
+            s.merge(doctor.getUser());
+            Doctor updatedDoctor = (Doctor) s.merge(doctor);
+            s.flush();
+            return updatedDoctor;
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi cập nhật bác sĩ: " + e.getMessage(), e);
         }
-
-        if (doctor.getUser() == null) {
-            throw new RuntimeException("Thông tin user cần thiết cho một Bác sĩ");
-        }
-
-        if (doctor.getUser().getId() != doctor.getId()) {
-            throw new RuntimeException("Id User và Id bác sĩ không trùng khớp");
-        }
-
-        s.merge(doctor.getUser());
-        s.flush();
-
-        Doctor updatedDoctor = (Doctor) s.merge(doctor);
-        transaction.commit();
-        return updatedDoctor;
-
     }
 
     @Override
     public void deleteDoctor(int id) {
-        Transaction transaction = null;
         Session s = this.factory.getObject().getCurrentSession();
-        transaction = s.beginTransaction();
 
         Doctor doctor = s.get(Doctor.class, id);
         if (doctor == null) {
@@ -197,7 +198,6 @@ public class DoctorRepositoryImpl implements DoctorRepository {
         }
 
         s.remove(doctor);
-        transaction.commit();
 
     }
 
@@ -225,27 +225,26 @@ public class DoctorRepositoryImpl implements DoctorRepository {
 
     @Override
     public void verifyDoctor(int doctorId) {
-        Transaction transaction = null;
         Session s = this.factory.getObject().getCurrentSession();
-        transaction = s.beginTransaction();
 
         Doctor doctor = s.get(Doctor.class, doctorId);
         if (doctor == null) {
-            throw new RuntimeException("Doctor with ID" + doctorId + "not found");
+            throw new RuntimeException("Doctor with ID " + doctorId + " not found");
         }
 
         if (doctor.isIsVerified()) {
-            throw new RuntimeException("Doctor with ID" + doctorId + " đã được chứng nhận rồi ");
+            throw new RuntimeException("Doctor with ID " + doctorId + " đã được chứng nhận rồi");
         }
 
         if (doctor.getLicenseNumber() == null || doctor.getLicenseNumber().trim().isEmpty()) {
-            throw new RuntimeException("Doctor with ID" + doctorId + "chưa cấp giấy phép");
+            throw new RuntimeException("Doctor with ID " + doctorId + " chưa cấp giấy phép");
         }
 
+        // Cập nhật cả isVerified và verificationStatus
         doctor.setIsVerified(true);
-        s.merge(doctor);
-        transaction.commit();
+        doctor.setVerificationStatus(VerificationStatus.APPROVED); // Cập nhật thành Approved
 
+        s.merge(doctor);
     }
 
     @Override

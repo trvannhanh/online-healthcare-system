@@ -12,18 +12,6 @@ import java.util.Map;
  * @author DELL
  */
 public interface HealthRecordRepository {
-
-    List<HealthRecord> getHealthRecords(Map<String, String> params);
-
-    List<HealthRecord> getAllHealthRecords();
-
-    HealthRecord getHealthRecordById(int id);
-
-    HealthRecord addHealthRecord(HealthRecord healthRecord);
-
-    HealthRecord updateHealthRecord(HealthRecord healthRecord);
-
-    void deleteHealthRecord(int id);
-
-    List<HealthRecord> getHealthRecordsByPatient(int patientId);
+    HealthRecord createHealthRecord(HealthRecord healthRecord);
+    HealthRecord getHealthRecordByAppointmentId(Integer appointmentId);
 }

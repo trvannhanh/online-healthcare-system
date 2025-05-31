@@ -38,7 +38,7 @@ public class User {
     @Column(name = "last_name", nullable = false, length = 50)
     private String lastName;
 
-    @Size(min = 1, max = 45, message = "{user.username.sizeMsg}")
+    @Size(min = 3, max = 30, message = "{user.username.sizeMsg}")
     @Column(name = "username", nullable = false, unique = true, length = 30)
     private String username;
 
@@ -54,18 +54,19 @@ public class User {
     private Date createdDate;
 
     @Column(name = "phone_number", unique = true, length = 10)
+    @Pattern(regexp = "^\\d{10}$", message = "{user.phoneNumber.invalidMsg}")
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gender")
     private Gender gender;
 
-    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@(.+)$",
-            message = "{user.email.error.invalidMsg}")
+    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@(.+)$", message = "{user.email.error.invalidMsg}")
     @Column(name = "email", nullable = false, unique = true, length = 50)
     private String email;
 
     @Column(name = "identity_number", unique = true, length = 12)
+    @Pattern(regexp = "^\\d{12}$", message = "{user.identityNumber.invalidMsg}")
     private String identityNumber;
 
     @Enumerated(EnumType.STRING)
@@ -75,6 +76,15 @@ public class User {
     @Column(name = "avatar", length = 255)
     private String avatar;
 
+    @Column(name = "failed_login_attempts", nullable = false, columnDefinition = "INT DEFAULT 0")
+    private Integer failedLoginAttempts = 0;
+
+    @Column(name = "last_failed_login_time")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date lastFailedLoginTime;
+
+    @Column(name = "is_locked", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isLocked = false;
     // Getters and Setters
     /**
      * @return the id
@@ -246,6 +256,48 @@ public class User {
 
     public String getFullName() {
         return this.firstName + " " + this.lastName;
+    }
+
+    /**
+     * @return the failedLoginAttempts
+     */
+    public Integer getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+
+    /**
+     * @param failedLoginAttempts the failedLoginAttempts to set
+     */
+    public void setFailedLoginAttempts(Integer failedLoginAttempts) {
+        this.failedLoginAttempts = failedLoginAttempts;
+    }
+
+    /**
+     * @return the lastFailedLoginTime
+     */
+    public Date getLastFailedLoginTime() {
+        return lastFailedLoginTime;
+    }
+
+    /**
+     * @param lastFailedLoginTime the lastFailedLoginTime to set
+     */
+    public void setLastFailedLoginTime(Date lastFailedLoginTime) {
+        this.lastFailedLoginTime = lastFailedLoginTime;
+    }
+
+    /**
+     * @return the isLocked
+     */
+    public Boolean getIsLocked() {
+        return isLocked;
+    }
+
+    /**
+     * @param isLocked the isLocked to set
+     */
+    public void setIsLocked(Boolean isLocked) {
+        this.isLocked = isLocked;
     }
     
 }

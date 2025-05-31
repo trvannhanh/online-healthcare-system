@@ -7,6 +7,7 @@ package com.can.controllers;
 import com.can.pojo.Appointment;
 import com.can.pojo.Doctor;
 import com.can.pojo.Patient;
+import com.can.repositories.AppointmentRepository;
 import com.can.services.AppointmentService;
 import com.can.services.DoctorService;
 import com.can.services.PatientService;
@@ -32,10 +33,16 @@ public class AppointmentController {
 
     @Autowired
     private AppointmentService appService;
+    
+    @Autowired
+    private AppointmentRepository appRepo;
+    
     @Autowired
     private DoctorService docService;
     @Autowired
     private PatientService patService;
+    
+    
 
     @GetMapping("/appointments")
     public String showAppointment(Model model, @RequestParam Map<String, String> params) throws ParseException {
@@ -55,7 +62,7 @@ public class AppointmentController {
 
     @PostMapping("/appointments/add")
     public String addAppointment(@ModelAttribute("appointment") Appointment appointment) {
-        this.appService.addAppointment(appointment); // gọi lại phương thức đã có
+        this.appRepo.addAppointment(appointment); // gọi lại phương thức đã có
         return "redirect:/appointments"; // quay lại danh sách lịch hẹn
     }
 

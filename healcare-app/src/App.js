@@ -18,6 +18,7 @@ import PendingRating from './components/PendingRating';
 import Rating from './components/Rating';
 import DoctorRatings from "./components/DoctorRatings";
 import Response from "./components/Response";
+import CreateHealthRecord from "./components/CreateHealthRecord";
 
 const App = () => {
 
@@ -38,6 +39,7 @@ const App = () => {
                         <Route path="/payment/:appointmentId" element={<Payment />} />
                         <Route path="/chat/:otherUserId" element={<ChatRoom />} />
                         <Route path="/doctor/statistic" element={<Statistic />} />
+                        <Route path="/health-record/create/:appointmentId" element={<CreateHealthRecord />} />
                         <Route path="/pending-rating" element={<PendingRating />} />
                         <Route path="/rate-doctor/:appointmentId" element={<Rating />} />
                         <Route path="/doctor/ratings" element={<DoctorRatings />} />
@@ -50,5 +52,6 @@ const App = () => {
         </MyUserProvider>
     );
 }
+
 
 export default App;

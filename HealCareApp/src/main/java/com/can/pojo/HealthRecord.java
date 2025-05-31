@@ -39,7 +39,6 @@ public class HealthRecord {
     @Column(name = "disease_type")
     private String diseaseType;
     
-    // Thêm liên kết với cuộc hẹn
     @OneToOne
     @JoinColumn(name = "appointment_id", nullable = false)
     private Appointment appointment;

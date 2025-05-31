@@ -4,21 +4,28 @@
  */
 package com.can.configs;
 
+import com.can.pojo.User;
+import com.can.services.DoctorService;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -41,7 +48,10 @@ public class SpringSecurityConfigs {
 
     @Autowired
     private UserDetailsService userDetailService;
-
+    
+    @Autowired
+    private DoctorService doctorService;
+    
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -64,24 +74,6 @@ public class SpringSecurityConfigs {
         return cloudinary;
     }
 
-    @Bean
-    public JavaMailSender javaMailSender() {
-        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost("smtp.gmail.com");
-        mailSender.setPort(587);
-//        mailSender.setUsername("trvannhanh@gmail.com");
-//        mailSender.setPassword("your-app-password");
-
-// Có thể dùng cái này thay thế cái trên 
-        mailSender.setUsername("nhatkhanhtran117@gmail.com");
-        mailSender.setPassword("holvedrmbrlaabyx");
-
-        Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-
-        return mailSender;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws
@@ -92,9 +84,12 @@ public class SpringSecurityConfigs {
                 .requestMatchers("/", "/home").authenticated()
                 .requestMatchers("/api/**").permitAll()
                 .requestMatchers("/api/payment/**").permitAll()
+                .requestMatchers("/api/admin/verify-doctor/**").hasRole("ADMIN")
                 .requestMatchers("/appointments/**").hasRole("ADMIN")
                 .requestMatchers("/statistics/**").hasRole("ADMIN")
                 .requestMatchers("/notifications/**").hasRole("ADMIN")
+                .requestMatchers("/api/secure/appointments/**").hasRole("PATIENT")
+                .requestMatchers("/api/appointments/**").access(new DoctorAuthorizationManager())
                 .anyRequest().authenticated()
         )
                 .formLogin(form -> form.loginPage("/login")
@@ -117,4 +112,34 @@ public class SpringSecurityConfigs {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+    
+    // Custom AuthorizationManager để kiểm tra role DOCTOR và isVerified
+    public class DoctorAuthorizationManager implements AuthorizationManager<RequestAuthorizationContext> {
+
+        @Override
+        public AuthorizationDecision check(Supplier<Authentication> authenticationSupplier, RequestAuthorizationContext context) {
+            Authentication authentication = authenticationSupplier.get();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return new AuthorizationDecision(false);
+            }
+
+            // Kiểm tra vai trò DOCTOR
+            boolean hasDoctorRole = authentication.getAuthorities().stream()
+                    .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_DOCTOR"));
+            if (!hasDoctorRole) {
+                return new AuthorizationDecision(false);
+            }
+
+            // Kiểm tra trạng thái isVerified
+            String username = authentication.getName();
+            User user = (User) userDetailService.loadUserByUsername(username);
+            if (user == null) {
+                return new AuthorizationDecision(false);
+            }
+
+            boolean isVerified = doctorService.isDoctorVerified(user.getId());
+            return new AuthorizationDecision(isVerified);
+        }
+    }
+        
 }

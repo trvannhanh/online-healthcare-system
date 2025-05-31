@@ -3,7 +3,7 @@ import { Container, Row, Col, Form, Button, Spinner, Alert } from 'react-bootstr
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Apis, { authApis, endpoints } from '../configs/Apis';
 import { useMyUser } from '../configs/MyContexts';
-import { FaUserMd, FaHospital, FaCalendarAlt } from 'react-icons/fa';
+import { FaHospital, FaCalendarAlt } from 'react-icons/fa';
 
 const AppointmentForm = () => {
     const [searchParams] = useSearchParams();
@@ -26,7 +26,9 @@ const AppointmentForm = () => {
             setDoctor(res.data);
         } catch (ex) {
             console.error(ex);
-            setError('Không thể tải thông tin bác sĩ. Vui lòng thử lại sau.');
+            setError(ex.response?.data || 'Không thể tải thông tin bác sĩ. Vui lòng thử lại sau.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -36,10 +38,10 @@ const AppointmentForm = () => {
             setSlotsLoading(true);
             let res = await Apis.get(`${endpoints['doctors']}/${doctorId}/available-slots?date=${selectedDate}`);
             setAvailableSlots(res.data);
-            setSelectedSlot(''); // Reset khung giờ khi đổi ngày
+            setSelectedSlot('');
         } catch (ex) {
             console.error(ex);
-            setError('Không thể tải khung giờ trống. Vui lòng thử lại sau.');
+            setError(ex.response?.data || 'Không thể tải khung giờ trống. Vui lòng thử lại sau.');
         } finally {
             setSlotsLoading(false);
         }
@@ -73,7 +75,7 @@ const AppointmentForm = () => {
             setTimeout(() => navigate('/'), 2000);
         } catch (ex) {
             console.error(ex);
-            setError('Đặt lịch hẹn thất bại. Vui lòng thử lại sau.');
+            setError(ex.response?.data || 'Đặt lịch hẹn thất bại. Vui lòng thử lại sau.');
         } finally {
             setLoading(false);
         }

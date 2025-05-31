@@ -16,9 +16,11 @@ export const endpoints = {
     //APPOINTMENT
     'rescheduleAppointment': (id) => `/secure/appointments/${id}/reschedule`, //Đổi thời gian lịch hẹn
     'appointments': '/appointments', // Danh sách lịch hẹn
+    'bookAppointment': 'secure/appointments',
     'appointmentsFilter': '/appointments/filter', //Lọc danh sách lịch hẹn
     'cancelAppointment': (id) => `/secure/appointments/${id}/cancel`, //Hủy lịch hẹn
     'confirmAppointment': (id) => `/secure/appointments/${id}/confirm`, // Xác nhận lịch hẹn
+    'createHealthRecord': (id) => `/secure/appointments/${id}/health-record`,
     'appointmentDetail': (id) => `/appointments/detail/${id}`, // Chi tiết lịch hẹn
 
 

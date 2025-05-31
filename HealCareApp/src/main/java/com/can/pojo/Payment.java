@@ -48,7 +48,7 @@ public class Payment {
     @Column(name = "transaction_id", length = 100)
     private String transactionId;
 
-    @Column(name = "created_at", length = 255)
+    @Column(name = "created_at")
     private Date createdAt;
 
     // Getters and Setters

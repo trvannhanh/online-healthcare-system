@@ -12,6 +12,7 @@ import com.can.pojo.Specialization;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.can.pojo.User;
+import com.can.pojo.VerificationStatus;
 import com.can.repositories.DoctorRepository;
 import com.can.repositories.HospitalRepository;
 import com.can.repositories.PatientRepository;
@@ -70,6 +71,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private Cloudinary cloudinary;
+    
+    private static final int MAX_LOGIN_ATTEMPTS = 5;
 
     @Override
     public User getUserById(int id) {
@@ -88,68 +91,56 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User addUser(Map<String, String> params, MultipartFile avatar) {
-
-        // Kiểm tra dữ liệu đầu vào
         validateParams(params);
 
-        // Kiểm tra avatar
         if (avatar == null || avatar.isEmpty()) {
-            throw new IllegalArgumentException("Avatar là bắt buộc");
+            throw new IllegalArgumentException("Ảnh đại diện là bắt buộc");
         }
-        // Tạo User
+
         User u = new User();
         u.setFirstName(params.get("firstName"));
         u.setLastName(params.get("lastName"));
         u.setPhoneNumber(params.get("phoneNumber"));
         u.setEmail(params.get("email"));
-        try {
-            u.setRole(Role.valueOf(params.get("role").toUpperCase()));
-        } catch (Exception e) {
-            System.out.println("Invalid role, defaulting to PATIENT" + e.getMessage());
-            u.setRole(Role.PATIENT);
-        }
+        u.setIdentityNumber(params.get("identityNumber"));
+        u.setRole(Role.valueOf(params.get("role") != null ? params.get("role").toUpperCase() : "PATIENT"));
         u.setUsername(params.get("username"));
-        u.setPassword(this.passEncoder.encode(params.get("password")));
+        u.setPassword(passEncoder.encode(params.get("password")));
+        u.setFailedLoginAttempts(0);
+        u.setIsLocked(false);
 
-        if (!avatar.isEmpty()) {
-            try {
-                Map res = cloudinary.uploader().upload(avatar.getBytes(),
-                        ObjectUtils.asMap("resource_type", "auto"));
-                u.setAvatar(res.get("secure_url").toString());
-            } catch (IOException ex) {
-                Logger.getLogger(AppointmentServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        try {
+            Map res = cloudinary.uploader().upload(avatar.getBytes(),
+                    ObjectUtils.asMap("resource_type", "auto"));
+            u.setAvatar(res.get("secure_url").toString());
+        } catch (IOException ex) {
+            Logger.getLogger(UserServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IllegalArgumentException("Lỗi khi tải ảnh đại diện");
         }
 
-        User savedUser = this.userRepo.addUser(u);
-        System.out.println("User saved successfully: " + savedUser.getId());
+        User savedUser = userRepo.addUser(u);
 
-        // Xử lý thông tin riêng dựa trên role
-        String role = params.get("role").toUpperCase();
-        if ("PATIENT".equalsIgnoreCase(role)) {
+        String role = params.get("role") != null ? params.get("role").toUpperCase() : "PATIENT";
+        if ("PATIENT".equals(role)) {
             Patient patient = new Patient();
             patient.setUser(savedUser);
-            // Replace this line:
-            // patient.setDateOfBirth(new Date(params.get("dateOfBirth")));
-
-            // With this code:
             try {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                 sdf.setLenient(false);
                 Date dob = sdf.parse(params.get("dateOfBirth"));
                 patient.setDateOfBirth(dob);
             } catch (ParseException e) {
-                throw new IllegalArgumentException("Invalid date format for dateOfBirth. Expected format: yyyy-MM-dd",
-                        e);
+                throw new IllegalArgumentException("Ngày sinh không hợp lệ, định dạng phải là yyyy-MM-dd");
             }
             patient.setInsuranceNumber(params.get("insuranceNumber"));
-            this.patRepo.addPatient(patient);
-            System.out.println("Patient saved successfully for user" + savedUser.getId());
-        } else if ("DOCTOR".equalsIgnoreCase(role)) {
+            patRepo.addPatient(patient);
+        } else if ("DOCTOR".equals(role)) {
             Doctor doctor = new Doctor();
             doctor.setUser(savedUser);
             doctor.setLicenseNumber(params.get("licenseNumber"));
-            // Xử lý Hospital
+            doctor.setIsVerified(false);
+            doctor.setVerificationStatus(VerificationStatus.PENDING);
+
             String hospitalName = params.get("hospital");
             Hospital hospital = hospitalRepo.getHospitalByName(hospitalName);
             if (hospital == null) {
@@ -167,52 +158,81 @@ public class UserServiceImpl implements UserService {
                 specialization = specializationRepo.addSpecialization(specialization);
             }
             doctor.setSpecialization(specialization);
-            this.docRepo.addDoctor(doctor);
-        } else {
-            throw new IllegalArgumentException("Role không hợp lệ: " + role);
+            docRepo.addDoctor(doctor);
         }
 
         return savedUser;
-
-        // return this.userRepo.addUser(u);
     }
 
     private void validateParams(Map<String, String> params) {
         // Kiểm tra các trường bắt buộc
-        if (!params.containsKey("username") || params.get("username").isBlank()) {
-            throw new IllegalArgumentException("Username là bắt buộc");
+        if (params.get("firstName") == null || params.get("firstName").isBlank() || params.get("firstName").length() > 50) {
+            throw new IllegalArgumentException("Họ không được để trống và tối đa 50 ký tự");
         }
-        if (!params.containsKey("email") || !params.get("email").matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
-            throw new IllegalArgumentException("Email không hợp lệ");
+        if (params.get("lastName") == null || params.get("lastName").isBlank() || params.get("lastName").length() > 50) {
+            throw new IllegalArgumentException("Tên không được để trống và tối đa 50 ký tự");
         }
-        if (!params.containsKey("password") || params.get("password").isBlank()) {
-            throw new IllegalArgumentException("Password là bắt buộc");
+        if (params.get("username") == null || !params.get("username").matches("^[a-zA-Z0-9_]{3,30}$")) {
+            throw new IllegalArgumentException("Tên đăng nhập phải từ 3-30 ký tự, chỉ chứa chữ, số và dấu gạch dưới");
         }
-        if (!params.containsKey("role") || params.get("role").isBlank()) {
-            throw new IllegalArgumentException("Role là bắt buộc");
+        if (params.get("password") == null || !params.get("password").matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,50}$")) {
+            throw new IllegalArgumentException("Mật khẩu phải từ 8-50 ký tự, chứa chữ hoa, chữ thường, số và ký tự đặc biệt");
+        }
+        if (params.get("email") == null || !params.get("email").matches("^[A-Za-z0-9+_.-]+@(.+)$") || params.get("email").length() > 50) {
+            throw new IllegalArgumentException("Email không hợp lệ hoặc vượt quá 50 ký tự");
+        }
+        if (params.get("phoneNumber") == null || !params.get("phoneNumber").matches("^\\d{10}$")) {
+            throw new IllegalArgumentException("Số điện thoại phải là 10 chữ số");
+        }
+        if (params.get("identityNumber") != null && !params.get("identityNumber").matches("^\\d{12}$")) {
+            throw new IllegalArgumentException("Số CMND/CCCD phải là 12 chữ số");
         }
 
-        // Kiểm tra các trường bổ sung dựa trên role
-        String role = params.get("role");
-        if ("Patient".equalsIgnoreCase(role)) {
-            if (!params.containsKey("insuranceNumber") || params.get("insuranceNumber").isBlank()) {
-                throw new IllegalArgumentException("insuranceNumber là bắt buộc cho Patient");
+        // Kiểm tra tính duy nhất
+        if (userRepo.getUserByUsername(params.get("username")) != null) {
+            throw new IllegalArgumentException("Tên đăng nhập đã tồn tại");
+        }
+        if (userRepo.findByEmail(params.get("email")) != null) {
+            throw new IllegalArgumentException("Email đã tồn tại");
+        }
+        if (userRepo.findByPhoneNumber(params.get("phoneNumber")) != null) {
+            throw new IllegalArgumentException("Số điện thoại đã tồn tại");
+        }
+        if (params.get("identityNumber") != null && userRepo.findByIdentityNumber(params.get("identityNumber")) != null) {
+            throw new IllegalArgumentException("Số CMND/CCCD đã tồn tại");
+        }
+
+        // Kiểm tra vai trò
+        String role = params.get("role") != null ? params.get("role").toUpperCase() : "PATIENT";
+
+        // Kiểm tra thông tin theo vai trò
+        if ("PATIENT".equals(role)) {
+            if (params.get("insuranceNumber") == null || !params.get("insuranceNumber").matches("^[A-Za-z0-9]{10,20}$")) {
+                throw new IllegalArgumentException("Số bảo hiểm phải từ 10-20 ký tự, chỉ chứa chữ và số");
             }
-            if (!params.containsKey("dateOfBirth") || !isValidDate(params.get("dateOfBirth"))) {
-                throw new IllegalArgumentException("dateOfBirth không hợp lệ cho Patient");
+            if (params.get("dateOfBirth") == null || !params.get("dateOfBirth").matches("^\\d{4}-\\d{2}-\\d{2}$")) {
+                throw new IllegalArgumentException("Ngày sinh phải có định dạng yyyy-MM-dd");
             }
-        } else if ("Doctor".equalsIgnoreCase(role)) {
-            if (!params.containsKey("specialization") || params.get("specialization").isBlank()) {
-                throw new IllegalArgumentException("specialization là bắt buộc cho Doctor");
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                sdf.setLenient(false);
+                Date dob = sdf.parse(params.get("dateOfBirth"));
+                if (dob.after(new Date())) {
+                    throw new IllegalArgumentException("Ngày sinh không được là ngày trong tương lai");
+                }
+            } catch (ParseException e) {
+                throw new IllegalArgumentException("Ngày sinh không hợp lệ, định dạng phải là yyyy-MM-dd");
             }
-            if (!params.containsKey("licenseNumber") || params.get("licenseNumber").isBlank()) {
-                throw new IllegalArgumentException("licenseNumber là bắt buộc cho Doctor");
+        } else if ("DOCTOR".equals(role)) {
+            if (params.get("licenseNumber") == null || !params.get("licenseNumber").matches("^[A-Za-z0-9]{8,20}$")) {
+                throw new IllegalArgumentException("Số giấy phép phải từ 8-20 ký tự, chỉ chứa chữ và số");
             }
-            if (!params.containsKey("hospital") || params.get("hospital").isBlank()) {
-                throw new IllegalArgumentException("hospital là bắt buộc cho Doctor");
+            if (params.get("hospital") == null || params.get("hospital").isBlank()) {
+                throw new IllegalArgumentException("Bệnh viện không được để trống");
             }
-        } else {
-            throw new IllegalArgumentException("Role không hợp lệ: " + role);
+            if (params.get("specialization") == null || params.get("specialization").isBlank()) {
+                throw new IllegalArgumentException("Chuyên khoa không được để trống");
+            }
         }
     }
 
@@ -251,9 +271,51 @@ public class UserServiceImpl implements UserService {
                 u.getUsername(), u.getPassword(), authorities);
     }
 
+
+    
     @Override
     public boolean authenticate(String username, String password) {
-        return this.userRepo.authenticate(username, password);
+        User user = userRepo.getUserByUsername(username);
+        if (user == null || user.getIsLocked()) {
+            return false;
+        }
+        boolean isAuthenticated = this.userRepo.authenticate(username, password);
+        if (isAuthenticated) {
+            resetFailedLoginAttempts(username);
+        }
+        return isAuthenticated;
+    }
+
+    @Override
+    public boolean isAccountLocked(String username) {
+        User user = userRepo.getUserByUsername(username);
+        return user != null && user.getIsLocked();
+    }
+
+
+    @Override
+    public void incrementFailedLoginAttempts(String username) {
+        User user = userRepo.getUserByUsername(username);
+        if (user != null) {
+            int attempts = user.getFailedLoginAttempts() + 1;
+            user.setFailedLoginAttempts(attempts);
+            user.setLastFailedLoginTime(new java.util.Date());
+            if (attempts >= MAX_LOGIN_ATTEMPTS) {
+                user.setIsLocked(true);
+            }
+            userRepo.updateUser(user);
+        }
+    }
+
+    @Override
+    public void resetFailedLoginAttempts(String username) {
+        User user = userRepo.getUserByUsername(username);
+        if (user != null) {
+            user.setFailedLoginAttempts(0);
+            user.setLastFailedLoginTime(null);
+            user.setIsLocked(false);
+            userRepo.updateUser(user);
+        }
     }
 
     @Override

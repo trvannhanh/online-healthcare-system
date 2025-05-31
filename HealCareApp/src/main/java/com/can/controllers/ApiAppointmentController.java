@@ -75,54 +75,38 @@ public class ApiAppointmentController {
     @Autowired
     private NotificationService notiService;
 
-    @PostMapping("/appointments")
-    public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {
-//         Appointment newAppointment = null;
+    @PostMapping("/secure/appointments")
+    @CrossOrigin
+    public ResponseEntity<?> createAppointment(@RequestBody Appointment appointment, Principal principal) {
         try {
-// <<<<<<< chi
-//             newAppointment = appService.addAppointment(appointment);
-
-//             try {
-//                 if (newAppointment.getPatient() != null && newAppointment.getDoctor() != null) {
-//                     // Load đầy đủ thông tin bệnh nhân và bác sĩ từ repository
-//                     Patient fullPatient = patientService.getPatientById(newAppointment.getPatient().getId());
-//                     Doctor fullDoctor = doctorService.getDoctorById(newAppointment.getDoctor().getId());
-
-//                     if (fullPatient != null && fullPatient.getUser() != null &&
-//                             fullDoctor != null && fullDoctor.getUser() != null) {
-
-//                         Notifications notification = new Notifications();
-//                         notification.setMessage("Bạn có lịch hẹn mới với bệnh nhân: "
-//                                 + fullPatient.getUser().getFullName()
-//                                 + " vào lúc "
-//                                 + new SimpleDateFormat("HH:mm dd/MM/yyyy").format(newAppointment.getAppointmentDate()));
-//                         notification.setUser(fullDoctor.getUser());
-//                         notification.setSentAt(new Date());
-//                         notification.setType(NotificationType.APPOINTMENT);
-//                         notiService.addNotification(notification);
-//                     }
-//                 }
-//             } catch (Exception ex) {
-//                 // Ghi log lỗi nhưng không ảnh hưởng đến response
-//                 System.err.println("Không thể tạo thông báo: " + ex.getMessage());
-//                 // Có thể log thêm vào file log nếu cần
-//             }
-// =======
-            Appointment newAppointment = appService.addAppointment(appointment);
-
+            Appointment newAppointment = appService.addAppointment(appointment, principal.getName());
             return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (RuntimeException e) {
-//             if (newAppointment != null) {
-//                 return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
-//             }
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-//             if (newAppointment != null) {
-//                 return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
-//             }
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    @GetMapping("secure/doctors/{doctorId}/available-slots")
+    @CrossOrigin
+    public ResponseEntity<?> getAvailableSlots(
+            @PathVariable("doctorId") int doctorId,
+            @RequestParam("date") String date,
+            Principal principal) {
+        try {
+            List<String> availableSlots = appService.getAvailableSlots(doctorId, date);
+            return new ResponseEntity<>(availableSlots, HttpStatus.OK);
+        } catch (ParseException e) {
+            return new ResponseEntity<>("Định dạng ngày không hợp lệ", HttpStatus.BAD_REQUEST);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

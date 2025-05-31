@@ -19,7 +19,7 @@ public interface AppointmentService {
     List<Appointment> getAppointments(Map<String, String> params) throws ParseException;
     List<Appointment> getAllAppointments() throws ParseException;
     Appointment getAppointmentById(int id);
-    Appointment addAppointment(Appointment appointment);
+    Appointment addAppointment(Appointment appointment, String username);
     Appointment updateAppointment(Appointment appointment);
     void deleteAppointment(int id);
     List<Appointment> getAppointmentsByStatus(AppointmentStatus status, int page);
@@ -29,4 +29,5 @@ public interface AppointmentService {
     Appointment rescheduleAppointment(int id, Date newDate, String username);
     Appointment confirmAppointment(int id, String username);
     List<Appointment> getAppointmentsWithFilters(Map<String, String> params);
+    List<String> getAvailableSlots(int doctorId, String date) throws ParseException;
 }

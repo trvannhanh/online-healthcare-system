@@ -12,18 +12,6 @@ import com.can.pojo.HealthRecord;
  */
 public interface HealthRecordService {
     
-    List<HealthRecord> getHealthRecords(Map<String, String> params);
-
-    List<HealthRecord> getAllHealthRecords();
-
-    HealthRecord getHealthRecordById(int id);
-
-    HealthRecord addHealthRecord(HealthRecord healthRecord);
-
-    HealthRecord updateHealthRecord(HealthRecord healthRecord);
-
-    void deleteHealthRecord(int id);
-
-    List<HealthRecord> getHealthRecordsByPatient(int patientId);
+    HealthRecord createHealthRecord(Integer appointmentId, String medicalHistory, String examinationResults, String diseaseType, String username);
     
 } 

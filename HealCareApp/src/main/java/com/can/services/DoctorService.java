@@ -27,8 +27,6 @@ public interface DoctorService {
     boolean isDoctorVerified(int doctorId);
     List<Doctor> getUnverifiedDoctors(int page);
     void updateLicenseNumber(int doctorId, String licenseNumber);
-    // Lấy khung giờ trống của bác sĩ trong một ngày
-    List<String> getAvailableTimeSlots(int doctorId, String date) throws ParseException;
     Doctor getCurrentDoctorProfile(String username);
     Doctor updateDoctorProfile(String username, Doctor doctorData);
     // String updateDoctorAvatar(String username, MultipartFile avatar);

@@ -36,6 +36,9 @@ public class ApiDoctorController {
 
     @Autowired
     private DoctorService doctorService;
+    
+    @Autowired
+    private AppointmentService appointmentService;
 
     // API tìm kiếm bác sĩ
     @GetMapping("/doctors")
@@ -53,16 +56,21 @@ public class ApiDoctorController {
     
     // API lấy khung giờ trống
     @GetMapping("/doctors/{doctorId}/available-slots")
-    public ResponseEntity<List<String>> getAvailableSlots(
+    @CrossOrigin
+    public ResponseEntity<?> getAvailableSlots(
             @PathVariable("doctorId") int doctorId,
             @RequestParam("date") String date) {
         try {
-            List<String> availableSlots = doctorService.getAvailableTimeSlots(doctorId, date);
+            List<String> availableSlots = appointmentService.getAvailableSlots(doctorId, date);
             return new ResponseEntity<>(availableSlots, HttpStatus.OK);
         } catch (ParseException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Định dạng ngày không hợp lệ", HttpStatus.BAD_REQUEST);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     
@@ -77,6 +85,19 @@ public class ApiDoctorController {
             return new ResponseEntity<>(doctor, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    // API mới: Xác nhận giấy phép bác sĩ bởi quản trị viên
+    @PostMapping("/admin/verify-doctor/{doctorId}")
+    public ResponseEntity<String> verifyDoctor(@PathVariable("doctorId") int doctorId) {
+        try {
+            doctorService.verifyDoctor(doctorId);
+            return new ResponseEntity<>("Xác nhận giấy phép thành công!", HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>("Lỗi khi xác nhận giấy phép: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
