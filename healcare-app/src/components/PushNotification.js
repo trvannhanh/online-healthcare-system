@@ -25,8 +25,6 @@ const PushNotification = () => {
     useEffect(() => {
         if (user) {
             fetchUpcomingNotifications();
-
-            // Check for new notifications every minute
             const intervalId = setInterval(fetchUpcomingNotifications, 60000);
             return () => clearInterval(intervalId);
         }
@@ -45,7 +43,7 @@ const PushNotification = () => {
     // Mark notification as read
     const markAsRead = async (notificationId) => {
         try {
-            await authApis().patch(endpoints['markNotificationAsRead'](notificationId));
+            await authApis().patch(`${endpoints['markNotificationAsRead']}/${notificationId}/mark-read`);
             // Remove from local state
             setUpcomingNotifications(prevNotifications =>
                 prevNotifications.filter(notification => notification.id !== notificationId)
@@ -58,43 +56,46 @@ const PushNotification = () => {
     if (!user || upcomingNotifications.length === 0) return null;
 
     return (
-        <div className="position-fixed" style={{ top: '80px', right: '20px', zIndex: 1050 }}>
-            <ToastContainer>
-                {upcomingNotifications.map((notification, index) => (
-                    <Toast
-                        key={notification.id}
-                        onClose={() => markAsRead(notification.id)}
-                        show={show}
-                        delay={10000}
-                        autohide
-                        animation
-                    >
-                        <Toast.Header>
-                            {getIcon(notification.type)}
-                            <strong className="me-auto">
-                                {notification.type === 'APPOINTMENT' ? 'Lịch hẹn sắp tới' :
-                                    notification.type === 'DISCOUNT' ? 'Ưu đãi đặc biệt' :
-                                        notification.type === 'HEALTH_PROGRAM' ? 'Chương trình sức khỏe' :
-                                            'Thông báo'}
-                            </strong>
-                            <small>{new Date(notification.sentAt || notification.createdAt).toLocaleDateString('vi-VN')}</small>
-                        </Toast.Header>
-                        <Toast.Body>
-                            {notification.message}
-                            <div className="mt-2">
-                                <Link
-                                    to="/notifications"
-                                    className="btn btn-sm btn-link ps-0"
-                                    onClick={() => markAsRead(notification.id)}
-                                >
-                                    Xem tất cả thông báo
-                                </Link>
-                            </div>
-                        </Toast.Body>
-                    </Toast>
-                ))}
-            </ToastContainer>
-        </div>
+        <ToastContainer 
+            className="position-fixed p-3" 
+            position="bottom-end" 
+            style={{ zIndex: 1050 }}
+        >
+            {upcomingNotifications.map((notification, index) => (
+                <Toast
+                    key={notification.id}
+                    onClose={() => markAsRead(notification.id)}
+                    show={show}
+                    delay={10000}
+                    autohide
+                    animation
+                    className="mb-2"
+                >
+                    <Toast.Header>
+                        {getIcon(notification.type)}
+                        <strong className="me-auto">
+                            {notification.type === 'APPOINTMENT' ? 'Lịch hẹn sắp tới' :
+                                notification.type === 'DISCOUNT' ? 'Ưu đãi đặc biệt' :
+                                    notification.type === 'HEALTH_PROGRAM' ? 'Chương trình sức khỏe' :
+                                        'Thông báo'}
+                        </strong>
+                        <small>{new Date(notification.sentAt || notification.createdAt).toLocaleDateString('vi-VN')}</small>
+                    </Toast.Header>
+                    <Toast.Body>
+                        {notification.message}
+                        <div className="mt-2">
+                            <Link
+                                to="/notifications"
+                                className="btn btn-sm btn-link ps-0"
+                                onClick={() => markAsRead(notification.id)}
+                            >
+                                Xem tất cả thông báo
+                            </Link>
+                        </div>
+                    </Toast.Body>
+                </Toast>
+            ))}
+        </ToastContainer>
     );
 };
 
