@@ -14,12 +14,17 @@ import Payment from "./components/Payment";
 import ChatRoom from "./components/ChatRoom";
 import Appointment from "./components/Appointment";
 import Statistic from './components/Statistic';
+import PendingRating from './components/PendingRating';
+import Rating from './components/Rating';
+import DoctorRatings from "./components/DoctorRatings";
+import Response from "./components/Response";
 import CreateHealthRecord from "./components/CreateHealthRecord";
 
 const App = () => {
+
     return (
-        <BrowserRouter>
-            <MyUserProvider>
+        <MyUserProvider>
+            <BrowserRouter>
                 <Header />
 
                 <Container>
@@ -35,14 +40,18 @@ const App = () => {
                         <Route path="/chat/:otherUserId" element={<ChatRoom />} />
                         <Route path="/doctor/statistic" element={<Statistic />} />
                         <Route path="/health-record/create/:appointmentId" element={<CreateHealthRecord />} />
+                        <Route path="/pending-rating" element={<PendingRating />} />
+                        <Route path="/rate-doctor/:appointmentId" element={<Rating />} />
+                        <Route path="/doctor/ratings" element={<DoctorRatings />} />
+                        <Route path="/doctor/response/:ratingId" element={<Response />} />
                     </Routes>
                 </Container>
 
                 <Footer />
-            </MyUserProvider>
-        </BrowserRouter>
+            </BrowserRouter>
+        </MyUserProvider>
     );
-};
+}
 
 
 export default App;

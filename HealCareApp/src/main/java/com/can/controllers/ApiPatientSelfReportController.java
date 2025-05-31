@@ -14,7 +14,6 @@ import com.can.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +23,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.security.Principal;
 
 /**
  *
@@ -37,32 +37,11 @@ public class ApiPatientSelfReportController {
     @Autowired
     private PatientSelfReportService patientSelfReportService;
 
-    @Autowired
-    private UserService userService;
-
     // Thêm mới một báo cáo sức khỏe
     @PostMapping("/add")
-    public ResponseEntity<?> createPatientSelfReport(@RequestBody PatientSelfReport patientSelfReport) {
+    public ResponseEntity<?> createPatientSelfReport(@RequestBody PatientSelfReport patientSelfReport, Principal principal) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
-            
-            User currentUser = userService.getUserByUsername(username);
-            if (currentUser == null) {
-                return new ResponseEntity<>("Không tìm thấy thông tin người dùng", HttpStatus.NOT_FOUND);
-            }
-            
-            // Kiểm tra quyền: chỉ cho phép bệnh nhân tạo báo cáo
-            if (!currentUser.getRole().name().equals("PATIENT")) {
-                return new ResponseEntity<>("Bạn không có quyền tạo báo cáo sức khỏe", HttpStatus.FORBIDDEN);
-            }
-            
-            // Kiểm tra xem bệnh nhân đã có báo cáo chưa
-            if (patientSelfReportService.hasCurrentPatientSelfReport(username)) {
-                return new ResponseEntity<>("Bạn đã có báo cáo sức khỏe. Vui lòng sử dụng chức năng cập nhật.", 
-                        HttpStatus.BAD_REQUEST);
-            }
-            
+            String username = principal.getName();
             PatientSelfReport newReport = patientSelfReportService.addPatientSelfReport(patientSelfReport, username);
             return new ResponseEntity<>(newReport, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
@@ -88,27 +67,9 @@ public class ApiPatientSelfReportController {
 
     // Cập nhật báo cáo sức khỏe
     @PutMapping
-    public ResponseEntity<?> updatePatientSelfReport(@RequestBody PatientSelfReport patientSelfReport) {
+    public ResponseEntity<?> updatePatientSelfReport(@RequestBody PatientSelfReport patientSelfReport, Principal principal) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
-            
-            User currentUser = userService.getUserByUsername(username);
-            if (currentUser == null) {
-                return new ResponseEntity<>("Không tìm thấy thông tin người dùng", HttpStatus.NOT_FOUND);
-            }
-            
-            // Kiểm tra quyền: chỉ cho phép bệnh nhân cập nhật báo cáo của chính họ
-            if (!currentUser.getRole().name().equals("PATIENT")) {
-                return new ResponseEntity<>("Bạn không có quyền cập nhật báo cáo sức khỏe", HttpStatus.FORBIDDEN);
-            }
-            
-            // Kiểm tra xem báo cáo có tồn tại không
-            if (!patientSelfReportService.hasCurrentPatientSelfReport(username)) {
-                return new ResponseEntity<>("Không tìm thấy báo cáo sức khỏe. Vui lòng tạo mới.", 
-                        HttpStatus.NOT_FOUND);
-            }
-            
+            String username = principal.getName();
             PatientSelfReport updatedReport = patientSelfReportService.updatePatientSelfReport(patientSelfReport, username);
             return ResponseEntity.ok(updatedReport);
         } catch (IllegalArgumentException e) {

@@ -10,7 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -27,13 +27,9 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "doctor_id", nullable = false)
-    private Doctor doctor;
-
-    @ManyToOne
-    @JoinColumn(name = "patient_id", nullable = false)
-    private Patient patient;
+    @OneToOne
+    @JoinColumn(name = "appointment_id", nullable = false)
+    private Appointment appointment;
 
     @Column(name = "rating")
     private int rating;
@@ -41,6 +37,9 @@ public class Rating {
     @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;
 
+    @Column(name = "created_date")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ratingDate ;
     // Getters and Setters
 
     /**
@@ -58,31 +57,17 @@ public class Rating {
     }
 
     /**
-     * @return the doctor
+     * @return the appointment
      */
-    public Doctor getDoctor() {
-        return doctor;
+    public Appointment getAppointment() {
+        return appointment;
     }
 
     /**
-     * @param doctor the doctor to set
+     * @param appointment the appointment to set
      */
-    public void setDoctor(Doctor doctor) {
-        this.doctor = doctor;
-    }
-
-    /**
-     * @return the patient
-     */
-    public Patient getPatient() {
-        return patient;
-    }
-
-    /**
-     * @param patient the patient to set
-     */
-    public void setPatient(Patient patient) {
-        this.patient = patient;
+    public void setAppointment(Appointment appointment) {
+        this.appointment = appointment;
     }
 
     /**
@@ -111,5 +96,19 @@ public class Rating {
      */
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+        /**
+     * @return the ratingDate
+     */
+    public Date getRatingDate() {
+        return ratingDate;
+    }
+
+    /**
+     * @param ratingDate the ratingDate to set
+     */
+    public void setRatingDate(Date ratingDate) {
+        this.ratingDate = ratingDate;
     }
 }

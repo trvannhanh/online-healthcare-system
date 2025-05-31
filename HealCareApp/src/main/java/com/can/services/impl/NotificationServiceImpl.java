@@ -1,9 +1,11 @@
 package com.can.services.impl;
 
+import com.can.pojo.User;
 import com.can.pojo.Notifications;
 
 import com.can.repositories.NotificationRepository;
 import com.can.services.NotificationService;
+import com.can.services.UserService;
 
 import java.util.List;
 import java.util.Date;
@@ -11,7 +13,6 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.text.ParseException;
-
 
 /**
  *
@@ -22,8 +23,11 @@ public class NotificationServiceImpl implements NotificationService {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private UserService userService;
+
     @Override
-    public List<Notifications> getNotificationsByCriteria(Map<String, String> params) throws ParseException{
+    public List<Notifications> getNotificationsByCriteria(Map<String, String> params) throws ParseException {
         return this.notificationRepository.getNotificationsByCriteria(params);
     }
 
@@ -34,6 +38,18 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<Notifications> getNotificationsByUserId(Integer userId) {
+        // Lấy thông tin người dùng
+        User user = userService.getUserById(userId);
+
+        // Kiểm tra xem người dùng có tồn tại không
+        if (user == null) {
+            throw new RuntimeException("Không tìm thấy người dùng với ID: " + userId);
+        }
+
+        // Chỉ cho phép bác sĩ hoặc bệnh nhân xem thông báo
+        if (!user.getRole().name().equals("DOCTOR") && !user.getRole().name().equals("PATIENT")) {
+            throw new RuntimeException("Chỉ có bác sĩ hoặc bệnh nhân mới có thể xem thông báo");
+        }
         return this.notificationRepository.getNotificationsByUserId(userId);
     }
 
@@ -76,5 +92,28 @@ public class NotificationServiceImpl implements NotificationService {
     public void deleteNotification(int id) {
         this.notificationRepository.deleteNotification(id);
     }
-    
+
+    @Override
+    public List<Notifications> getUpcomingAppointmentNotifications(String username) {
+        // Lấy thông tin người dùng từ username
+        User user = userService.getUserByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("Không tìm thấy người dùng với username: " + username);
+        }
+
+        // Gọi repository để lấy thông báo lịch hẹn sắp tới
+        return this.notificationRepository.getUpcomingAppointmentNotifications(user.getId());
+    }
+
+    @Override
+    public void markNotificationAsRead(int notificationId, String username) {
+        // Lấy thông tin người dùng từ username
+        User user = userService.getUserByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("Không tìm thấy người dùng với username: " + username);
+        }
+
+        this.notificationRepository.markNotificationAsRead(notificationId, user.getId());
+    }
+
 }

@@ -174,4 +174,18 @@ public class ApiAppointmentController {
         }
     }
 
+    @GetMapping("/appointments/detail/{id}")
+    public ResponseEntity<Appointment> getAppointmentById(@PathVariable("id") int id) {
+        try {
+            Appointment appointment = appService.getAppointmentById(id);
+            if (appointment != null) {
+                return new ResponseEntity<>(appointment, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

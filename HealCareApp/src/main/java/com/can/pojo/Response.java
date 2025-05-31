@@ -31,8 +31,12 @@ public class Response {
     @JoinColumn(name = "rating_id", nullable = false)
     private Rating rating;
 
-    @Column(name = "content" , nullable = false, columnDefinition = "TEXT")
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Column(name = "created_date")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date responseDate;
 
     // Getters and Setters
 
@@ -76,5 +80,19 @@ public class Response {
      */
     public void setContent(String content) {
         this.content = content;
+    }
+
+            /**
+     * @return the responseDate
+     */
+    public Date getResponseDate() {
+        return responseDate;
+    }
+
+    /**
+     * @param responseDate the responseDate to set
+     */
+    public void setResponseDate(Date ResponseDate) {
+        this.responseDate = responseDate;
     }
 }

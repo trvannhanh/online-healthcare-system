@@ -4,6 +4,8 @@ import com.can.pojo.Appointment;
 import com.can.pojo.Notifications;
 import com.can.pojo.User;
 import com.can.repositories.NotificationRepository;
+
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -14,6 +16,7 @@ import jakarta.persistence.criteria.Root;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
@@ -201,6 +204,72 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         Notifications notification = session.get(Notifications.class, id);
         if (notification != null)
             session.remove(notification);
+    }
+
+    @Override
+    public List<Notifications> getUpcomingAppointmentNotifications(Integer userId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Notifications> q = builder.createQuery(Notifications.class);
+        Root<Notifications> root = q.from(Notifications.class);
+
+        // Join với bảng user để lọc theo userId
+        Join<Notifications, User> userJoin = root.join("user");
+
+        // Lấy các thông báo lịch hẹn trong 1-2 ngày tới
+        Calendar cal = Calendar.getInstance();
+        Date today = new Date();
+        cal.setTime(today);
+
+        cal.add(Calendar.DAY_OF_MONTH, 2); // Lấy thông báo đến 2 ngày sau
+        Date twoDaysLater = cal.getTime();
+
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(userJoin.get("id"), userId));
+        predicates.add(builder.equal(root.get("type"), "APPOINTMENT")); // Giả sử có field type để phân loại thông báo
+        predicates.add(builder.equal(root.get("isRead"), false)); // Chưa đọc
+
+        // Lọc thông báo có ngày hẹn nằm trong khoảng từ hiện tại đến 2 ngày sau
+        // Giả sử có field appointmentDate lưu ngày hẹn, hoặc có thể dùng field khác tùy
+        // vào cấu trúc dữ liệu
+        predicates.add(builder.between(root.get("appointmentDate"), today, twoDaysLater));
+
+        q.where(predicates.toArray(new Predicate[0]));
+        q.orderBy(builder.asc(root.get("appointmentDate"))); // Sắp xếp theo thời gian lịch hẹn
+
+        Query query = session.createQuery(q);
+        return query.getResultList();
+    }
+
+    @Override
+    public void markNotificationAsRead(int notificationId, Integer userId) {
+        Session session = this.factory.getObject().getCurrentSession();
+
+        // Lấy thông báo theo ID và userId để đảm bảo người dùng chỉ có thể đánh dấu
+        // đã đọc các thông báo của chính họ
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Notifications> q = builder.createQuery(Notifications.class);
+        Root<Notifications> root = q.from(Notifications.class);
+
+        Join<Notifications, User> userJoin = root.join("user");
+
+        q.where(
+                builder.and(
+                        builder.equal(root.get("id"), notificationId),
+                        builder.equal(userJoin.get("id"), userId)));
+
+        Query query = session.createQuery(q);
+
+        try {
+            Notifications notification = (Notifications) query.getSingleResult();
+
+            // Đánh dấu đã đọc và cập nhật
+            notification.setIsRead(true);
+            session.update(notification);
+        } catch (NoResultException e) {
+            // Không tìm thấy thông báo hoặc thông báo không thuộc về người dùng này
+            // Có thể ghi log hoặc xử lý theo nhu cầu
+        }
     }
 
 }

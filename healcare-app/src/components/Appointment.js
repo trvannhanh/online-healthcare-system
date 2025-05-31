@@ -23,13 +23,17 @@ const Appointment = () => {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [newDateTime, setNewDateTime] = useState('');
 
+  // Để lưu trạng thái đánh giá cho từng lịch hẹn
+  const [appointmentRatings, setAppointmentRatings] = useState({});
+  const [ratingLoading, setRatingLoading] = useState(false);
+
   const loadAppointments = async () => {
     if (!user) return;
 
     try {
       setLoadingAppointments(true);
       let url = `${endpoints['appointmentsFilter']}?page=${page}`;
-      
+
       if (user.role === 'PATIENT') {
         url += `&patientId=${user.id}`;
       } else if (user.role === 'DOCTOR') {
@@ -74,6 +78,8 @@ const Appointment = () => {
 
   useEffect(() => {
     if (page > 0 && user) loadAppointments();
+
+
   }, [page, filters, user]);
 
   const loadMore = () => {
@@ -175,6 +181,7 @@ const Appointment = () => {
       setLoadingReschedule(false);
     }
   };
+
 
   return (
     <Container className="py-5">

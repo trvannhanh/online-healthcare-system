@@ -8,6 +8,9 @@ const Statistic = () => {
     const { user } = useMyUser();
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    
+    // Tùy chọn loại báo cáo: 'patients' hoặc 'diseases'
+    const [reportType, setReportType] = useState('patients');
     const [viewType, setViewType] = useState('dateRange'); // 'dateRange', 'month', 'quarter'
 
     // Form states
@@ -17,16 +20,18 @@ const Statistic = () => {
     const [month, setMonth] = useState(new Date().getMonth() + 1);
     const [quarter, setQuarter] = useState(Math.floor((new Date().getMonth() + 3) / 3));
 
-    // Chart states
+    // Stats cho số lượng bệnh nhân
     const [patientCount, setPatientCount] = useState(null);
     const [monthlyData, setMonthlyData] = useState([]);
     const [quarterlyData, setQuarterlyData] = useState([]);
 
-    // Chart ref (single ref for all charts)
-    const chartRef = useRef(null);
-    const chartIdRef = useRef(`chart-${Math.random().toString(36).substring(2, 9)}`); // ID cố định cho chart
+    // Stats cho loại bệnh phổ biến
+    const [diseaseData, setDiseaseData] = useState({});
+    const [isLoadingDiseases, setIsLoadingDiseases] = useState(false);
 
-    // Chart instance (single instance)
+    // Chart refs
+    const chartRef = useRef(null);
+    const chartIdRef = useRef(`chart-${Math.random().toString(36).substring(2, 9)}`);
     const [chartInstance, setChartInstance] = useState(null);
 
     // Check if user is doctor
@@ -50,10 +55,9 @@ const Statistic = () => {
                 chartInstance.destroy();
             }
         };
-    }, []); // Chỉ chạy một lần khi component được mount
+    }, []);
 
-    // QUAN TRỌNG: Xóa useEffect tự động load dữ liệu khi viewType thay đổi
-    // Thay vào đó, chỉ load dữ liệu khi người dùng nhấn nút
+    // ===== PHƯƠNG THỨC XỬ LÝ SỐ LƯỢNG BỆNH NHÂN =====
 
     // Load data by date range
     const loadDateRangeData = async () => {
@@ -72,8 +76,6 @@ const Statistic = () => {
             });
 
             setPatientCount(response.data);
-
-            // Create or update chart
             renderDateRangeChart(response.data);
         } catch (error) {
             console.error('Error loading date range data:', error);
@@ -88,11 +90,9 @@ const Statistic = () => {
         if (loading) return;
         try {
             setLoading(true);
-            // Create an array to store data for all months
             const data = [];
-
-            // Sử dụng Promise.all để tăng tốc độ tải dữ liệu 
             const promises = [];
+            
             for (let i = 1; i <= 12; i++) {
                 promises.push(authApis().get(endpoints['doctorStatistics'] + '/doctor/patients-count-by-month', {
                     params: {
@@ -108,8 +108,6 @@ const Statistic = () => {
             });
 
             setMonthlyData(data);
-
-            // Create or update chart
             renderMonthlyChart(data);
         } catch (error) {
             console.error('Error loading monthly data:', error);
@@ -124,11 +122,9 @@ const Statistic = () => {
         if (loading) return;
         try {
             setLoading(true);
-            // Create an array to store data for all quarters
             const data = [];
-
-            // Sử dụng Promise.all để tăng tốc độ tải dữ liệu
             const promises = [];
+            
             for (let i = 1; i <= 4; i++) {
                 promises.push(authApis().get(endpoints['doctorStatistics'] + '/doctor/patients-count-by-quarter', {
                     params: {
@@ -144,8 +140,6 @@ const Statistic = () => {
             });
 
             setQuarterlyData(data);
-
-            // Create or update chart
             renderQuarterlyChart(data);
         } catch (error) {
             console.error('Error loading quarterly data:', error);
@@ -157,7 +151,6 @@ const Statistic = () => {
 
     // Render date range chart
     const renderDateRangeChart = (count) => {
-        // Destroy existing chart if it exists
         if (chartInstance) {
             chartInstance.destroy();
         }
@@ -167,7 +160,7 @@ const Statistic = () => {
         const ctx = chartRef.current.getContext('2d');
 
         const newChart = new Chart(ctx, {
-            id: chartIdRef.current, // Sử dụng ID cố định
+            id: chartIdRef.current,
             type: 'bar',
             data: {
                 labels: ['Số lượng bệnh nhân'],
@@ -210,7 +203,6 @@ const Statistic = () => {
 
     // Render monthly chart
     const renderMonthlyChart = (data) => {
-        // Destroy existing chart if it exists
         if (chartInstance) {
             chartInstance.destroy();
         }
@@ -226,7 +218,7 @@ const Statistic = () => {
         ];
 
         const newChart = new Chart(ctx, {
-            id: chartIdRef.current, // Sử dụng ID cố định
+            id: chartIdRef.current,
             type: 'bar',
             data: {
                 labels: months,
@@ -276,7 +268,6 @@ const Statistic = () => {
 
     // Render quarterly chart
     const renderQuarterlyChart = (data) => {
-        // Destroy existing chart if it exists
         if (chartInstance) {
             chartInstance.destroy();
         }
@@ -288,7 +279,7 @@ const Statistic = () => {
         const quarters = ['Quý 1', 'Quý 2', 'Quý 3', 'Quý 4'];
 
         const newChart = new Chart(ctx, {
-            id: chartIdRef.current, // Sử dụng ID cố định
+            id: chartIdRef.current,
             type: 'bar',
             data: {
                 labels: quarters,
@@ -336,26 +327,161 @@ const Statistic = () => {
         setChartInstance(newChart);
     };
 
+    // ===== PHƯƠNG THỨC XỬ LÝ LOẠI BỆNH PHỔ BIẾN =====
+
+    // Load loại bệnh phổ biến theo tháng
+    const loadDiseasesByMonth = async () => {
+        if (isLoadingDiseases) return;
+        try {
+            setIsLoadingDiseases(true);
+            const response = await authApis().get(endpoints['doctorStatistics'] + '/disease-type-by-month', {
+                params: { year }
+            });
+            setDiseaseData(response.data);
+            renderDiseaseChart(response.data, 'bar');
+        } catch (error) {
+            console.error('Error loading diseases by month:', error);
+            setError(error.response?.data || 'Không thể tải dữ liệu loại bệnh theo tháng.');
+        } finally {
+            setIsLoadingDiseases(false);
+        }
+    };
+
+    // Load loại bệnh phổ biến theo quý
+    const loadDiseasesByQuarter = async () => {
+        if (isLoadingDiseases) return;
+        try {
+            setIsLoadingDiseases(true);
+            const response = await authApis().get(endpoints['doctorStatistics'] + '/disease-type-by-quarter', {
+                params: { year }
+            });
+            setDiseaseData(response.data);
+            renderDiseaseChart(response.data, 'pie');
+        } catch (error) {
+            console.error('Error loading diseases by quarter:', error);
+            setError(error.response?.data || 'Không thể tải dữ liệu loại bệnh theo quý.');
+        } finally {
+            setIsLoadingDiseases(false);
+        }
+    };
+
+    // Render biểu đồ loại bệnh phổ biến
+    const renderDiseaseChart = (data, chartType) => {
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        if (!chartRef.current) return;
+
+        const ctx = chartRef.current.getContext('2d');
+        
+        // Lấy top 10 loại bệnh phổ biến nhất
+        const sortedData = Object.entries(data)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+            
+        const labels = sortedData.map(item => item[0]);
+        const values = sortedData.map(item => item[1]);
+        
+        // Cấu hình màu sắc
+        const backgroundColors = [
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 159, 64, 0.7)',
+            'rgba(199, 199, 199, 0.7)',
+            'rgba(83, 102, 255, 0.7)',
+            'rgba(78, 205, 196, 0.7)',
+            'rgba(247, 159, 31, 0.7)'
+        ];
+        
+        const borderColors = backgroundColors.map(color => color.replace('0.7', '1'));
+        
+        // Tiêu đề dựa vào loại biểu đồ
+        const titleText = chartType === 'bar' 
+            ? `Top loại bệnh phổ biến nhất năm ${year} (theo tháng)` 
+            : `Top loại bệnh phổ biến nhất năm ${year} (theo quý)`;
+        
+        const config = {
+            type: chartType,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: titleText,
+                    data: values,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: titleText,
+                        font: {
+                            size: 16
+                        }
+                    },
+                    legend: {
+                        position: chartType === 'pie' ? 'right' : 'top',
+                        display: chartType === 'pie'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                if (chartType === 'pie') {
+                                    const total = values.reduce((sum, v) => sum + v, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${context.label}: ${value} ca (${percentage}%)`;
+                                } else {
+                                    return `Số ca: ${value}`;
+                                }
+                            }
+                        }
+                    }
+                },
+                indexAxis: chartType === 'bar' ? 'y' : undefined, // Thanh ngang cho biểu đồ bar
+                scales: chartType === 'bar' ? {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { precision: 0 },
+                        title: { display: true, text: 'Số ca' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Loại bệnh' }
+                    }
+                } : undefined
+            }
+        };
+        
+        const newChart = new Chart(ctx, config);
+        setChartInstance(newChart);
+    };
+
+    // ===== EVENT HANDLERS =====
+
     // Handle form submission for date range
     const handleDateRangeSubmit = (e) => {
         e.preventDefault();
         loadDateRangeData();
     };
 
-    // Handle year change for monthly and quarterly charts
+    // Handle year change
     const handleYearChange = (e) => {
         const newYear = parseInt(e.target.value);
         setYear(newYear);
-        // XÓA: không tự động tải dữ liệu khi năm thay đổi
     };
 
-    // XÓA useEffect tự động tải khi thay đổi năm
-    // Thay vào đó, chỉ tải dữ liệu khi người dùng nhấn nút "Cập nhật biểu đồ"
-
-    // Handle change of view type
+    // Handle view type change (dateRange, month, quarter)
     const handleViewTypeChange = (e) => {
         setViewType(e.target.value);
-        // Xóa dữ liệu hiện tại khi chuyển đổi loại xem
+        // Reset data when changing view type
         if (chartInstance) {
             chartInstance.destroy();
             setChartInstance(null);
@@ -364,6 +490,27 @@ const Statistic = () => {
         setPatientCount(null);
         setMonthlyData([]);
         setQuarterlyData([]);
+        setDiseaseData({});
+    };
+    
+    // Handle report type change (patients, diseases)
+    const handleReportTypeChange = (e) => {
+        const newType = e.target.value;
+        setReportType(newType);
+        
+        // Reset data when changing report type
+        if (chartInstance) {
+            chartInstance.destroy();
+            setChartInstance(null);
+        }
+        
+        setPatientCount(null);
+        setMonthlyData([]);
+        setQuarterlyData([]);
+        setDiseaseData({});
+        
+        // Reset view type to default
+        setViewType('dateRange');
     };
 
     // If not a doctor, show access denied
@@ -379,7 +526,7 @@ const Statistic = () => {
 
     return (
         <Container className="my-4">
-            <h2 className="mb-4 text-center">Thống Kê Bệnh Nhân</h2>
+            <h2 className="mb-4 text-center">Thống Kê Bác Sĩ</h2>
 
             {error && (
                 <Alert variant="danger" onClose={() => setError(null)} dismissible>
@@ -389,93 +536,155 @@ const Statistic = () => {
 
             <Card className="mb-4">
                 <Card.Body>
+                    {/* Lựa chọn loại báo cáo */}
                     <Form.Group className="mb-4">
-                        <Form.Label>Chọn loại thống kê</Form.Label>
+                        <Form.Label>Chọn loại báo cáo</Form.Label>
                         <Form.Select
-                            value={viewType}
-                            onChange={handleViewTypeChange}
-                            disabled={loading}
+                            value={reportType}
+                            onChange={handleReportTypeChange}
+                            disabled={loading || isLoadingDiseases}
                         >
-                            <option value="dateRange">Thống kê theo khoảng thời gian</option>
-                            <option value="month">Thống kê theo tháng</option>
-                            <option value="quarter">Thống kê theo quý</option>
+                            <option value="patients">Thống kê số lượng bệnh nhân</option>
+                            <option value="diseases">Thống kê loại bệnh phổ biến</option>
                         </Form.Select>
                     </Form.Group>
 
-                    {viewType === 'dateRange' && (
-                        <div className="mb-4">
-                            <Form onSubmit={handleDateRangeSubmit}>
-                                <Row>
-                                    <Col md={5}>
+                    {/* THỐNG KÊ SỐ LƯỢNG BỆNH NHÂN */}
+                    {reportType === 'patients' && (
+                        <>
+                            <Form.Group className="mb-4">
+                                <Form.Label>Chọn loại thống kê</Form.Label>
+                                <Form.Select
+                                    value={viewType}
+                                    onChange={handleViewTypeChange}
+                                    disabled={loading}
+                                >
+                                    <option value="dateRange">Thống kê theo khoảng thời gian</option>
+                                    <option value="month">Thống kê theo tháng</option>
+                                    <option value="quarter">Thống kê theo quý</option>
+                                </Form.Select>
+                            </Form.Group>
+
+                            {viewType === 'dateRange' && (
+                                <div className="mb-4">
+                                    <Form onSubmit={handleDateRangeSubmit}>
+                                        <Row>
+                                            <Col md={5}>
+                                                <Form.Group>
+                                                    <Form.Label>Từ ngày</Form.Label>
+                                                    <Form.Control
+                                                        type="date"
+                                                        value={fromDate}
+                                                        onChange={(e) => setFromDate(e.target.value)}
+                                                        disabled={loading}
+                                                        required
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+                                            <Col md={5}>
+                                                <Form.Group>
+                                                    <Form.Label>Đến ngày</Form.Label>
+                                                    <Form.Control
+                                                        type="date"
+                                                        value={toDate}
+                                                        onChange={(e) => setToDate(e.target.value)}
+                                                        disabled={loading}
+                                                        required
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+                                            <Col md={2} className="d-flex align-items-end">
+                                                <Button
+                                                    type="submit"
+                                                    variant="primary"
+                                                    className="w-100"
+                                                    disabled={loading}
+                                                >
+                                                    {loading ? <Spinner size="sm" animation="border" /> : 'Xem thống kê'}
+                                                </Button>
+                                            </Col>
+                                        </Row>
+                                    </Form>
+                                </div>
+                            )}
+
+                            {(viewType === 'month' || viewType === 'quarter') && (
+                                <Row className="mb-4">
+                                    <Col md={6}>
                                         <Form.Group>
-                                            <Form.Label>Từ ngày</Form.Label>
+                                            <Form.Label>Chọn năm</Form.Label>
                                             <Form.Control
-                                                type="date"
-                                                value={fromDate}
-                                                onChange={(e) => setFromDate(e.target.value)}
+                                                type="number"
+                                                value={year}
+                                                onChange={handleYearChange}
+                                                min="2000"
+                                                max="2100"
                                                 disabled={loading}
-                                                required
                                             />
                                         </Form.Group>
                                     </Col>
-                                    <Col md={5}>
-                                        <Form.Group>
-                                            <Form.Label>Đến ngày</Form.Label>
-                                            <Form.Control
-                                                type="date"
-                                                value={toDate}
-                                                onChange={(e) => setToDate(e.target.value)}
-                                                disabled={loading}
-                                                required
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md={2} className="d-flex align-items-end">
+                                    <Col md={6} className="d-flex align-items-end">
                                         <Button
-                                            type="submit"
+                                            onClick={viewType === 'month' ? loadMonthlyData : loadQuarterlyData}
                                             variant="primary"
                                             className="w-100"
                                             disabled={loading}
                                         >
-                                            {loading ? <Spinner size="sm" animation="border" /> : 'Xem thống kê'}
+                                            {loading ? <Spinner size="sm" animation="border" /> : 'Cập nhật biểu đồ'}
                                         </Button>
                                     </Col>
                                 </Row>
-                            </Form>
-                        </div>
+                            )}
+
+                        </>
                     )}
 
-                    {(viewType === 'month' || viewType === 'quarter') && (
-                        <Row className="mb-4">
-                            <Col md={6}>
-                                <Form.Group>
-                                    <Form.Label>Chọn năm</Form.Label>
-                                    <Form.Control
-                                        type="number"
-                                        value={year}
-                                        onChange={handleYearChange}
-                                        min="2000"
-                                        max="2100"
-                                        disabled={loading}
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6} className="d-flex align-items-end">
-                                <Button
-                                    onClick={viewType === 'month' ? loadMonthlyData : loadQuarterlyData}
-                                    variant="primary"
-                                    className="w-100"
-                                    disabled={loading}
+                    {/* THỐNG KÊ LOẠI BỆNH PHỔ BIẾN */}
+                    {reportType === 'diseases' && (
+                        <>
+                            <Form.Group className="mb-4">
+                                <Form.Label>Chọn loại thống kê</Form.Label>
+                                <Form.Select
+                                    value={viewType}
+                                    onChange={handleViewTypeChange}
+                                    disabled={isLoadingDiseases}
                                 >
-                                    {loading ? <Spinner size="sm" animation="border" /> : 'Cập nhật biểu đồ'}
-                                </Button>
-                            </Col>
-                        </Row>
+                                    <option value="month">Thống kê theo tháng</option>
+                                    <option value="quarter">Thống kê theo quý</option>
+                                </Form.Select>
+                            </Form.Group>
+
+                            <Row className="mb-4">
+                                <Col md={6}>
+                                    <Form.Group>
+                                        <Form.Label>Chọn năm</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={year}
+                                            onChange={handleYearChange}
+                                            min="2000"
+                                            max="2100"
+                                            disabled={isLoadingDiseases}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={6} className="d-flex align-items-end">
+                                    <Button
+                                        onClick={viewType === 'month' ? loadDiseasesByMonth : loadDiseasesByQuarter}
+                                        variant="primary"
+                                        className="w-100"
+                                        disabled={isLoadingDiseases}
+                                    >
+                                        {isLoadingDiseases ? <Spinner size="sm" animation="border" /> : 'Cập nhật biểu đồ'}
+                                    </Button>
+                                </Col>
+                            </Row>
+                        </>
                     )}
 
                     {/* Phần hiển thị biểu đồ - dùng chung cho mọi loại */}
                     <div style={{ height: '400px', position: 'relative' }}>
-                        {loading && (
+                        {(loading || isLoadingDiseases) && (
                             <div style={{
                                 position: 'absolute',
                                 top: 0,
@@ -494,8 +703,37 @@ const Statistic = () => {
                         <canvas ref={chartRef}></canvas>
                     </div>
 
+                    {/* Hiển thị bảng dữ liệu khi xem thống kê loại bệnh */}
+                    {reportType === 'diseases' && Object.keys(diseaseData).length > 0 && (
+                        <div className="mt-4">
+                            <h4>Bảng chi tiết loại bệnh</h4>
+                            <div className="table-responsive">
+                                <table className="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Loại bệnh</th>
+                                            <th>Số ca</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {Object.entries(diseaseData)
+                                            .sort((a, b) => b[1] - a[1])
+                                            .map(([disease, count], index) => (
+                                                <tr key={disease}>
+                                                    <td>{index + 1}</td>
+                                                    <td>{disease}</td>
+                                                    <td>{count}</td>
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Hiển thị thống kê tổng hợp khi đang ở chế độ xem theo tháng */}
-                    {viewType === 'month' && monthlyData.length > 0 && (
+                    {reportType === 'patients' && viewType === 'month' && monthlyData.length > 0 && (
                         <div className="mt-4">
                             <Row>
                                 <Col md={4}>
@@ -537,7 +775,7 @@ const Statistic = () => {
                     )}
 
                     {/* Hiển thị thống kê tổng hợp khi đang ở chế độ xem theo quý */}
-                    {viewType === 'quarter' && quarterlyData.length > 0 && (
+                    {reportType === 'patients' && viewType === 'quarter' && quarterlyData.length > 0 && (
                         <div className="mt-4">
                             <Row>
                                 <Col md={4}>

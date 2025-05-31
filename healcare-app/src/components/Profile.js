@@ -31,6 +31,10 @@ const Profile = () => {
     const [personalMedicalHistory, setPersonalMedicalHistory] = useState('');
     const [familyMedicalHistory, setFamilyMedicalHistory] = useState('');
     const [pregnancyHistory, setPregnancyHistory] = useState('');
+    const [bloodType, setBloodType] = useState('');
+    const [medicationAllergies, setMedicationAllergies] = useState('');
+    const [currentMedications, setCurrentMedications] = useState('');
+    const [currentTreatments, setCurrentTreatments] = useState('');
     //Thông tin bác sĩ
     const [specialization, setSpecialization] = useState('');
     const [hospital, setHospital] = useState('');
@@ -134,6 +138,10 @@ const Profile = () => {
                         setPersonalMedicalHistory(selfReportData.report.personalMedicalHistory || '');
                         setFamilyMedicalHistory(selfReportData.report.familyMedicalHistory || '');
                         setPregnancyHistory(selfReportData.report.pregnancyHistory || '');
+                        setBloodType(selfReportData.report.bloodType || '');
+                        setMedicationAllergies(selfReportData.report.medicationAllergies || '');
+                        setCurrentMedications(selfReportData.report.currentMedications || '');
+                        setCurrentTreatments(selfReportData.report.currentTreatments || '');
                     } else {
                         setHasSelfReport(false);
                         setSelfReport(null);
@@ -144,6 +152,10 @@ const Profile = () => {
                         setPersonalMedicalHistory('');
                         setFamilyMedicalHistory('');
                         setPregnancyHistory('');
+                        setBloodType('');
+                        setMedicationAllergies('');
+                        setCurrentMedications('');
+                        setCurrentTreatments('');
                     }
                 } else {
                     console.warn("Không có dữ liệu selfReport trong response profile");
@@ -374,7 +386,11 @@ const Profile = () => {
                 weight: weight ? parseFloat(weight) : null,
                 personalMedicalHistory,
                 familyMedicalHistory,
-                pregnancyHistory
+                pregnancyHistory,
+                bloodType,
+                medicationAllergies,
+                currentMedications,
+                currentTreatments
             };
 
             let response;
@@ -416,6 +432,10 @@ const Profile = () => {
             setPersonalMedicalHistory(response.data.personalMedicalHistory || '');
             setFamilyMedicalHistory(response.data.familyMedicalHistory || '');
             setPregnancyHistory(response.data.pregnancyHistory || '');
+            setBloodType(response.data.bloodType || '');
+            setMedicationAllergies(response.data.medicationAllergies || '');
+            setCurrentMedications(response.data.currentMedications || '');
+            setCurrentTreatments(response.data.currentTreatments || '');
 
         } catch (error) {
             console.error('Error submitting self report:', error);
@@ -796,7 +816,57 @@ const Profile = () => {
                                     placeholder="Nhập thông tin về các lần mang thai, sinh nở..."
                                 />
                             </Form.Group>
+                            <Form.Group className="mb-3" controlId="formBloodType">
+                                <Form.Label>Nhóm máu</Form.Label>
+                                <Form.Control
+                                    as="select"
+                                    value={bloodType}
+                                    onChange={(e) => setBloodType(e.target.value)}
+                                >
+                                    <option value="">-- Chọn nhóm máu --</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </Form.Control>
+                            </Form.Group>
 
+                            <Form.Group className="mb-3" controlId="formMedicationAllergies">
+                                <Form.Label>Dị ứng thuốc</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={2}
+                                    value={medicationAllergies}
+                                    onChange={(e) => setMedicationAllergies(e.target.value)}
+                                    placeholder="Liệt kê các loại thuốc bạn bị dị ứng..."
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3" controlId="formCurrentMedications">
+                                <Form.Label>Thuốc đang sử dụng</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={2}
+                                    value={currentMedications}
+                                    onChange={(e) => setCurrentMedications(e.target.value)}
+                                    placeholder="Liệt kê các loại thuốc bạn đang sử dụng..."
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3" controlId="formCurrentTreatments">
+                                <Form.Label>Bệnh đang điều trị</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={2}
+                                    value={currentTreatments}
+                                    onChange={(e) => setCurrentTreatments(e.target.value)}
+                                    placeholder="Các bệnh lý bạn đang được điều trị..."
+                                />
+                            </Form.Group>
                             <div className="d-grid gap-2">
                                 <Button variant="primary" type="submit" disabled={loading}>
                                     {loading ? (

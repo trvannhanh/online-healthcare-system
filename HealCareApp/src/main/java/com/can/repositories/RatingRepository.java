@@ -11,12 +11,25 @@ import java.util.Map;
  */
 public interface RatingRepository {
     List<Rating> getAllRatings(Map<String, String> params);
+
     Rating getRatingById(Integer id);
+
     List<Rating> getRatingsByDoctorId(Integer doctorId);
+
     List<Rating> getRatingsByPatientId(Integer patientId);
+
     Rating addRating(Rating rating);
+
     Rating updateRating(Rating rating);
+
     void deleteRating(Integer ratingId);
+
     boolean isRatingExist(int ratingId);
+
     Double getAverageRatingForDoctor(Integer doctorId);
-} 
+
+    boolean isAppointmentRated(int appointmentId);
+
+    Rating getRatingByAppointmentId(Integer appointmentId);
+
+}

@@ -4,6 +4,7 @@ import Apis, { authApis, endpoints } from "../configs/Apis";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMyUser } from "../configs/MyContexts";
 import cookie from "react-cookies";
+import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 
 const Home = () => {
     const [doctors, setDoctors] = useState([]);
@@ -23,6 +24,12 @@ const Home = () => {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [newDateTime, setNewDateTime] = useState("");
 
+    //State cho ratings
+    const [ratings, setRatings] = useState({});
+    const [loadingRatings, setLoadingRatings] = useState(false);
+    const doctorRatings = {};
+
+
     const loadDoctors = async () => {
         try {
             setLoadingDoctors(true);
@@ -41,6 +48,8 @@ const Home = () => {
             else {
                 if (page === 1) setDoctors(res.data);
                 else setDoctors([...doctors, ...res.data]);
+                fetchDoctorRatings(res.data);
+
             }
         } catch (ex) {
             console.error("Load doctors error:", ex);
@@ -211,6 +220,78 @@ const Home = () => {
         }
     };
 
+    const renderStars = (rating) => {
+        if (!rating && rating !== 0) return null;
+
+        const stars = [];
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 >= 0.5;
+
+        // Thêm các sao đầy đủ
+        for (let i = 0; i < fullStars; i++) {
+            stars.push(<FaStar key={`full-${i}`} className="me-1" style={{ color: '#f1c40f', fontSize: '0.9rem' }} />);
+        }
+
+        // Thêm nửa sao nếu có
+        if (hasHalfStar) {
+            stars.push(<FaStarHalfAlt key="half" className="me-1" style={{ color: '#f1c40f', fontSize: '0.9rem' }} />);
+        }
+
+        // Thêm các sao rỗng còn lại
+        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+        for (let i = 0; i < emptyStars; i++) {
+            stars.push(<FaRegStar key={`empty-${i}`} className="me-1" style={{ color: '#f1c40f', fontSize: '0.9rem' }} />);
+        }
+
+        return (
+            <div className="d-flex align-items-center">
+                {stars}
+                <span className="ms-1 text-muted" style={{ fontSize: '0.9rem' }}>({rating.toFixed(1)})</span>
+            </div>
+        );
+    };
+
+    // Thêm hàm để fetch ratings cho các bác sĩ
+    const fetchDoctorRatings = async (doctorsToFetch) => {
+        if (doctorsToFetch.length === 0) return;
+
+        setLoadingRatings(true);
+        const newRatings = { ...ratings };
+
+        try {
+            // Lấy ratings cho các bác sĩ chưa có rating
+            const promises = doctorsToFetch
+                .filter(doctor => !doctorRatings[doctor.id])
+                .map(doctor =>
+                    Apis.get(endpoints['doctorAverageRating'](doctor.id))
+                        .then(response => {
+                            doctorRatings[doctor.id] = response.data;
+                            newRatings[doctor.id] = response.data;
+                        })
+                        .catch(err => {
+                            console.error(`Error fetching rating for doctor ${doctor.id}:`, err);
+                            doctorRatings[doctor.id] = 0;
+                            newRatings[doctor.id] = 0;
+                        })
+                );
+
+            // Thêm các ratings đã có sẵn trong cache
+            doctorsToFetch.forEach(doctor => {
+                if (doctorRatings[doctor.id] !== undefined) {
+                    newRatings[doctor.id] = doctorRatings[doctor.id];
+                }
+            });
+
+            await Promise.all(promises);
+            setRatings(newRatings);
+        } catch (error) {
+            console.error("Error fetching doctor ratings:", error);
+        } finally {
+            setLoadingRatings(false);
+        }
+    };
+
+    
     return (
         <>
             {/* Hero Section */}
@@ -340,6 +421,9 @@ const Home = () => {
                                         <Card.Text className="mb-3" style={{ fontSize: "0.95rem" }}>
                                             <strong>🩺</strong> {d.specialization.name}
                                         </Card.Text>
+                                                                                <div className="mb-2">
+                                            {ratings[d.id] !== undefined ? renderStars(ratings[d.id]) : <Spinner size="sm" />}
+                                        </div>
                                     </div>
                                     <div className="mt-auto d-flex justify-content-between gap-2">
                                         <Button 

@@ -17,6 +17,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
 import org.hibernate.Transaction;
 import org.springframework.stereotype.Repository;
@@ -41,17 +42,28 @@ public class ResponseRepositoryImpl implements ResponseRepository {
         CriteriaQuery<Response> query = builder.createQuery(Response.class);
         Root<Response> root = query.from(Response.class);
 
+        // Fetch đầy đủ mối quan hệ để tránh LazyInitializationException
+        root.fetch("rating", JoinType.LEFT).fetch("appointment", JoinType.LEFT).fetch("doctor", JoinType.LEFT)
+                .fetch("user", JoinType.LEFT);
+        root.fetch("rating", JoinType.LEFT).fetch("appointment", JoinType.LEFT).fetch("patient", JoinType.LEFT)
+                .fetch("user", JoinType.LEFT);
+
         if (params != null) {
             List<Predicate> predicates = new ArrayList<>();
 
             // Lọc theo doctorId
             String doctorId = params.get("doctorId");
             if (doctorId != null) {
-                predicates.add(builder.equal(root.get("rating").get("doctor").get("id"), Integer.parseInt(doctorId)));
+                predicates.add(builder.equal(root.get("rating").get("appointment").get("doctor").get("id"),
+                        Integer.parseInt(doctorId)));
             }
 
-            query.where(predicates.toArray(new Predicate[0]));
+            if (!predicates.isEmpty()) {
+                query.where(predicates.toArray(new Predicate[0]));
+            }
         }
+
+        query.distinct(true); // Tránh duplicate do fetch join
 
         Query q = session.createQuery(query);
 
@@ -72,13 +84,21 @@ public class ResponseRepositoryImpl implements ResponseRepository {
         CriteriaQuery<Response> query = builder.createQuery(Response.class);
         Root<Response> root = query.from(Response.class);
 
-        // Fetch các mối quan hệ liên quan
-        root.fetch("rating", JoinType.LEFT);
+        // Fetch đầy đủ các mối quan hệ liên quan
+        root.fetch("rating", JoinType.LEFT).fetch("appointment", JoinType.LEFT).fetch("doctor", JoinType.LEFT)
+                .fetch("user", JoinType.LEFT);
+        root.fetch("rating", JoinType.LEFT).fetch("appointment", JoinType.LEFT).fetch("patient", JoinType.LEFT)
+                .fetch("user", JoinType.LEFT);
 
         // Điều kiện lọc theo ID
         query.where(builder.equal(root.get("id"), id));
+        query.distinct(true); // Tránh duplicate
 
-        return session.createQuery(query).uniqueResult();
+        try {
+            return session.createQuery(query).getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
@@ -88,7 +108,15 @@ public class ResponseRepositoryImpl implements ResponseRepository {
         CriteriaQuery<Response> query = builder.createQuery(Response.class);
         Root<Response> root = query.from(Response.class);
 
-        query.where(builder.equal(root.get("rating").get("doctor").get("id"), doctorId));
+        // Fetch đầy đủ các mối quan hệ liên quan
+        root.fetch("rating", JoinType.LEFT).fetch("appointment", JoinType.LEFT).fetch("doctor", JoinType.LEFT)
+                .fetch("user", JoinType.LEFT);
+        root.fetch("rating", JoinType.LEFT).fetch("appointment", JoinType.LEFT).fetch("patient", JoinType.LEFT)
+                .fetch("user", JoinType.LEFT);
+
+        query.where(builder.equal(root.get("rating").get("appointment").get("doctor").get("id"), doctorId));
+        query.distinct(true); // Tránh duplicate
+
         Query q = session.createQuery(query);
         return q.getResultList();
     }
@@ -114,9 +142,7 @@ public class ResponseRepositoryImpl implements ResponseRepository {
     @Override
     public Response updateResponse(Response response) {
         Session session = this.factory.getObject().getCurrentSession();
-        Transaction tx = session.beginTransaction();
         session.update(response);
-        tx.commit();
         return response;
     }
 
@@ -148,6 +174,38 @@ public class ResponseRepositoryImpl implements ResponseRepository {
             return (Response) q.getSingleResult();
         } catch (Exception e) {
             return null; // Trả về null nếu không tìm thấy Response
+        }
+    }
+
+    @Override
+    public boolean isRatingResponsed(int ratingId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Response> root = query.from(Response.class);
+
+        query.select(builder.count(root));
+        query.where(builder.equal(root.get("rating").get("id"), ratingId));
+
+        return session.createQuery(query).getSingleResult() > 0;
+    }
+
+    @Override
+    public Response getResponseByRatingId(Integer ratingId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Response> query = builder.createQuery(Response.class);
+        Root<Response> root = query.from(Response.class);
+
+        // Fetch rating để tránh lazy loading exception
+        root.fetch("rating", JoinType.INNER);
+
+        query.where(builder.equal(root.get("rating").get("id"), ratingId));
+
+        try {
+            return session.createQuery(query).getSingleResult();
+        } catch (NoResultException e) {
+            return null; // Trả về null nếu không tìm thấy phản hồi
         }
     }
 
