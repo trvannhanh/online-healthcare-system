@@ -26,9 +26,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import java.security.Principal;
+
 
 @RestController
-@RequestMapping("/api/secure/statistics")
+@RequestMapping("/api/secure")
 @CrossOrigin
 public class ApiStatisticsController {
     @Autowired
@@ -38,23 +40,14 @@ public class ApiStatisticsController {
     private UserService userService;
 
     // Thống kê số lượng bệnh nhân theo bác sĩ và khoảng thời gian
-    @GetMapping("/doctor/patients-count")
+    @GetMapping("/statistics/doctor/patients-count")
     public ResponseEntity<?> countPatientsByDoctor(
             @RequestParam(name = "fromDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
-            @RequestParam(name = "toDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate) {
+            @RequestParam(name = "toDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate,
+            Principal principal) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            String username = principal.getName();
             User currentUser = userService.getUserByUsername(username);
-            
-            if (currentUser == null) {
-                return new ResponseEntity<>("Không tìm thấy thông tin người dùng", HttpStatus.UNAUTHORIZED);
-            }
-            
-            // Kiểm tra người dùng hiện tại phải là bác sĩ
-            if (!currentUser.getRole().name().equals("DOCTOR")) {
-                return new ResponseEntity<>("Bạn không có quyền truy cập vào thống kê này", HttpStatus.FORBIDDEN);
-            }
             
             int count = statisticService.countDistinctPatientsByDoctorAndDateRange(currentUser.getId(), fromDate, toDate);
             return ResponseEntity.ok(count);
@@ -64,29 +57,15 @@ public class ApiStatisticsController {
     }
 
     // Thống kê số lượng bệnh nhân theo bác sĩ và tháng
-    @GetMapping("/doctor/patients-count-by-month")
+    @GetMapping("/statistics/doctor/patients-count-by-month")
     public ResponseEntity<?> countPatientsByDoctorAndMonth(
             @RequestParam(name = "year") Integer year,
-            @RequestParam(name = "month") Integer month) {
+            @RequestParam(name = "month") Integer month,
+            Principal principal) {
         try {
             // Xác thực người dùng hiện tại
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            String username = principal.getName();
             User currentUser = userService.getUserByUsername(username);
-            
-            if (currentUser == null) {
-                return new ResponseEntity<>("Không tìm thấy thông tin người dùng", HttpStatus.UNAUTHORIZED);
-            }
-            
-            // Kiểm tra người dùng hiện tại phải là bác sĩ
-            if (!currentUser.getRole().name().equals("DOCTOR")) {
-                return new ResponseEntity<>("Bạn không có quyền truy cập vào thống kê này", HttpStatus.FORBIDDEN);
-            }
-            
-            if (month < 1 || month > 12) {
-                return ResponseEntity.badRequest().body("Error: Month must be between 1 and 12.");
-            }
-            
             int count = statisticService.countDistinctPatientsByDoctorAndMonth(currentUser.getId(), year, month);
             return ResponseEntity.ok(count);
         } catch (Exception e) {
@@ -95,33 +74,47 @@ public class ApiStatisticsController {
     }
 
     // Thống kê số lượng bệnh nhân theo bác sĩ và quý
-    @GetMapping("/doctor/patients-count-by-quarter")
+    @GetMapping("/statistics/doctor/patients-count-by-quarter")
     public ResponseEntity<?> countPatientsByDoctorAndQuarter(
             @RequestParam(name = "year") Integer year,
-            @RequestParam(name = "quarter") Integer quarter) {
+            @RequestParam(name = "quarter") Integer quarter,
+            Principal principal) {
         try {
             // Xác thực người dùng hiện tại
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            String username = principal.getName();
             User currentUser = userService.getUserByUsername(username);
-            
-            if (currentUser == null) {
-                return new ResponseEntity<>("Không tìm thấy thông tin người dùng", HttpStatus.UNAUTHORIZED);
-            }
-            
-            // Kiểm tra người dùng hiện tại phải là bác sĩ
-            if (!currentUser.getRole().name().equals("DOCTOR")) {
-                return new ResponseEntity<>("Bạn không có quyền truy cập vào thống kê này", HttpStatus.FORBIDDEN);
-            }
-            
-            if(quarter < 1 || quarter > 4) {
-                return ResponseEntity.badRequest().body("Error: Quarter must be between 1 and 4.");
-            }
-            
             int count = statisticService.countDistinctPatientsByDoctorAndQuarter(currentUser.getId(), year, quarter);
             return ResponseEntity.ok(count);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
+
+        @GetMapping("/statistics/disease-type-by-month")
+    public ResponseEntity<?> getTopDiseaseTypesByDoctorSortedByMonth(
+            @RequestParam(name = "year", required = true) Integer year,
+            Principal principal) {
+        try {
+            String username = principal.getName();
+            Map<String, Long> diseaseStats = statisticService.getTopDiseaseTypesByDoctorSortedByMonth(username, year);
+            return new ResponseEntity<>(diseaseStats, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/statistics/disease-type-by-quarter")
+    public ResponseEntity<?> getTopDiseaseTypesByDoctorSortedByQuarter(
+            @RequestParam(name = "year", required = true) Integer year,
+            Principal principal) {
+        try {
+            String username = principal.getName();            
+            Map<String, Long> diseaseStats = statisticService.getTopDiseaseTypesByDoctorSortedByQuarter(username, year);
+            return new ResponseEntity<>(diseaseStats, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -9,11 +9,13 @@ import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.can.pojo.Appointment;
 import com.can.pojo.Doctor;
 import com.can.pojo.Patient;
 import com.can.pojo.Rating;
 import com.can.repositories.RatingRepository;
 
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -42,23 +44,36 @@ public class RatingRepositoryImpl implements RatingRepository {
         CriteriaQuery<Rating> query = builder.createQuery(Rating.class);
         Root<Rating> root = query.from(Rating.class);
 
+        // Mặc định fetch appointment để tránh lazy loading exception
+        root.fetch("appointment", JoinType.INNER);
+
         if (params != null) {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Lọc theo doctor_id
+            // Lọc theo doctor_id - thông qua appointment
             String doctorId = params.get("doctorId");
             if (doctorId != null) {
-                predicates.add(builder.equal(root.get("doctor").get("id"), Integer.parseInt(doctorId)));
+                predicates.add(
+                        builder.equal(root.get("appointment").get("doctor").get("id"), Integer.parseInt(doctorId)));
             }
 
-            // Lọc theo patient_id
+            // Lọc theo patient_id - thông qua appointment
             String patientId = params.get("patientId");
             if (patientId != null) {
-                predicates.add(builder.equal(root.get("patient").get("id"), Integer.parseInt(patientId)));
+                predicates.add(
+                        builder.equal(root.get("appointment").get("patient").get("id"), Integer.parseInt(patientId)));
+            }
+
+            // Lọc theo appointment_id
+            String appointmentId = params.get("appointmentId");
+            if (appointmentId != null) {
+                predicates.add(builder.equal(root.get("appointment").get("id"), Integer.parseInt(appointmentId)));
             }
 
             // Áp dụng các điều kiện lọc
-            query.where(predicates.toArray(new Predicate[0]));
+            if (!predicates.isEmpty()) {
+                query.where(predicates.toArray(new Predicate[0]));
+            }
         }
 
         Query hqlQuery = session.createQuery(query);
@@ -81,13 +96,22 @@ public class RatingRepositoryImpl implements RatingRepository {
         CriteriaQuery<Rating> q = b.createQuery(Rating.class);
         Root<Rating> root = q.from(Rating.class);
 
-        // Fetch các mối quan hệ liên quan
-        root.fetch("doctor", JoinType.LEFT).fetch("user", JoinType.LEFT);
-        root.fetch("patient", JoinType.LEFT).fetch("user", JoinType.LEFT);
+        // Fetch appointment và các mối quan hệ liên quan
+        root.fetch("appointment", JoinType.LEFT)
+                .fetch("doctor", JoinType.LEFT)
+                .fetch("user", JoinType.LEFT);
+
+        root.fetch("appointment", JoinType.LEFT)
+                .fetch("patient", JoinType.LEFT)
+                .fetch("user", JoinType.LEFT);
 
         q.where(b.equal(root.get("id"), id));
 
-        return s.createQuery(q).uniqueResult();
+        try {
+            return s.createQuery(q).getSingleResult();
+        } catch (NoResultException ex) {
+            return null;
+        }
     }
 
     @Override
@@ -97,9 +121,11 @@ public class RatingRepositoryImpl implements RatingRepository {
         CriteriaQuery<Rating> query = builder.createQuery(Rating.class);
         Root<Rating> root = query.from(Rating.class);
 
-        query.where(builder.equal(root.get("doctor").get("id"), doctorId));
-        Query hqlQuery = session.createQuery(query);
-        return hqlQuery.getResultList();
+        // Join với appointment để lấy thông tin doctor
+        root.fetch("appointment", JoinType.INNER);
+        query.where(builder.equal(root.get("appointment").get("doctor").get("id"), doctorId));
+
+        return session.createQuery(query).getResultList();
     }
 
     @Override
@@ -109,33 +135,18 @@ public class RatingRepositoryImpl implements RatingRepository {
         CriteriaQuery<Rating> query = builder.createQuery(Rating.class);
         Root<Rating> root = query.from(Rating.class);
 
-        query.where(builder.equal(root.get("patient").get("id"), patientId));
-        Query hqlQuery = session.createQuery(query);
-        return hqlQuery.getResultList();
+        // Fetch appointment thay vì join để eager loading data
+        root.fetch("appointment", JoinType.INNER);
+
+        // Sử dụng điều kiện lọc qua path từ root thay vì từ join
+        query.where(builder.equal(root.get("appointment").get("patient").get("id"), patientId));
+
+        return session.createQuery(query).getResultList();
     }
 
     @Override
     public Rating addRating(Rating rating) {
         Session s = this.factory.getObject().getCurrentSession();
-
-        // Kiểm tra xem doctor có tồn tại hay không
-        if (rating.getDoctor() == null) {
-            throw new RuntimeException("Doctor is required for a Rating");
-        }
-        Doctor doctor = s.get(Doctor.class, rating.getDoctor().getId());
-        if (doctor == null) {
-            throw new RuntimeException("Doctor with ID " + rating.getDoctor().getId() + " not found");
-        }
-
-        // Kiểm tra xem patient có tồn tại hay không
-        if (rating.getPatient() == null) {
-            throw new RuntimeException("Patient is required for a Rating");
-        }
-        Patient patient = s.get(Patient.class, rating.getPatient().getId());
-        if (patient == null) {
-            throw new RuntimeException("Patient with ID " + rating.getPatient().getId() + " not found");
-        }
-
         // Lưu rating vào cơ sở dữ liệu
         s.persist(rating);
         return rating;
@@ -144,9 +155,7 @@ public class RatingRepositoryImpl implements RatingRepository {
     @Override
     public Rating updateRating(Rating rating) {
         Session session = this.factory.getObject().getCurrentSession();
-        Transaction transaction = session.beginTransaction();
         session.update(rating);
-        transaction.commit();
         return rating;
     }
 
@@ -175,8 +184,7 @@ public class RatingRepositoryImpl implements RatingRepository {
 
         // Tính trung bình cột "score" cho bác sĩ có ID được truyền vào
         query.select(builder.avg(root.get("rating")));
-        query.where(builder.equal(root.get("doctor").get("id"), doctorId));
-
+        query.where(builder.equal(root.get("appointment").get("doctor").get("id"), doctorId));
         try {
             Double average = session.createQuery(query).getSingleResult();
             return average != null ? average : 0.0; // Trả về 0.0 nếu không có đánh giá
@@ -187,4 +195,35 @@ public class RatingRepositoryImpl implements RatingRepository {
         }
     }
 
+    @Override
+    public boolean isAppointmentRated(int appointmentId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Rating> root = query.from(Rating.class);
+
+        query.select(builder.count(root));
+        query.where(builder.equal(root.get("appointment").get("id"), appointmentId));
+
+        return session.createQuery(query).getSingleResult() > 0;
+    }
+
+    @Override
+    public Rating getRatingByAppointmentId(Integer appointmentId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Rating> query = builder.createQuery(Rating.class);
+        Root<Rating> root = query.from(Rating.class);
+
+        // Fetch appointment để tránh lazy loading exception
+        root.fetch("appointment", JoinType.INNER);
+
+        query.where(builder.equal(root.get("appointment").get("id"), appointmentId));
+
+        try {
+            return session.createQuery(query).getSingleResult();
+        } catch (NoResultException e) {
+            return null; // Trả về null nếu không tìm thấy đánh giá
+        }
+    }
 }

@@ -27,7 +27,7 @@ public class PatientSelfReportRepositoryImpl implements PatientSelfReportReposit
     }
 
     @Override
-    public PatientSelfReport getPatientSelfReportByPatientId(int patientId) {
+    public PatientSelfReport getPatientSelfReportByPatientId(int patientId, String username) {
         Session s = this.factory.getObject().getCurrentSession();
         CriteriaBuilder b = s.getCriteriaBuilder();
         CriteriaQuery<PatientSelfReport> q = b.createQuery(PatientSelfReport.class);

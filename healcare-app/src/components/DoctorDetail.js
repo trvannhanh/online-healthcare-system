@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Button, Container, Row, Col, Spinner, Alert, Form } from 'react-bootstrap';
+import { Button, Container, Row, Col, Spinner, Alert, Form, Card } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import Apis, { authApis, endpoints } from '../configs/Apis';
 import { useMyUser } from '../configs/MyContexts';
-import { FaStar, FaHospital, FaCalendarAlt } from 'react-icons/fa';
-
+import { FaStar, FaStarHalfAlt, FaRegStar, FaHospital, FaCalendarAlt } from 'react-icons/fa';
 const DoctorDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -18,12 +17,21 @@ const DoctorDetail = () => {
     const [selectedSlot, setSelectedSlot] = useState('');
     const [slotsLoading, setSlotsLoading] = useState(false);
 
+    const [rating, setRating] = useState(0);
+    const [loadingRating, setLoadingRating] = useState(false);
+
+    const [doctorRatings, setDoctorRatings] = useState([]);
+    const [loadingDoctorRatings, setLoadingDoctorRatings] = useState(false);
+
     // Lấy thông tin chi tiết bác sĩ
     const loadDoctor = async () => {
         try {
             setLoading(true);
             let res = await Apis.get(`${endpoints['doctors']}/${id}`);
             setDoctor(res.data);
+
+            fetchDoctorRatingAverage(id);
+            fetchDoctorRatings(id);
         } catch (ex) {
             console.error(ex);
             setError('Không thể tải thông tin bác sĩ. Vui lòng thử lại sau.');
@@ -78,6 +86,92 @@ const DoctorDetail = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Lấy rating trung bình của bác sĩ
+    const fetchDoctorRatingAverage = async (doctorId) => {
+        try {
+            setLoadingRating(true);
+            const response = await Apis.get(endpoints['doctorAverageRating'](doctorId));
+            setRating(response.data);
+        } catch (error) {
+            console.error("Error fetching doctor rating:", error);
+            // Không hiển thị lỗi cho người dùng để tránh phiền nhiễu
+        } finally {
+            setLoadingRating(false);
+        }
+    };
+
+    //Lấy tất cả đánh giá về bác sĩ
+    const fetchDoctorRatings = async (doctorId) => {
+        try {
+            setLoadingDoctorRatings(true);
+            const response = await Apis.get(endpoints['ratingForDoctor'](doctorId));
+            const processedData = response.data.map(item => {
+                // Nếu item không có cấu trúc phù hợp, tạo cấu trúc mới
+                if (typeof item === 'object' && item !== null) {
+                    // Kiểm tra xem item có phải là RatingResponse với rating property
+                    if (item.rating && typeof item.rating === 'object') {
+                        return {
+                            id: item.rating.id || item.id,
+                            appointment: item.rating.appointment || {},
+                            rating: item.rating.rating || 0,
+                            comment: item.rating.comment || "Không có nhận xét",
+                            ratingDate: item.rating.ratingDate || item.rating.createdAt,
+                            response: item.response || null
+                        };
+                    } else {
+                        return {
+                            id: item.id || 0,
+                            appointment: item.appointment || {},
+                            rating: item.rating || 0,
+                            comment: typeof item.comment === 'string' ? item.comment : "Không có nhận xét",
+                            ratingDate: item.ratingDate || item.createdAt,
+                            response: item.response || null
+                        };
+                    }
+                }
+                return null;
+            }).filter(Boolean);
+
+            console.log("Processed data:", processedData);
+            setDoctorRatings(processedData);
+        } catch (error) {
+            console.error("Error fetching doctor ratings:", error);
+            setDoctorRatings([]);
+
+        } finally {
+            setLoadingDoctorRatings(false);
+        }
+    };
+
+    const formatDate = (dateString) => {
+        const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+        return new Date(dateString).toLocaleString('vi-VN', options);
+    };
+
+    const renderStars = (rating) => {
+        const stars = [];
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 >= 0.5;
+
+        // Thêm các sao đầy đủ
+        for (let i = 0; i < fullStars; i++) {
+            stars.push(<FaStar key={`full-${i}`} className="me-1" style={{ color: '#f1c40f' }} />);
+        }
+
+        // Thêm nửa sao nếu có
+        if (hasHalfStar) {
+            stars.push(<FaStarHalfAlt key="half" className="me-1" style={{ color: '#f1c40f' }} />);
+        }
+
+        // Thêm các sao rỗng còn lại
+        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+        for (let i = 0; i < emptyStars; i++) {
+            stars.push(<FaRegStar key={`empty-${i}`} className="me-1" style={{ color: '#f1c40f' }} />);
+        }
+
+        return stars;
     };
 
     useEffect(() => {
@@ -146,9 +240,12 @@ const DoctorDetail = () => {
                     <p style={{ color: '#666', fontSize: '1rem' }}>
                         <FaHospital className="me-2" /> {doctor.hospital.name}
                     </p>
-                    <div className="d-flex align-items-center mb-2">
-                        <FaStar className="me-1" style={{ color: '#f1c40f' }} />
-                        <span>{doctor.rating} ({doctor.experienceYears} năm kinh nghiệm)</span>
+                    <div className="d-flex align-items-center mb-3">
+                        {/* Trung bình đánh giá của bác sĩ */}
+                        {renderStars(rating)}
+                        <span className="fw-semibold ms-2" style={{ color: '#333' }}>
+                            {rating ? rating.toFixed(1) : "N/A"} ({doctor?.experienceYears} năm kinh nghiệm)
+                        </span>
                     </div>
                 </Col>
             </Row>
@@ -212,6 +309,78 @@ const DoctorDetail = () => {
                         </>
                     ) : (
                         <Alert variant="info">Không có khung giờ trống vào ngày này.</Alert>
+                    )}
+                </Col>
+            </Row>
+            {/* Phần hiển thị đánh giá */}
+            <Row className="mt-5">
+                <Col md={12}>
+                    <h3 style={{ color: '#1a3c34', fontWeight: 'bold', marginBottom: '20px' }}>
+                        Đánh giá từ bệnh nhân
+                    </h3>
+
+                    {loadingDoctorRatings ? (
+                        <div className="text-center my-4">
+                            <Spinner animation="border" variant="primary" />
+                            <p>Đang tải đánh giá...</p>
+                        </div>
+                    ) : doctorRatings.length > 0 ? (
+                        <div>
+                            {doctorRatings.map((item, index) => (
+                                <Card key={index} className="mb-3 border-0 shadow-sm">
+                                    <Card.Body>
+                                        <div className="d-flex align-items-center mb-2">
+                                            <img
+                                                src={item.appointment?.patient?.user?.avatar || '/images/user-placeholder.jpg'}
+                                                alt="Avatar"
+                                                className="rounded-circle me-3"
+                                                style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                                            />
+                                            <div>
+                                                <h5 className="mb-0">
+                                                    {item.appointment?.patient?.user?.firstName} {item.appointment?.patient?.user?.lastName || item.appointment?.patient?.user?.username || "Người dùng ẩn danh"}
+                                                </h5>
+                                                <small className="text-muted">{formatDate(item.ratingDate || item.createdAt)}</small>
+                                            </div>
+                                        </div>
+                                        <div className="mb-2">
+                                            {renderStars(item.rating || 0)}
+                                            <span className="ms-2">({item.rating || 0}/5)</span>
+                                        </div>
+                                        <Card.Text style={{ color: '#555' }}>
+                                            {item.comment || "Không có nhận xét."}
+                                        </Card.Text>
+
+                                        {/* Hiển thị phản hồi từ bác sĩ nếu có */}
+                                        {item.response && (
+                                            <div className="mt-3 p-3 bg-light rounded">
+                                                <div className="d-flex align-items-center mb-2">
+                                                    <img
+                                                        src={doctor.user.avatar || '/images/doctor-placeholder.jpg'}
+                                                        alt="Doctor Avatar"
+                                                        className="rounded-circle me-2"
+                                                        style={{ width: '30px', height: '30px', objectFit: 'cover' }}
+                                                    />
+                                                    <div>
+                                                        <h6 className="mb-0 text-primary">
+                                                            BS. {doctor.user.firstName} {doctor.user.lastName}
+                                                        </h6>
+                                                        <small className="text-muted">{formatDate(item.response.responseDate || item.response.createdAt)}</small>
+                                                    </div>
+                                                </div>
+                                                <Card.Text style={{ color: '#444' }}>
+                                                    {item.response.content || ""}
+                                                </Card.Text>
+                                            </div>
+                                        )}
+                                    </Card.Body>
+                                </Card>
+                            ))}
+                        </div>
+                    ) : (
+                        <Alert variant="light" className="text-center border">
+                            Chưa có đánh giá nào cho bác sĩ này.
+                        </Alert>
                     )}
                 </Col>
             </Row>

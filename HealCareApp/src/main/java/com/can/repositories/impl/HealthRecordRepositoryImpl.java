@@ -122,39 +122,30 @@ public class HealthRecordRepositoryImpl implements HealthRecordRepository {
     public HealthRecord addHealthRecord(HealthRecord healthRecord) {
         Session s = this.factory.getObject().getCurrentSession();
 
-        if (healthRecord.getPatient() == null) {
-            throw new RuntimeException("Patient is required for a Health Record");
-        }
-
-        Patient patient = s.get(Patient.class, healthRecord.getPatient().getId());
-        if (patient == null) {
-            throw new RuntimeException("Patient with ID " + healthRecord.getPatient().getId() + " not found");
-        }
-
         s.persist(healthRecord);
         return healthRecord;
     }
 
-    @Override
-    public HealthRecord updateHealthRecord(HealthRecord healthRecord) {
-        Session s = this.factory.getObject().getCurrentSession();
+    // @Override
+    // public HealthRecord updateHealthRecord(HealthRecord healthRecord) {
+    //     Session s = this.factory.getObject().getCurrentSession();
 
-        HealthRecord existing = s.get(HealthRecord.class, healthRecord.getId());
-        if (existing == null) {
-            throw new RuntimeException("Health Record with ID " + healthRecord.getId() + " not found");
-        }
+    //     HealthRecord existing = s.get(HealthRecord.class, healthRecord.getId());
+    //     if (existing == null) {
+    //         throw new RuntimeException("Health Record with ID " + healthRecord.getId() + " not found");
+    //     }
 
-        if (healthRecord.getPatient() == null) {
-            throw new RuntimeException("Patient is required for a Health Record");
-        }
+    //     if (healthRecord.getPatient() == null) {
+    //         throw new RuntimeException("Patient is required for a Health Record");
+    //     }
 
-        Patient patient = s.get(Patient.class, healthRecord.getPatient().getId());
-        if (patient == null) {
-            throw new RuntimeException("Patient with ID " + healthRecord.getPatient().getId() + " not found");
-        }
+    //     Patient patient = s.get(Patient.class, healthRecord.getPatient().getId());
+    //     if (patient == null) {
+    //         throw new RuntimeException("Patient with ID " + healthRecord.getPatient().getId() + " not found");
+    //     }
 
-        return (HealthRecord) s.merge(healthRecord);
-    }
+    //     return (HealthRecord) s.merge(healthRecord);
+    // }
 
     @Override
     public void deleteHealthRecord(int id) {

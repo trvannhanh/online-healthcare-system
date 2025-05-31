@@ -15,10 +15,10 @@ public class PatientSelfReportServiceImpl implements PatientSelfReportService {
 
     @Autowired
     private PatientSelfReportRepository patientSelfReportRepository;
-    
+
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private PatientService patientService;
 
@@ -27,24 +27,10 @@ public class PatientSelfReportServiceImpl implements PatientSelfReportService {
         return patientSelfReportRepository.getPatientSelfReportById(id);
     }
 
+    // Bác sĩ dùng để lấy báo cáo tự đánh giá của bệnh nhân theo ID bệnh nhân
     @Override
-    public PatientSelfReport getPatientSelfReportByPatientId(int patientId) {
-        return patientSelfReportRepository.getPatientSelfReportByPatientId(patientId);
-    }
-
-    @Override
-    public PatientSelfReport getCurrentPatientSelfReport(String username) {
-        User currentUser = userService.getUserByUsername(username);
-        if (currentUser == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        // Ensure user is a patient
-        if (!currentUser.getRole().name().equals("PATIENT")) {
-            throw new RuntimeException("Access denied. Only patients can access this resource");
-        }
-
-        return patientSelfReportRepository.getPatientSelfReportByPatientId(currentUser.getId());
+    public PatientSelfReport getPatientSelfReportByPatientId(int patientId, String username) {
+        return patientSelfReportRepository.getPatientSelfReportByPatientId(patientId, username);
     }
 
     @Override
@@ -78,25 +64,50 @@ public class PatientSelfReportServiceImpl implements PatientSelfReportService {
             throw new RuntimeException("User not found");
         }
 
-        // Ensure user is a patient
-        if (!currentUser.getRole().name().equals("PATIENT")) {
-            throw new RuntimeException("Access denied. Only patients can update their self reports");
-        }
+        // Lấy thông tin báo cáo hiện có
+        PatientSelfReport existingReport;
 
-        // Get existing report
-        PatientSelfReport existingReport = patientSelfReportRepository.getPatientSelfReportByPatientId(currentUser.getId());
-        if (existingReport == null) {
-            throw new RuntimeException("No self report found for this patient");
-        }
+        // Phân quyền dựa trên vai trò người dùng
+        if (currentUser.getRole().name().equals("PATIENT")) {
+            // Bệnh nhân chỉ có thể cập nhật báo cáo của chính họ
+            existingReport = patientSelfReportRepository.getPatientSelfReportByPatientId(currentUser.getId(), username);
 
-        // Ensure patient is updating their own report
-        if (existingReport.getPatient().getId() != currentUser.getId()) {
-            throw new RuntimeException("You can only update your own self report");
-        }
+            if (existingReport == null) {
+                throw new RuntimeException("No self report found for this patient");
+            }
 
-        // Set ID and patient from existing report
-        patientSelfReport.setId(existingReport.getId());
-        patientSelfReport.setPatient(existingReport.getPatient());
+            // Đảm bảo bệnh nhân đang cập nhật báo cáo của chính họ
+            if (existingReport.getPatient().getId() != currentUser.getId()) {
+                throw new RuntimeException("You can only update your own self report");
+            }
+
+            // Set ID và patient từ báo cáo hiện có
+            patientSelfReport.setId(existingReport.getId());
+            patientSelfReport.setPatient(existingReport.getPatient());
+
+        } else if (currentUser.getRole().name().equals("DOCTOR")) {
+            // Bác sĩ cần patientId được chỉ định để cập nhật
+            if (patientSelfReport.getPatient() == null || patientSelfReport.getPatient().getId() == 0) {
+                throw new RuntimeException("Patient ID is required when a doctor updates a self report");
+            }
+
+            // Lấy báo cáo hiện tại của bệnh nhân
+            existingReport = patientSelfReportRepository.getPatientSelfReportByPatientId(
+                    patientSelfReport.getPatient().getId(), username);
+
+            if (existingReport == null) {
+                throw new RuntimeException("No self report found for this patient");
+            }
+
+            // Giữ lại patient object và id
+            patientSelfReport.setId(existingReport.getId());
+
+            // Giữ lại các trường chỉ bệnh nhân được phép cập nhật nếu cần
+            // (Ví dụ: nếu bác sĩ không được phép cập nhật một số thông tin cá nhân)
+            // Trong trường hợp này, tôi giả định bác sĩ có thể cập nhật tất cả các trường
+        } else {
+            throw new RuntimeException("Access denied. Only patients and doctors can update self reports");
+        }
 
         return patientSelfReportRepository.updatePatientSelfReport(patientSelfReport);
     }

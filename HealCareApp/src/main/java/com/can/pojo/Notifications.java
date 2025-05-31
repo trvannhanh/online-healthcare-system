@@ -42,6 +42,9 @@ public class Notifications {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "is_read", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean isRead;
     // Getters and Setters
 
     /**
@@ -112,5 +115,19 @@ public class Notifications {
      */
     public void setUser(User user) {
         this.user = user;
+    }
+
+    /**
+     * @return the isRead
+     */
+    public boolean isRead() {
+        return isRead;
+    }
+
+    /**
+     * @param isRead the isRead to set
+     */
+    public void setIsRead(Boolean isRead) {
+        this.isRead = isRead;
     }
 }

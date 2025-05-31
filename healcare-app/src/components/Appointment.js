@@ -23,13 +23,17 @@ const Appointment = () => {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [newDateTime, setNewDateTime] = useState('');
 
+  // Để lưu trạng thái đánh giá cho từng lịch hẹn
+  const [appointmentRatings, setAppointmentRatings] = useState({});
+  const [ratingLoading, setRatingLoading] = useState(false);
+
   const loadAppointments = async () => {
     if (!user) return;
 
     try {
       setLoadingAppointments(true);
       let url = `${endpoints['appointmentsFilter']}?page=${page}`;
-      
+
       if (user.role === 'PATIENT') {
         url += `&patientId=${user.id}`;
       } else if (user.role === 'DOCTOR') {
@@ -75,6 +79,8 @@ const Appointment = () => {
 
   useEffect(() => {
     if (page > 0 && user) loadAppointments();
+
+
   }, [page, filters, user]);
 
   const loadMore = () => {
@@ -176,6 +182,7 @@ const Appointment = () => {
       setLoadingReschedule(false);
     }
   };
+
 
   return (
     <Container className="py-5">
@@ -309,8 +316,8 @@ const Appointment = () => {
                           className={`inline-block px-2 py-1 rounded-full text-xs font-semibold
                             ${appt.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                               appt.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
-                              appt.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                              'bg-red-100 text-red-800'}`}
+                                appt.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                                  'bg-red-100 text-red-800'}`}
                         >
                           {appt.status}
                         </span>
@@ -342,7 +349,7 @@ const Appointment = () => {
                                 'Hủy'
                               )}
                             </Button>
-                            
+
                           </>
                         )}
                         {user.role === 'DOCTOR' && appt.status === 'COMPLETED' && !appt.payment && (

@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface PatientSelfReportRepository {
     PatientSelfReport getPatientSelfReportById(int id);
-    PatientSelfReport getPatientSelfReportByPatientId(int patientId);
+    PatientSelfReport getPatientSelfReportByPatientId(int patientId, String username);
     PatientSelfReport addPatientSelfReport(PatientSelfReport patientSelfReport);
     PatientSelfReport updatePatientSelfReport(PatientSelfReport patientSelfReport);
     boolean existsByPatientId(int patientId);

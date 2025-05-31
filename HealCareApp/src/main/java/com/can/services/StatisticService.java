@@ -54,4 +54,11 @@ public interface StatisticService {
 
     Map<Integer, Map<String, Double>> getMonthlyRevenueByPaymentMethod(int year) throws ParseException;
 
+    //Thống kê loại bệnh phổ biến nhất trong một khoảng thời gian
+    // Map<String, Long> getTopDiseaseTypes(Date fromDate, Date toDate, int topN) throws ParseException;
+    // Map<Integer, Map<String, Long>> getMostCommonDiseaseByMonth(int year) throws ParseException;
+    // Map<Integer, Map<String, Long>> getMostCommonDiseaseByQuarter(int year) throws ParseException;
+    Map<String, Long> getTopDiseaseTypesByDoctorSortedByMonth(String username, int year) throws ParseException;
+    Map<String, Long> getTopDiseaseTypesByDoctorSortedByQuarter(String username, int year) throws ParseException;
+
 }

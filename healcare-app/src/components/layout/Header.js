@@ -91,6 +91,14 @@ const Header = () => {
                         {user && user.role === 'DOCTOR' && (
                             <Link to="/doctor/statistic" className="nav-link fs-6 text-dark fw-semibold">Thống kê bệnh nhân</Link>
                         )}
+                        {user && user.role === 'PATIENT' && (
+                            <Link to="/pending-rating" className="nav-link fs-6 text-dark fw-semibold">Quản lý đánh giá</Link>
+                        )}
+                        {user && user.role === 'DOCTOR' && (
+                            <Link to="/doctor/ratings" className="nav-link fs-6 text-dark fw-semibold">
+                                 Quản lý gửi phản hồi
+                            </Link>
+                        )}
                     </Nav>
 
                     {/* Search bar */}

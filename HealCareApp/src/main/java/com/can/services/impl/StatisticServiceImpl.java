@@ -9,7 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.can.pojo.Appointment;
 import com.can.pojo.Payment;
+import com.can.pojo.User;
+import com.can.services.DoctorService;
 import com.can.services.StatisticService;
+import com.can.services.UserService;
 import com.can.repositories.StatisticRepository;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +25,12 @@ public class StatisticServiceImpl implements StatisticService{
 
     @Autowired
     private StatisticRepository statisticRepo;
+
+        @Autowired
+    private DoctorService doctorService;
+
+    @Autowired
+    private UserService userService;
 
     @Override
     public List<Appointment> getAppointmentsCompleteByDateRange(Date fromDateStr, Date toDateStr)
@@ -125,4 +134,51 @@ public class StatisticServiceImpl implements StatisticService{
     public Map<Integer, Map<String, Double>> getMonthlyRevenueByPaymentMethod(int year) throws ParseException {
         return this.statisticRepo.getMonthlyRevenueByPaymentMethod(year);
     }
+
+    // @Override
+    // public Map<String, Long> getTopDiseaseTypes(Date fromDate, Date toDate, int topN) throws ParseException {
+    //     return this.statisticRepo.getTopDiseaseTypes(fromDate, toDate, topN);
+    // }
+
+    // @Override
+    // public Map<Integer, Map<String, Long>> getMostCommonDiseaseByMonth(int year) throws ParseException {
+    //     return this.statisticRepo.getMostCommonDiseaseByMonth(year);
+    // }
+
+    // @Override
+    // public Map<Integer, Map<String, Long>> getMostCommonDiseaseByQuarter(int year) throws ParseException {
+    //     return this.statisticRepo.getMostCommonDiseaseByQuarter(year);
+    // }
+
+@Override
+public Map<String, Long> getTopDiseaseTypesByDoctorSortedByMonth(String username, int year) throws ParseException {
+    User currentUser = userService.getUserByUsername(username);
+    
+    // Kiểm tra người dùng là bác sĩ và đã được duyệt
+    if (!currentUser.getRole().name().equals("DOCTOR")) {
+        throw new RuntimeException("Chỉ bác sĩ mới có thể xem thống kê này");
+    }
+    
+    if (!doctorService.isDoctorVerified(currentUser.getId())) {
+        throw new RuntimeException("Bác sĩ chưa được xác minh không thể xem thống kê");
+    }
+    
+    return this.statisticRepo.getTopDiseaseTypesByDoctorSortedByMonth(currentUser.getId(), year);
+}
+
+@Override
+public Map<String, Long> getTopDiseaseTypesByDoctorSortedByQuarter(String username, int year) throws ParseException {
+    User currentUser = userService.getUserByUsername(username);
+    
+    // Kiểm tra người dùng là bác sĩ và đã được duyệt
+    if (!currentUser.getRole().name().equals("DOCTOR")) {
+        throw new RuntimeException("Chỉ bác sĩ mới có thể xem thống kê này");
+    }
+    
+    if (!doctorService.isDoctorVerified(currentUser.getId())) {
+        throw new RuntimeException("Bác sĩ chưa được xác minh không thể xem thống kê");
+    }
+    
+    return this.statisticRepo.getTopDiseaseTypesByDoctorSortedByQuarter(currentUser.getId(), year);
+}
 }

@@ -62,10 +62,9 @@ public class ApiPatientController {
     
     // Get the current patient's profile
     @GetMapping("/secure/patient/profile")
-    public ResponseEntity<?> getPatientProfile() {
+    public ResponseEntity<?> getPatientProfile(Principal principal) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            String username = principal.getName();
             System.out.println("Username: " + username);
             Patient patient = patientService.getCurrentPatientProfile(username);
             // Tạo đối tượng phản hồi
@@ -86,7 +85,7 @@ public class ApiPatientController {
             selfReportData.put("exists", hasReport);
             
             if (hasReport) {
-                PatientSelfReport report = patientSelfReportService.getCurrentPatientSelfReport(username);
+                PatientSelfReport report = patientSelfReportService.getPatientSelfReportByPatientId(patient.getId(), username);
                 selfReportData.put("report", report);
             } else {
                 selfReportData.put("message", "Bạn chưa có báo cáo sức khỏe. Hãy tạo mới.");
@@ -117,12 +116,10 @@ public class ApiPatientController {
     // Cập nhật thông tin cá nhân
     @PutMapping("/secure/patient/profile")
     public ResponseEntity<?> updatePatientProfile(
-            @RequestBody Patient patient) {
+            @RequestBody Patient patient, Principal principal) {
 
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
-            Patient updatedPatient = patientService.updatePatientProfile(username, patient);
+            Patient updatedPatient = patientService.updatePatientProfile(principal.getName(), patient);
             return ResponseEntity.ok(updatedPatient);
         } catch (Exception e) {
             e.printStackTrace();
