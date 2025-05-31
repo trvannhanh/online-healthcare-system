@@ -57,8 +57,10 @@ const ChatRoom = () => {
   useEffect(() => {
     const checkJitsiScript = () => {
       if (window.JitsiMeetExternalAPI) {
+        console.log("Jitsi Meet script loaded successfully.");
         setJitsiScriptLoaded(true);
       } else {
+        console.log("Jitsi Meet script not loaded yet, retrying...");
         setTimeout(checkJitsiScript, 500);
       }
     };
@@ -66,6 +68,7 @@ const ChatRoom = () => {
     checkJitsiScript();
 
     const handleScriptError = () => {
+      console.error("Failed to load Jitsi Meet script.");
       setError("Không thể tải Jitsi Meet script. Vui lòng kiểm tra kết nối hoặc domain.");
     };
     window.addEventListener('error', handleScriptError);
@@ -79,18 +82,14 @@ const ChatRoom = () => {
   useEffect(() => {
     if (showVideoCall && jitsiScriptLoaded && !jitsiApi) {
       if (!jitsiContainerRef.current) {
-        const timer = setTimeout(() => {
-          if (jitsiContainerRef.current) {
-            initializeJitsi();
-          } else {
-            setError("Không thể tìm thấy container cho video call. Vui lòng thử lại.");
-          }
-        }, 100);
-        return () => clearTimeout(timer);
-      } else {
-        initializeJitsi();
+        console.error("Jitsi container not found.");
+        setError("Không thể tìm thấy container cho video call. Vui lòng thử lại.");
+        return;
       }
+      console.log("Initializing Jitsi...");
+      initializeJitsi();
     } else if (showVideoCall && !jitsiScriptLoaded) {
+      console.warn("Jitsi script not loaded yet.");
       setError("Jitsi Meet script chưa tải xong. Vui lòng chờ hoặc làm mới trang.");
     }
   }, [showVideoCall, jitsiScriptLoaded, jitsiApi]);
@@ -259,25 +258,42 @@ const ChatRoom = () => {
   // Khởi tạo Jitsi Meet API
   const initializeJitsi = () => {
     if (!jitsiContainerRef.current) {
+      console.error("Jitsi container is missing during initialization.");
       setError("Không thể tìm thấy container cho video call.");
       return;
     }
     if (jitsiApi) {
+      console.log("Jitsi API already initialized.");
       return;
     }
 
-    const roomName = user?.id && otherUserId ? `chat_${user.id}_${otherUserId}` : 'default_room';
+      const roomName = user?.id && otherUserId 
+    ? `chat_${user.id}_${otherUserId}_${Date.now()}` 
+    : `default_room_${Date.now()}`;
+
+    // window.location.href = `https://meet.jit.si/${roomName}#auth`;
+
+
+
     const options = {
       roomName: roomName,
       width: '100%',
       height: 400,
       parentNode: jitsiContainerRef.current,
       userInfo: {
-        displayName: user.firstName || user.username || "Người dùng",
+        displayName: user?.firstName || user?.username || "Người dùng",
+        email: user?.email || "", // Truyền email từ thông tin đăng nhập
       },
       configOverwrite: {
         startWithAudioMuted: true,
+        startWithVideoMuted: false,
         disableModeratorIndicator: true,
+        enableMembersOnly: false,
+        prejoinPageEnabled: false,
+        requireDisplayName: false,
+        startVideoMuted: 0,
+        startAudioMuted: 0,
+        disableInviteFunctions: true,
       },
       interfaceConfigOverwrite: {
         SHOW_JITSI_WATERMARK: false,
@@ -287,18 +303,37 @@ const ChatRoom = () => {
 
     try {
       if (!window.JitsiMeetExternalAPI) {
+        console.error("Jitsi Meet API not found.");
         setError("Không thể tải Jitsi Meet API. Vui lòng kiểm tra kết nối hoặc script.");
         return;
       }
+      console.log("Starting Jitsi Meet with options:", options);
       const api = new window.JitsiMeetExternalAPI('meet.jit.si', options);
-      api.addEventListener('videoConferenceJoined', () => {});
-      api.addEventListener('videoConferenceLeft', handleCloseVideoCall);
+
+      api.addEventListener('videoConferenceJoined', () => {
+        console.log("Video conference joined successfully.");
+      });
+      api.addEventListener('videoConferenceLeft', () => {
+        console.log("Video conference left.");
+        handleCloseVideoCall();
+      });
       api.addEventListener('errorOccurred', (error) => {
-        setError("Đã xảy ra lỗi trong cuộc gọi video: " + error.message);
+        console.error("Jitsi error occurred:", error);
+        setError("Đã xảy ra lỗi trong cuộc gọi video: " + (error.message || "Không xác định"));
+      });
+      api.addEventListener('participantRoleChanged', (data) => {
+        console.log("Participant role changed:", data);
+        if (data.role === 'moderator') {
+          console.log("User is now a moderator.");
+        } else {
+          console.log("User is not a moderator.");
+          setError("Bạn không có quyền bắt đầu cuộc gọi. Vui lòng đăng nhập bằng Google, GitHub hoặc Facebook.");
+        }
       });
       setJitsiApi(api);
     } catch (error) {
-      setError("Không thể khởi tạo cuộc gọi video: " + error.message);
+      console.error("Failed to initialize Jitsi Meet:", error);
+      setError("Không thể khởi tạo cuộc gọi video: " + (error.message || "Không xác định"));
     }
   };
 
