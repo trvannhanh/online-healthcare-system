@@ -204,9 +204,6 @@ public class UserServiceImpl implements UserService {
 
         // Kiểm tra vai trò
         String role = params.get("role") != null ? params.get("role").toUpperCase() : "PATIENT";
-        if (!"PATIENT".equals(role) && !"DOCTOR".equals(role)) {
-            throw new IllegalArgumentException("Vai trò phải là PATIENT hoặc DOCTOR");
-        }
 
         // Kiểm tra thông tin theo vai trò
         if ("PATIENT".equals(role)) {
