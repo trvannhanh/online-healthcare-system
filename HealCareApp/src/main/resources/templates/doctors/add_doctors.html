@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Thêm Bác Sĩ</title>
+    <th:block th:replace="base :: styles"></th:block>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="base :: header"></div>
+    <main>
+        <div class="d-flex bg-secondary">
+            <div th:replace="base :: sidebar" class="p-2"></div>
+            <div class="p-2 bg-light flex-grow-1">
+                <h1 class="text-center text-info mt-3 mb-4">Thêm Bác Sĩ</h1>
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+                <form th:action="@{/doctors/add}" method="post" enctype="multipart/form-data">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Họ</label>
+                            <input type="text" class="form-control" name="firstName" required/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tên</label>
+                            <input type="text" class="form-control" name="lastName" required/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tên đăng nhập</label>
+                            <input type="text" class="form-control" name="username" required/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Mật khẩu</label>
+                            <input type="password" class="form-control" name="password" required/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="text" class="form-control" name="phoneNumber" required/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" required/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Số giấy phép</label>
+                            <input type="text" class="form-control" name="licenseNumber"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Số năm kinh nghiệm</label>
+                            <input type="number" class="form-control" name="experienceYears" min="0" value="0"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Bệnh viện</label>
+                            <input type="text" class="form-control" name="hospital" required/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Chuyên khoa</label>
+                            <input type="text" class="form-control" name="specialization" required/>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Ảnh đại diện</label>
+                            <input type="file" class="form-control" name="avatar" accept="image/*" required/>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Tiểu sử</label>
+                            <textarea class="form-control" name="bio" rows="4"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Lưu</button>
+                            <a th:href="@{/doctors}" class="btn btn-secondary">Hủy</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <div th:replace="base :: footer"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
