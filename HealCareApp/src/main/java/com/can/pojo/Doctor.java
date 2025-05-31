@@ -56,8 +56,6 @@ public class Doctor {
     @Column(name = "experience_years")
     private int experienceYears;
 
-    @Column(name = "rating", columnDefinition = "FLOAT DEFAULT 0")
-    private float rating;
 
     // Getters and Setters
 
@@ -143,20 +141,6 @@ public class Doctor {
      */
     public void setExperienceYears(int experienceYears) {
         this.experienceYears = experienceYears;
-    }
-
-    /**
-     * @return the rating
-     */
-    public float getRating() {
-        return rating;
-    }
-
-    /**
-     * @param rating the rating to set
-     */
-    public void setRating(float rating) {
-        this.rating = rating;
     }
 
     /**

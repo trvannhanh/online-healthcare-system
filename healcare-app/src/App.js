@@ -19,6 +19,9 @@ import Rating from './components/Rating';
 import DoctorRatings from "./components/DoctorRatings";
 import Response from "./components/Response";
 import CreateHealthRecord from "./components/CreateHealthRecord";
+import Notifications from "./components/Notifications";
+import PushNotification from './components/PushNotification';
+
 
 const App = () => {
 
@@ -44,7 +47,9 @@ const App = () => {
                         <Route path="/rate-doctor/:appointmentId" element={<Rating />} />
                         <Route path="/doctor/ratings" element={<DoctorRatings />} />
                         <Route path="/doctor/response/:ratingId" element={<Response />} />
+                        <Route path="/notifications" element={<Notifications />} />
                     </Routes>
+                    <PushNotification />
                 </Container>
 
                 <Footer />

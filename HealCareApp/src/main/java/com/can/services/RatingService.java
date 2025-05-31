@@ -12,17 +12,28 @@ import java.util.Map;
  */
 public interface RatingService {
     List<Rating> getAllRatings(Map<String, String> params);
+
     Rating getRatingById(Integer id);
-public List<Rating> getRatingsByDoctorId(Integer doctorId);    
-Rating addRating(Rating rating, String username);
+
+    public List<Rating> getRatingsByDoctorId(Integer doctorId);
+
+    Rating addRating(Rating rating, String username);
+
     Rating updateRating(Rating rating, String username);
+
     void deleteRating(Integer ratingId, String username);
+
     boolean isRatingExist(int ratingId);
+
     Double getAverageRatingForDoctor(Integer doctorId);
+
     // Kiểm tra xem bệnh nhân có thể đánh giá cuộc hẹn không
     boolean canPatientRateAppointment(int appointmentId, int patientId);
-    //Kiểm tra xem lịch hẹn đã được đánh giá chưa?
+
+    // Kiểm tra xem lịch hẹn đã được đánh giá chưa?
     boolean isAppointmentRated(int appointmentId);
-        List<RatingResponse> getRatingResponsesByDoctorId(Integer doctorId);
-Rating getRatingByAppointmentId(Integer appointmentId); 
-} 
+
+    List<RatingResponse> getRatingResponsesByDoctorId(Integer doctorId);
+
+    Rating getRatingByAppointmentId(Integer appointmentId);
+}

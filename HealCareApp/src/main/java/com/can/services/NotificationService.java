@@ -17,7 +17,7 @@ public interface NotificationService {
 
     Notifications getNotificationById(Integer id);
 
-    List<Notifications> getNotificationsByUserId(Integer userId);
+    List<Notifications> getNotificationsByUser(String username);
 
     List<Notifications> getNotificationsByCreateDate(String createAt);
 
@@ -38,4 +38,6 @@ public interface NotificationService {
     List<Notifications> getUpcomingAppointmentNotifications(String username);
 
     void markNotificationAsRead(int notificationId, String username);
+
+    Notifications createAppointmentNotification(int appointmentId, String username);
 }

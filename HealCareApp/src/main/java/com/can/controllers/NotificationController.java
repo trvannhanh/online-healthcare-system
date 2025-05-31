@@ -58,7 +58,7 @@ public class NotificationController {
     @PostMapping("/notifications/add")
     public String addNotification(
             @ModelAttribute("notification") Notifications notificationFromForm) {
-        List<User> patients = userService.getUsersByRole("PATIENT"); // hoặc Enum nếu bạn dùng
+        List<User> patients = userService.getUsersByRole("PATIENT"); 
 
         for (User patient : patients) {
             Notifications notification = new Notifications();

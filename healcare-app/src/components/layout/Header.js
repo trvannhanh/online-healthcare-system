@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Button, Container, Form, InputGroup, Nav, Navbar, NavDropdown } from "react-bootstrap";
+import { Button, Container, Form, InputGroup, Nav, Navbar, NavDropdown, Badge } from "react-bootstrap";
 import Apis, { authApis, endpoints } from "../../configs/Apis";
 import { Link, useNavigate } from "react-router-dom";
 import { FaSearch, FaHospital, FaStethoscope, FaUser } from "react-icons/fa";
+import { FaBell } from "react-icons/fa";  // Import FaBell separately
 import { useMyDispatcher, useMyUser } from "../../configs/MyContexts";
 import cookie from 'react-cookies'
 
@@ -13,6 +14,8 @@ const Header = () => {
     const nav = useNavigate();
     const { user } = useMyUser();
     const dispatch = useMyDispatcher();
+        const [unreadNotifications, setUnreadNotifications] = useState(0);
+
 
     const loadHospitals = async () => {
         let res = await Apis.get(endpoints["hospitals"]);
@@ -42,6 +45,19 @@ const Header = () => {
             return false;
         }
         return true;
+    };
+
+        const fetchNotificationsCount = async () => {
+        if (!user) return;
+        
+        try {
+            const res = await authApis().get(endpoints["allNotifications"]);
+            // Count unread notifications
+            const unreadCount = res.data.filter(notif => !notif.isRead).length;
+            setUnreadNotifications(unreadCount);
+        } catch (error) {
+            console.error("Error fetching notifications:", error);
+        }
     };
 
     useEffect(() => {
@@ -173,6 +189,34 @@ const Header = () => {
                                  Quản lý gửi phản hồi
                             </Link>
                         )}
+                        {user && user.role === 'PATIENT' && (
+                        <div className="mx-3 position-relative" style={{ cursor: 'pointer' }}>
+                            <Link to="/notifications" className="text-decoration-none">
+                                <FaBell 
+                                    size={22} 
+                                    className="text-white"
+                                    style={{ 
+                                        transition: 'transform 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.2)'}
+                                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                                />
+                                {unreadNotifications > 0 && (
+                                    <Badge 
+                                        pill 
+                                        bg="danger" 
+                                        className="position-absolute top-0 start-100 translate-middle"
+                                        style={{ 
+                                            fontSize: '0.6rem',
+                                            padding: '0.25rem 0.4rem'
+                                        }}
+                                    >
+                                        {unreadNotifications}
+                                    </Badge>
+                                )}
+                            </Link>
+                        </div>
+                    )}
                     </Nav>
 
                     {/* Search bar */}

@@ -15,6 +15,7 @@ import com.can.repositories.PatientRepository;
 import com.can.repositories.UserRepository;
 import com.can.services.AppointmentService;
 import com.can.services.EmailService;
+import com.can.services.NotificationService;
 import com.can.services.UserService;
 import java.nio.file.AccessDeniedException;
 import java.text.ParseException;
@@ -61,6 +62,9 @@ public class AppointmentServiceImpl implements AppointmentService {
     
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Override
     public List<Appointment> getAppointments(Map<String, String> params) throws ParseException {
@@ -365,6 +369,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         if (!"PENDING".equals(status) && !"CONFIRMED".equals(status) ) {
             throw new IllegalStateException("Chỉ lịch hẹn chờ xác nhận mới có thể được xác nhận");
         }
+
+        notificationService.createAppointmentNotification(id, existingAppointment.getPatient().getUser().getUsername());
 
         return this.appRepo.confirmAppointment(id);
     }
