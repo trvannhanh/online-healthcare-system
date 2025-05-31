@@ -30,7 +30,7 @@ import java.security.Principal;
  * @author DELL
  */
 @RestController
-@RequestMapping("/api/secure/patient-self-report")
+@RequestMapping("/api")
 @CrossOrigin
 public class ApiPatientSelfReportController {
 
@@ -38,22 +38,12 @@ public class ApiPatientSelfReportController {
     private PatientSelfReportService patientSelfReportService;
 
     // Thêm mới một báo cáo sức khỏe
-    @PostMapping("/add")
+    @PostMapping("/secure/patient-self-report/add")
     public ResponseEntity<?> createPatientSelfReport(@RequestBody PatientSelfReport patientSelfReport, Principal principal) {
         try {
             String username = principal.getName();
             PatientSelfReport newReport = patientSelfReportService.addPatientSelfReport(patientSelfReport, username);
             return new ResponseEntity<>(newReport, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("message", "Dữ liệu không hợp lệ");
-            errorResponse.put("error", e.getMessage());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-        } catch (RuntimeException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("message", "Không thể tạo báo cáo sức khỏe");
-            errorResponse.put("error", e.getMessage());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
@@ -66,22 +56,30 @@ public class ApiPatientSelfReportController {
     }
 
     // Cập nhật báo cáo sức khỏe
-    @PutMapping
+    @PutMapping("/secure/patient-self-report")
     public ResponseEntity<?> updatePatientSelfReport(@RequestBody PatientSelfReport patientSelfReport, Principal principal) {
         try {
             String username = principal.getName();
             PatientSelfReport updatedReport = patientSelfReportService.updatePatientSelfReport(patientSelfReport, username);
             return ResponseEntity.ok(updatedReport);
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("message", "Dữ liệu không hợp lệ");
+            errorResponse.put("message", "Lỗi hệ thống khi cập nhật báo cáo sức khỏe");
             errorResponse.put("error", e.getMessage());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-        } catch (RuntimeException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("message", "Không thể cập nhật báo cáo sức khỏe");
-            errorResponse.put("error", e.getMessage());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+            errorResponse.put("timestamp", LocalDateTime.now().toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    //Lấy báo cáo sức khỏe của bệnh nhân
+    @GetMapping("/secure/patient-self-report/{patientId}")
+        public ResponseEntity<?> getPatientSelfReport(@PathVariable("patientId") Integer patientId, Principal principal) {
+        try {
+            String username = principal.getName();
+            PatientSelfReport getReport = patientSelfReportService.getPatientSelfReportByPatientId(patientId, username);
+            return ResponseEntity.ok(getReport);
         } catch (Exception e) {
             e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();

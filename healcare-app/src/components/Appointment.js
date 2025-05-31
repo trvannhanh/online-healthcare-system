@@ -185,20 +185,20 @@ const Appointment = () => {
 
   return (
     <Container className="py-5">
-      <h2 
-        className="fw-bold mb-4" 
-        style={{ 
-          color: '#0d6efd', 
-          fontSize: '2.2rem', 
-          textShadow: '1px 1px 2px rgba(0,0,0,0.1)' 
+      <h2
+        className="fw-bold mb-4"
+        style={{
+          color: '#0d6efd',
+          fontSize: '2.2rem',
+          textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
         }}
       >
         Lịch Hẹn Của Bạn
       </h2>
 
       {!user && (
-        <Alert 
-          variant="warning" 
+        <Alert
+          variant="warning"
           className="shadow-sm rounded-pill px-4 py-3"
         >
           Vui lòng đăng nhập để xem danh sách lịch hẹn!{' '}
@@ -211,10 +211,10 @@ const Appointment = () => {
       {user && (
         <>
           {/* Filter Form */}
-          <Card 
-            className="mb-5 shadow-lg border-0" 
-            style={{ 
-              borderRadius: '20px', 
+          <Card
+            className="mb-5 shadow-lg border-0"
+            style={{
+              borderRadius: '20px',
               background: 'linear-gradient(to right, #f8f9fa, #e9ecef)',
               transition: 'box-shadow 0.3s'
             }}
@@ -275,7 +275,7 @@ const Appointment = () => {
                     variant="outline-secondary"
                     onClick={clearFilters}
                     className="rounded-pill px-4 py-2"
-                    style={{ 
+                    style={{
                       transition: 'transform 0.2s',
                       borderColor: '#6c757d'
                     }}
@@ -290,20 +290,20 @@ const Appointment = () => {
           </Card>
 
           {error && (
-            <Alert 
-              variant="danger" 
-              onClose={() => setError(null)} 
-              dismissible 
+            <Alert
+              variant="danger"
+              onClose={() => setError(null)}
+              dismissible
               className="shadow-sm rounded-pill px-4 py-3 mb-4"
             >
               {error}
             </Alert>
           )}
           {success && (
-            <Alert 
-              variant="success" 
-              onClose={() => setSuccess(null)} 
-              dismissible 
+            <Alert
+              variant="success"
+              onClose={() => setSuccess(null)}
+              dismissible
               className="shadow-sm rounded-pill px-4 py-3 mb-4"
             >
               {success}
@@ -312,9 +312,9 @@ const Appointment = () => {
 
           {loadingAppointments && page === 1 && (
             <div className="text-center my-5">
-              <Spinner 
-                animation="border" 
-                variant="primary" 
+              <Spinner
+                animation="border"
+                variant="primary"
                 style={{ width: '3rem', height: '3rem' }}
               />
               <p className="mt-3 fw-semibold" style={{ color: '#0d6efd' }}>
@@ -324,8 +324,8 @@ const Appointment = () => {
           )}
 
           {appointments.length === 0 && !loadingAppointments && (
-            <Alert 
-              variant="info" 
+            <Alert
+              variant="info"
               className="shadow-sm rounded-pill px-4 py-3"
             >
               Bạn chưa có lịch hẹn nào!
@@ -336,10 +336,10 @@ const Appointment = () => {
             <Row xs={1} md={2} lg={3} className="g-4">
               {appointments.map((appt) => (
                 <Col key={appt.id}>
-                  <Card 
-                    className="shadow-lg border-0 h-100" 
-                    style={{ 
-                      borderRadius: '20px', 
+                  <Card
+                    className="shadow-lg border-0 h-100"
+                    style={{
+                      borderRadius: '20px',
                       transition: 'transform 0.3s, box-shadow 0.3s'
                     }}
                     onMouseEnter={(e) => {
@@ -398,15 +398,15 @@ const Appointment = () => {
                             color: '#fff',
                             backgroundColor:
                               appt.status === 'PENDING' ? '#ffc107' :
-                              appt.status === 'CONFIRMED' ? '#0d6efd' :
-                              appt.status === 'COMPLETED' ? '#20c997' :
-                              '#dc3545'
+                                appt.status === 'CONFIRMED' ? '#0d6efd' :
+                                  appt.status === 'COMPLETED' ? '#20c997' :
+                                    '#dc3545'
                           }}
                         >
                           {appt.status === 'PENDING' ? 'Đang Chờ' :
-                           appt.status === 'CONFIRMED' ? 'Đã Xác Nhận' :
-                           appt.status === 'COMPLETED' ? 'Hoàn Thành' :
-                           'Đã Hủy'}
+                            appt.status === 'CONFIRMED' ? 'Đã Xác Nhận' :
+                              appt.status === 'COMPLETED' ? 'Hoàn Thành' :
+                                'Đã Hủy'}
                         </span>
                       </p>
                       <div className="mt-auto d-flex flex-wrap gap-2">
@@ -444,6 +444,25 @@ const Appointment = () => {
                             </Button>
                           </>
                         )}
+                        {user.role === 'DOCTOR' && (appt.status === 'CONFIRMED' || appt.status === 'COMPLETED') && (
+                          <Button
+                            as={Link}
+                            to={`/patient-health-record/${appt.patient.id}`}
+                            variant="info"
+                            size="sm"
+                            className="rounded-pill px-3"
+                            style={{
+                              backgroundColor: '#17a2b8',
+                              borderColor: '#17a2b8',
+                              color: '#fff',
+                              transition: 'transform 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                          >
+                            Hồ Sơ Sức Khỏe
+                          </Button>
+                        )}
                         {user.role === 'DOCTOR' && appt.status === 'COMPLETED' && !appt.payment && (
                           <Button
                             as={Link}
@@ -451,8 +470,8 @@ const Appointment = () => {
                             variant="primary"
                             size="sm"
                             className="rounded-pill px-3"
-                            style={{ 
-                              backgroundColor: '#0d6efd', 
+                            style={{
+                              backgroundColor: '#0d6efd',
                               borderColor: '#0d6efd',
                               transition: 'transform 0.2s'
                             }}
@@ -470,8 +489,8 @@ const Appointment = () => {
                             size="sm"
                             className="rounded-pill px-3"
                             disabled={appt.payment.paymentStatus !== 'PENDING'}
-                            style={{ 
-                              backgroundColor: '#20c997', 
+                            style={{
+                              backgroundColor: '#20c997',
                               borderColor: '#20c997',
                               transition: 'transform 0.2s'
                             }}
@@ -489,8 +508,8 @@ const Appointment = () => {
                             size="sm"
                             className="rounded-pill px-3"
                             aria-label={`Chat với ${user.role === 'PATIENT' ? 'bác sĩ' : 'bệnh nhân'}`}
-                            style={{ 
-                              backgroundColor: '#0d6efd', 
+                            style={{
+                              backgroundColor: '#0d6efd',
                               borderColor: '#0d6efd',
                               transition: 'transform 0.2s'
                             }}
@@ -514,8 +533,8 @@ const Appointment = () => {
                 variant="primary"
                 onClick={loadMore}
                 className="px-5 py-2 rounded-pill shadow-sm"
-                style={{ 
-                  backgroundColor: '#0d6efd', 
+                style={{
+                  backgroundColor: '#0d6efd',
                   borderColor: '#0d6efd',
                   transition: 'transform 0.2s'
                 }}
@@ -528,13 +547,13 @@ const Appointment = () => {
           )}
 
           {/* Reschedule Modal */}
-          <Modal 
-            show={showRescheduleModal} 
+          <Modal
+            show={showRescheduleModal}
             onHide={closeRescheduleModal}
             centered
           >
-            <Modal.Header 
-              closeButton 
+            <Modal.Header
+              closeButton
               className="bg-primary text-white"
               style={{ borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}
             >
@@ -556,9 +575,9 @@ const Appointment = () => {
               </Form>
             </Modal.Body>
             <Modal.Footer className="border-0">
-              <Button 
-                variant="secondary" 
-                onClick={closeRescheduleModal} 
+              <Button
+                variant="secondary"
+                onClick={closeRescheduleModal}
                 className="rounded-pill px-4 py-2"
                 style={{ transition: 'transform 0.2s' }}
                 onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
@@ -571,8 +590,8 @@ const Appointment = () => {
                 onClick={rescheduleAppointment}
                 disabled={loadingReschedule || !newDateTime}
                 className="rounded-pill px-4 py-2"
-                style={{ 
-                  backgroundColor: '#0d6efd', 
+                style={{
+                  backgroundColor: '#0d6efd',
                   borderColor: '#0d6efd',
                   transition: 'transform 0.2s'
                 }}
