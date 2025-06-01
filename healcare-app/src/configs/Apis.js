@@ -68,6 +68,8 @@ export const endpoints = {
     'doctorProfile': '/secure/doctor/profile',
     'userAvatar': '/secure/avatar',
     'changePassword': '/secure/change-password',
+    'patientHealthRecord': (patientId) => `/secure/patient-self-report/${patientId}`,
+
 
     //NOTIFICATION
     'notificationById': (id) => `/notification/${id}`,
@@ -75,9 +77,6 @@ export const endpoints = {
     'upcomingNotifications': '/secure/notifications/upcoming',
     'markNotificationAsRead': (id) => `/secure/notifications/${id}/mark-read`,
 
-    // 'healthRecord': (id) => `/secure/health-records/${id}`,
-    // 'createHealthRecord': '/secure/health-records/add',
-    // 'updateHealthRecord': (id) => `/secure/health-records/${id}`
 }
 
 export const authApis = () => {
