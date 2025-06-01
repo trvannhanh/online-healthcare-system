@@ -99,7 +99,7 @@ public class EmailServiceImpl implements EmailService {
 
         String doctorName = doctor.getUser().getFirstName() + " " + doctor.getUser().getLastName();
         String formattedDate = new SimpleDateFormat("dd/MM/yyyy HH:mm").format(appointment.getAppointmentDate());
-        String confirmationLink = frontendUrl + "/appointments/confirm/" + appointment.getId();
+        String confirmationLink = frontendUrl + "/appointment";
 
         String htmlContent = createAppointmentConfirmationHtml(
                 user.getFirstName() + " " + user.getLastName(),
@@ -151,9 +151,9 @@ public class EmailServiceImpl implements EmailService {
                             <p><strong>Chuyên khoa:</strong> %s</p>
                             <p><strong>Bệnh viện:</strong> %s</p>
                             <p><strong>Thời gian:</strong> %s</p>
-                            <p>Vui lòng xác nhận lịch hẹn bằng cách nhấn vào nút dưới đây:</p>
+                            <p>Theo dõi lịch hẹn bằng cách nhấn vào nút dưới đây:</p>
                             <p style="text-align: center;">
-                                <a href="%s" class="button">Xác Nhận Lịch Hẹn</a>
+                                <a href="%s" class="button">Xem Lịch Hẹn</a>
                             </p>
                             <p>Nếu bạn không thể nhấn nút, hãy sao chép và dán liên kết sau vào trình duyệt:</p>
                             <p>%s</p>

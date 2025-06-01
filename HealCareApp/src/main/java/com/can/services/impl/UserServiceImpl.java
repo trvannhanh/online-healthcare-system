@@ -108,6 +108,7 @@ public class UserServiceImpl implements UserService {
         u.setPassword(passEncoder.encode(params.get("password")));
         u.setFailedLoginAttempts(0);
         u.setIsLocked(false);
+        u.setCreatedDate(new Date());
 
         try {
             Map res = cloudinary.uploader().upload(avatar.getBytes(),
