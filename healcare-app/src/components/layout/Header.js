@@ -127,7 +127,7 @@ const Header = () => {
                     <Nav className="me-auto ms-4">
                         <Link
                             to="/"
-                            className="nav-link text-white fw-semibold px-3 py-2 rounded"
+                            className="nav-link text-white fw-semibold px-3 py-2 rounded d-flex justify-content-center align-items-center"
                             style={{ transition: 'background 0.2s' }}
                             onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
                             onMouseLeave={(e) => e.target.style.background = 'transparent'}
@@ -188,7 +188,7 @@ const Header = () => {
                         </NavDropdown>
                         <Link
                             to="/appointment"
-                            className="nav-link text-white fw-semibold px-3 py-2 rounded"
+                            className="nav-link text-white fw-semibold px-3 py-2 rounded d-flex justify-content-center align-items-center"
                             style={{ transition: 'background 0.2s' }}
                             onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
                             onMouseLeave={(e) => e.target.style.background = 'transparent'}
@@ -198,26 +198,26 @@ const Header = () => {
                         </Link>
                         {user && user.role === 'DOCTOR' && (
                             <Link to="/doctor/statistic"
-                                className="nav-link fs-6 text-dark fw-semibold"
+                                className="nav-link text-white fw-semibold px-3 py-2 rounded d-flex justify-content-center align-items-center"
                                 onClick={(e) => checkVerified(e)}
                             >
                                 Thống kê bệnh nhân
                             </Link>
                         )}
                         {user && user.role === 'PATIENT' && (
-                            <Link to="/pending-rating" className="nav-link fs-6 text-dark fw-semibold">Quản lý đánh giá</Link>
+                            <Link to="/pending-rating" className="nav-link text-white fw-semibold px-3 py-2 rounded d-flex justify-content-center align-items-center">Quản lý đánh giá</Link>
                         )}
                         {user && user.role === 'DOCTOR' && (
-                            <Link to="/doctor/ratings" className="nav-link fs-6 text-dark fw-semibold">
+                            <Link to="/doctor/ratings" className="nav-link text-white fw-semibold px-3 py-2 rounded d-flex justify-content-center align-items-center">
                                 Quản lý gửi phản hồi
                             </Link>
                         )}
                         {user && user.role === 'PATIENT' && (
                             <div className="mx-3 position-relative" style={{ cursor: 'pointer' }}>
-                                <Link to="/notifications" className="text-decoration-none">
+                                <Link to="/notifications" className="text-decoration-none ">
                                     <FaBell
                                         size={22}
-                                        className="text-white"
+                                        className="text-white "
                                         style={{
                                             transition: 'transform 0.2s'
                                         }}
@@ -228,7 +228,7 @@ const Header = () => {
                                         <Badge
                                             pill
                                             bg="danger"
-                                            className="position-absolute top-0 start-100 translate-middle"
+                                            className="position-absolute top-0 start-100 translate-middle "
                                             style={{
                                                 fontSize: '0.6rem',
                                                 padding: '0.25rem 0.4rem'

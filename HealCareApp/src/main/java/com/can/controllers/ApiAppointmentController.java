@@ -80,6 +80,7 @@ public class ApiAppointmentController {
     public ResponseEntity<?> createAppointment(@RequestBody Appointment appointment, Principal principal) {
         try {
             Appointment newAppointment = appService.addAppointment(appointment, principal.getName());
+            notiService.createAppointmentNotification(newAppointment.getId(), newAppointment.getPatient().getUser().getUsername());
             return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
         } catch (IllegalArgumentException | IllegalStateException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
