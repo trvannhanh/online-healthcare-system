@@ -410,7 +410,7 @@ const Appointment = () => {
                         </span>
                       </p>
                       <div className="mt-auto d-flex flex-wrap gap-2">
-                        {appt.status === 'PENDING' && (
+                        {user.role === 'PATIENT' && (appt.status === 'PENDING' ||  appt.status === 'CONFIRMED') &&(
                           <>
                             <Button
                               variant="warning"
@@ -461,6 +461,20 @@ const Appointment = () => {
                           >
                             Tạo Hóa Đơn
                           </Button>
+                        )}
+
+                        {user.role === 'DOCTOR' && appt.status === 'CONFIRMED' &&(
+                            <Button
+                            as={Link}
+                            to={`/health-record/create/${appt.id}`}
+                            variant="info"
+                            size="sm"
+                            className="rounded-pill px-3"
+                            disabled={!user.isVerified}
+                            style={{ backgroundColor: "#0dcaf0", borderColor: "#0dcaf0" }}
+                            >
+                            Tạo Kết Quả Khám
+                            </Button>
                         )}
                         {user.role === 'PATIENT' && appt.status === 'COMPLETED' && appt.payment && (
                           <Button

@@ -14,6 +14,7 @@ import com.can.services.ResponseService;
 import com.can.services.UserService;
 import com.can.pojo.Response;
 import com.can.repositories.ResponseRepository;
+import java.util.Date;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -75,6 +76,8 @@ public class ResponseServiceImpl implements ResponseService {
         if (!canRespond) {
             throw new RuntimeException("Bác sĩ không có quyền phản hồi đánh giá này hoặc đánh giá đã có phản hồi");
         }
+        
+        response.setResponseDate(new Date());
 
         return this.responseRepo.addResponse(response);
     }

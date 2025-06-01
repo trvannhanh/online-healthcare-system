@@ -9,6 +9,7 @@ import com.can.repositories.HealthRecordRepository;
 import com.can.repositories.UserRepository;
 import com.can.services.HealthRecordService;
 import java.nio.file.AccessDeniedException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -88,6 +89,7 @@ public class HealthRecordServiceImpl implements HealthRecordService {
         healthRecord.setExaminationResults(examinationResults);
         healthRecord.setDiseaseType(diseaseType);
         healthRecord.setAppointment(appointment);
+        healthRecord.setCreatedDate(new Date());
 
         // Cập nhật trạng thái lịch hẹn
         appointment.setStatus(AppointmentStatus.COMPLETED);
