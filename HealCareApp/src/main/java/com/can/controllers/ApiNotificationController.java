@@ -49,7 +49,7 @@ public class ApiNotificationController {
 
         try {
             List<Notifications> notifications = notificationService
-                    .getUpcomingAppointmentNotifications(principal.getName());
+                    .getUpcomingNotifications(principal.getName());
             return new ResponseEntity<>(notifications, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Lỗi khi lấy thông báo: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

@@ -47,7 +47,7 @@ public interface NotificationRepository {
 
     void deleteNotification(int id);
 // Lấy thông báo lịch hẹn sắp tới cho user
-List<Notifications> getUpcomingAppointmentNotifications(Integer userId);
+List<Notifications> getUpcomingNotifications(Integer userId);
 
 // Đánh dấu là đã đọc
 void markNotificationAsRead(int notificationId, Integer userId);

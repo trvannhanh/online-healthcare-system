@@ -15,8 +15,8 @@ const PatientHealthRecord = () => {
     const [success, setSuccess] = useState(null);
     const [patient, setPatient] = useState(null);
     const [selfReport, setSelfReport] = useState(null);
-    
-    // Self report fields
+
+    // Selfreport
     const [height, setHeight] = useState('');
     const [weight, setWeight] = useState('');
     const [personalMedicalHistory, setPersonalMedicalHistory] = useState('');
@@ -28,29 +28,27 @@ const PatientHealthRecord = () => {
     const [currentTreatments, setCurrentTreatments] = useState('');
     const [doctorNotes, setDoctorNotes] = useState('');
 
-    // Fetch patient data and self report
+    // Lấy dữ liệu bệnh nhân và báo cáo tự đánh giá
     useEffect(() => {
         if (!user || user.role !== 'DOCTOR') {
             setError("Bạn không có quyền truy cập trang này");
             return;
         }
-        
+
         fetchPatientData();
     }, [patientId, user]);
 
     const fetchPatientData = async () => {
         try {
             setLoading(true);
-            // Fetch patient information
+            // Fetch thông tin bệnh nhân
             const patientResponse = await authApis().get(`${endpoints['patients']}/${patientId}`);
             setPatient(patientResponse.data);
-            
-            // Fetch patient self report
-// Sửa dòng này:
-const selfReportResponse = await authApis().get(endpoints.patientHealthRecord(patientId));            if (selfReportResponse.data) {
+
+            // Fetch thông tin hồ sơ cá nhân
+            const selfReportResponse = await authApis().get(endpoints.patientHealthRecord(patientId)); if (selfReportResponse.data) {
                 setSelfReport(selfReportResponse.data);
-                
-                // Populate form fields
+
                 setHeight(selfReportResponse.data.height || '');
                 setWeight(selfReportResponse.data.weight || '');
                 setPersonalMedicalHistory(selfReportResponse.data.personalMedicalHistory || '');
@@ -74,22 +72,22 @@ const selfReportResponse = await authApis().get(endpoints.patientHealthRecord(pa
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!user || user.role !== 'DOCTOR') {
             setError("Bạn không có quyền cập nhật hồ sơ sức khỏe");
             return;
         }
-        
+
         if (!selfReport) {
             setError("Không tìm thấy báo cáo sức khỏe để cập nhật");
             return;
         }
-        
+
         try {
             setSaving(true);
             setError(null);
-            
-            // Prepare update data
+
+            // Chuẩn bị dữ liệu để cập nhật
             const updatedSelfReport = {
                 id: selfReport.id,
                 patient: { id: parseInt(patientId) },
@@ -104,13 +102,13 @@ const selfReportResponse = await authApis().get(endpoints.patientHealthRecord(pa
                 currentTreatments,
                 doctorNotes
             };
-            
-            // Send update request
+
+            // Gửi yêu cầu cập nhật đến endpoint
             const response = await authApis().put(endpoints['updatePatientSelfReport'], updatedSelfReport);
-            
+
             setSelfReport(response.data);
             setSuccess("Cập nhật hồ sơ sức khỏe bệnh nhân thành công!");
-            
+
             // Clear success message after 3 seconds
             setTimeout(() => setSuccess(null), 3000);
         } catch (err) {
@@ -121,7 +119,7 @@ const selfReportResponse = await authApis().get(endpoints.patientHealthRecord(pa
         }
     };
 
-    // If not a doctor or unauthorized
+    // Nếu người dùng không phải bác sĩ hay chưa đăng nhập
     if (!user || user.role !== 'DOCTOR') {
         return (
             <Container className="my-5">
@@ -140,8 +138,8 @@ const selfReportResponse = await authApis().get(endpoints.patientHealthRecord(pa
                     <FaFileMedical className="me-2 text-primary" />
                     Hồ sơ sức khỏe bệnh nhân
                 </h2>
-                <Button 
-                    variant="outline-secondary" 
+                <Button
+                    variant="outline-secondary"
                     onClick={() => navigate(-1)}
                     className="d-flex align-items-center"
                 >
@@ -155,7 +153,7 @@ const selfReportResponse = await authApis().get(endpoints.patientHealthRecord(pa
                     {error}
                 </Alert>
             )}
-            
+
             {success && (
                 <Alert variant="success" onClose={() => setSuccess(null)} dismissible>
                     {success}
@@ -202,9 +200,9 @@ const selfReportResponse = await authApis().get(endpoints.patientHealthRecord(pa
                                         <Col md={6}>
                                             <Form.Group className="mb-3">
                                                 <Form.Label>Chiều cao (cm)</Form.Label>
-                                                <Form.Control 
-                                                    type="number" 
-                                                    value={height} 
+                                                <Form.Control
+                                                    type="number"
+                                                    value={height}
                                                     onChange={(e) => setHeight(e.target.value)}
                                                     step="0.1"
                                                 />
@@ -213,9 +211,9 @@ const selfReportResponse = await authApis().get(endpoints.patientHealthRecord(pa
                                         <Col md={6}>
                                             <Form.Group className="mb-3">
                                                 <Form.Label>Cân nặng (kg)</Form.Label>
-                                                <Form.Control 
-                                                    type="number" 
-                                                    value={weight} 
+                                                <Form.Control
+                                                    type="number"
+                                                    value={weight}
                                                     onChange={(e) => setWeight(e.target.value)}
                                                     step="0.1"
                                                 />
@@ -243,70 +241,70 @@ const selfReportResponse = await authApis().get(endpoints.patientHealthRecord(pa
 
                                     <Form.Group className="mb-3">
                                         <Form.Label>Tiền sử bệnh cá nhân</Form.Label>
-                                        <Form.Control 
-                                            as="textarea" 
+                                        <Form.Control
+                                            as="textarea"
                                             rows={3}
-                                            value={personalMedicalHistory} 
+                                            value={personalMedicalHistory}
                                             onChange={(e) => setPersonalMedicalHistory(e.target.value)}
                                         />
                                     </Form.Group>
 
                                     <Form.Group className="mb-3">
                                         <Form.Label>Tiền sử bệnh gia đình</Form.Label>
-                                        <Form.Control 
-                                            as="textarea" 
+                                        <Form.Control
+                                            as="textarea"
                                             rows={3}
-                                            value={familyMedicalHistory} 
+                                            value={familyMedicalHistory}
                                             onChange={(e) => setFamilyMedicalHistory(e.target.value)}
                                         />
                                     </Form.Group>
 
                                     <Form.Group className="mb-3">
                                         <Form.Label>Tiền sử thai sản</Form.Label>
-                                        <Form.Control 
-                                            as="textarea" 
+                                        <Form.Control
+                                            as="textarea"
                                             rows={3}
-                                            value={pregnancyHistory} 
+                                            value={pregnancyHistory}
                                             onChange={(e) => setPregnancyHistory(e.target.value)}
                                         />
                                     </Form.Group>
 
                                     <Form.Group className="mb-3">
                                         <Form.Label>Dị ứng thuốc</Form.Label>
-                                        <Form.Control 
-                                            as="textarea" 
+                                        <Form.Control
+                                            as="textarea"
                                             rows={3}
-                                            value={medicationAllergies} 
+                                            value={medicationAllergies}
                                             onChange={(e) => setMedicationAllergies(e.target.value)}
                                         />
                                     </Form.Group>
 
                                     <Form.Group className="mb-3">
                                         <Form.Label>Thuốc đang sử dụng</Form.Label>
-                                        <Form.Control 
-                                            as="textarea" 
+                                        <Form.Control
+                                            as="textarea"
                                             rows={3}
-                                            value={currentMedications} 
+                                            value={currentMedications}
                                             onChange={(e) => setCurrentMedications(e.target.value)}
                                         />
                                     </Form.Group>
 
                                     <Form.Group className="mb-3">
                                         <Form.Label>Đang điều trị bệnh</Form.Label>
-                                        <Form.Control 
-                                            as="textarea" 
+                                        <Form.Control
+                                            as="textarea"
                                             rows={3}
-                                            value={currentTreatments} 
+                                            value={currentTreatments}
                                             onChange={(e) => setCurrentTreatments(e.target.value)}
                                         />
                                     </Form.Group>
 
                                     <Form.Group className="mb-3">
                                         <Form.Label><strong>Ghi chú của bác sĩ</strong></Form.Label>
-                                        <Form.Control 
-                                            as="textarea" 
+                                        <Form.Control
+                                            as="textarea"
                                             rows={5}
-                                            value={doctorNotes} 
+                                            value={doctorNotes}
                                             onChange={(e) => setDoctorNotes(e.target.value)}
                                             className="border-primary"
                                         />
@@ -314,21 +312,21 @@ const selfReportResponse = await authApis().get(endpoints.patientHealthRecord(pa
                                     </Form.Group>
 
                                     <div className="d-grid">
-                                        <Button 
-                                            type="submit" 
-                                            variant="primary" 
-                                            size="lg" 
+                                        <Button
+                                            type="submit"
+                                            variant="primary"
+                                            size="lg"
                                             disabled={saving}
                                             className="d-flex align-items-center justify-content-center"
                                         >
                                             {saving ? (
                                                 <>
-                                                    <Spinner animation="border" size="sm" className="me-2" /> 
+                                                    <Spinner animation="border" size="sm" className="me-2" />
                                                     Đang lưu...
                                                 </>
                                             ) : (
                                                 <>
-                                                    <FaSave className="me-2" /> 
+                                                    <FaSave className="me-2" />
                                                     Lưu thông tin
                                                 </>
                                             )}

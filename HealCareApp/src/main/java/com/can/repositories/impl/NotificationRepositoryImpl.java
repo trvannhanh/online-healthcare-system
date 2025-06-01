@@ -104,8 +104,15 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         // Join với bảng user để lọc theo userId
         Join<Notifications, User> userJoin = root.join("user");
 
-        // Thiết lập điều kiện where và sắp xếp
-        query.where(builder.equal(userJoin.get("id"), userId));
+        Date now = new Date();
+
+        // Thiết lập điều kiện để sắp xếp thông báo mới nhất vào hiện tại lên trước
+        query.where(
+                builder.and(
+                        builder.equal(userJoin.get("id"), userId),
+                        builder.lessThanOrEqualTo(root.get("sentAt"), now) // Chỉ lấy các thông báo đến thời điểm hiện
+                                                                           // tại hoặc trước đó
+                ));
         query.orderBy(builder.desc(root.get("sentAt"))); // Thông báo mới nhất trước
 
         Query hqlQuery = session.createQuery(query);
@@ -152,27 +159,27 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         return hqlQuery.getResultList();
     }
 
-@Override
-public List<Notifications> getNotificationsByUserId(int userId, int page) {
-    Session session = this.factory.getObject().getCurrentSession();
-    CriteriaBuilder builder = session.getCriteriaBuilder();
-    CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
-    Root<Notifications> root = query.from(Notifications.class);
-    
-    // Join với bảng user để lọc theo userId
-    Join<Notifications, User> userJoin = root.join("user");
-    
-    // Thiết lập điều kiện where và sắp xếp
-    query.where(builder.equal(userJoin.get("id"), userId));
-    query.orderBy(builder.desc(root.get("sentAt"))); // Thông báo mới nhất trước
-    
-    Query hqlQuery = session.createQuery(query);
-    int start = (page - 1) * PAGE_SIZE;
-    hqlQuery.setFirstResult(start);
-    hqlQuery.setMaxResults(PAGE_SIZE);
-    
-    return hqlQuery.getResultList();
-}
+    @Override
+    public List<Notifications> getNotificationsByUserId(int userId, int page) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
+        Root<Notifications> root = query.from(Notifications.class);
+
+        // Join với bảng user để lọc theo userId
+        Join<Notifications, User> userJoin = root.join("user");
+
+        // Thiết lập điều kiện where và sắp xếp
+        query.where(builder.equal(userJoin.get("id"), userId));
+        query.orderBy(builder.desc(root.get("sentAt"))); // Thông báo mới nhất trước
+
+        Query hqlQuery = session.createQuery(query);
+        int start = (page - 1) * PAGE_SIZE;
+        hqlQuery.setFirstResult(start);
+        hqlQuery.setMaxResults(PAGE_SIZE);
+
+        return hqlQuery.getResultList();
+    }
 
     @Override
     public List<Notifications> getNotificationsByDateRange(Date startDate, Date endDate) {
@@ -218,7 +225,7 @@ public List<Notifications> getNotificationsByUserId(int userId, int page) {
     }
 
     @Override
-    public List<Notifications> getUpcomingAppointmentNotifications(Integer userId) {
+    public List<Notifications> getUpcomingNotifications(Integer userId) {
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Notifications> q = builder.createQuery(Notifications.class);
@@ -227,37 +234,24 @@ public List<Notifications> getNotificationsByUserId(int userId, int page) {
         // Join với bảng user để lọc theo userId
         Join<Notifications, User> userJoin = root.join("user");
 
-        // Lấy thời gian hiện tại và đặt thời gian bắt đầu/kết thúc ngày
-        Calendar cal = Calendar.getInstance();
+        // Lấy thời gian hiện tại
         Date now = new Date();
 
-        // Đặt thời gian bắt đầu của ngày hiện tại (00:00:00)
-        Calendar startCal = Calendar.getInstance();
-        startCal.setTime(now);
-        startCal.set(Calendar.HOUR_OF_DAY, 0);
-        startCal.set(Calendar.MINUTE, 0);
-        startCal.set(Calendar.SECOND, 0);
-        startCal.set(Calendar.MILLISECOND, 0);
-        Date startOfDay = startCal.getTime();
-
-        // Đặt thời gian kết thúc của ngày hiện tại (23:59:59)
-        Calendar endCal = Calendar.getInstance();
-        endCal.setTime(now);
-        endCal.set(Calendar.HOUR_OF_DAY, 23);
-        endCal.set(Calendar.MINUTE, 59);
-        endCal.set(Calendar.SECOND, 59);
-        endCal.set(Calendar.MILLISECOND, 999);
-        Date endOfDay = endCal.getTime();
+        // Lấy thời gian là 30 phút trước
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(now);
+        calendar.add(Calendar.MINUTE, -30); // Lấy thông báo trong 30 phút gần đây
+        Date thirtyMinutesAgo = calendar.getTime();
 
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(builder.equal(userJoin.get("id"), userId));
         predicates.add(builder.equal(root.get("isRead"), false)); // Chưa đọc
 
-        // Lọc thông báo có ngày gửi (sentAt) trong ngày hiện tại
-        predicates.add(builder.between(root.get("sentAt"), startOfDay, endOfDay));
+        // Chỉ lấy thông báo trong khoảng 30 phút gần đây
+        predicates.add(builder.between(root.get("sentAt"), thirtyMinutesAgo, now));
 
         q.where(predicates.toArray(new Predicate[0]));
-        q.orderBy(builder.asc(root.get("sentAt"))); // Sắp xếp theo thời gian gửi thông báo
+        q.orderBy(builder.desc(root.get("sentAt"))); // Sắp xếp theo thời gian gửi từ mới đến cũ
 
         Query query = session.createQuery(q);
         return query.getResultList();
@@ -282,16 +276,12 @@ public List<Notifications> getNotificationsByUserId(int userId, int page) {
 
         Query query = session.createQuery(q);
 
-        try {
-            Notifications notification = (Notifications) query.getSingleResult();
+        Notifications notification = (Notifications) query.getSingleResult();
 
-            // Đánh dấu đã đọc và cập nhật
-            notification.setIsRead(true);
-            session.update(notification);
-        } catch (NoResultException e) {
-            // Không tìm thấy thông báo hoặc thông báo không thuộc về người dùng này
-            // Có thể ghi log hoặc xử lý theo nhu cầu
-        }
+        // Đánh dấu đã đọc và cập nhật
+        notification.setIsRead(true);
+        session.update(notification);
+
     }
 
 }

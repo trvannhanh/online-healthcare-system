@@ -101,7 +101,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<Notifications> getUpcomingAppointmentNotifications(String username) {
+    public List<Notifications> getUpcomingNotifications(String username) {
         // Lấy thông tin người dùng từ username
         User user = userService.getUserByUsername(username);
         if (user == null) {
@@ -109,7 +109,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         // Gọi repository để lấy thông báo lịch hẹn sắp tới
-        return this.notificationRepository.getUpcomingAppointmentNotifications(user.getId());
+        return this.notificationRepository.getUpcomingNotifications(user.getId());
     }
 
     @Override

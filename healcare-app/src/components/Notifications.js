@@ -12,7 +12,7 @@ const Notifications = () => {
     const { user } = useMyUser();
     const navigate = useNavigate();
 
-    // Function to load all notifications
+    // Hàm để load toàn bộ thông báo của người dùng
     const loadAllNotifications = useCallback(async () => {
         if (!user) return;
 
@@ -28,7 +28,6 @@ const Notifications = () => {
         }
     }, [user]);
 
-    // Load notifications on component mount
     useEffect(() => {
         if (user) {
             loadAllNotifications();
@@ -37,15 +36,15 @@ const Notifications = () => {
         }
     }, [user, loadAllNotifications, navigate]);
 
-    // Function to mark a notification as read
+    // Hàm đánh dấu đã đọc
     const markAsRead = async (notificationId) => {
         try {
             await authApis().patch(`/secure/notifications/${notificationId}/mark-read`);
-            
-            // Update the notification in the local state
-            setNotifications(prevNotifications => 
-                prevNotifications.map(notification => 
-                    notification.id === notificationId 
+
+            // Cập nhật thông báo
+            setNotifications(prevNotifications =>
+                prevNotifications.map(notification =>
+                    notification.id === notificationId
                         ? { ...notification, isRead: true }
                         : notification
                 )
@@ -56,7 +55,7 @@ const Notifications = () => {
         }
     };
 
-    // Get the icon for a notification type
+    // Thêm icon cho mỗi loại thông báo
     const getNotificationIcon = (type) => {
         switch (type) {
             case 'APPOINTMENT':
@@ -70,19 +69,19 @@ const Notifications = () => {
         }
     };
 
-    // Format date for display
+    // Format ngày 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
-        return date.toLocaleDateString('vi-VN', { 
-            year: 'numeric', 
-            month: '2-digit', 
+        return date.toLocaleDateString('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
             day: '2-digit',
             hour: '2-digit',
             minute: '2-digit'
         });
     };
 
-    // Count unread notifications
+    // Đếm số lượng thông báo chưa đọc
     const unreadCount = notifications.filter(notification => !notification.isRead).length;
 
     if (!user) {
@@ -129,10 +128,10 @@ const Notifications = () => {
                 <Card className="shadow-sm">
                     <ListGroup variant="flush">
                         {notifications.map((notification) => (
-                            <ListGroup.Item 
-                                key={notification.id} 
+                            <ListGroup.Item
+                                key={notification.id}
                                 className={`py-3 ${!notification.isRead ? 'bg-light' : ''}`}
-                                style={{ 
+                                style={{
                                     borderLeft: !notification.isRead ? '4px solid #0d6efd' : 'none',
                                     transition: 'all 0.3s ease'
                                 }}
@@ -144,20 +143,20 @@ const Notifications = () => {
                                     <Col>
                                         <div className="d-flex justify-content-between">
                                             <h5 className="mb-1">
-                                                {notification.type === 'APPOINTMENT' ? 'Lịch hẹn' : 
-                                                 notification.type === 'DISCOUNT' ? 'Ưu đãi' : 
-                                                 notification.type === 'HEALTH_PROGRAM' ? 'Chương trình sức khỏe' : 
-                                                 'Thông báo'}
+                                                {notification.type === 'APPOINTMENT' ? 'Lịch hẹn' :
+                                                    notification.type === 'DISCOUNT' ? 'Ưu đãi' :
+                                                        notification.type === 'HEALTH_PROGRAM' ? 'Chương trình sức khỏe' :
+                                                            'Thông báo'}
                                             </h5>
                                             <small className="text-muted">
                                                 {formatDate(notification.sentAt || notification.createdAt)}
                                             </small>
                                         </div>
                                         <p className="mb-1">{notification.message}</p>
-                                        {!notification.isRead && (
-                                            <Button 
-                                                variant="outline-primary" 
-                                                size="sm" 
+                                        {!notification.read && (
+                                            <Button
+                                                variant="outline-primary"
+                                                size="sm"
                                                 className="mt-2"
                                                 onClick={() => markAsRead(notification.id)}
                                             >

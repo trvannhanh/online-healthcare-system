@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button, Container, Form, InputGroup, Nav, Navbar, NavDropdown, Badge } from "react-bootstrap";
 import Apis, { authApis, endpoints } from "../../configs/Apis";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,7 +14,7 @@ const Header = () => {
     const nav = useNavigate();
     const { user } = useMyUser();
     const dispatch = useMyDispatcher();
-        const [unreadNotifications, setUnreadNotifications] = useState(0);
+    const [unreadNotifications, setUnreadNotifications] = useState(0);
 
 
     const loadHospitals = async () => {
@@ -47,30 +47,53 @@ const Header = () => {
         return true;
     };
 
-        const fetchNotificationsCount = async () => {
+    const fetchNotificationsCount = useCallback(async () => {
         if (!user) return;
-        
+
         try {
             const res = await authApis().get(endpoints["allNotifications"]);
-            // Count unread notifications
-            const unreadCount = res.data.filter(notif => !notif.isRead).length;
+            // Đếm những thông báo chưa đọc
+            const unreadCount = res.data.filter(notif => !notif.read ).length;
             setUnreadNotifications(unreadCount);
         } catch (error) {
             console.error("Error fetching notifications:", error);
         }
-    };
+    }, [user]); 
 
     useEffect(() => {
         loadHospitals();
         loadSpecialization();
     }, []);
 
+    // Thêm useEffect mới để xử lý thông báo
+    useEffect(() => {
+        if (user && user.role === 'PATIENT') {
+            // Gọi ngay khi component được tải
+            fetchNotificationsCount();
+
+            // Thiết lập lắng nghe sự kiện từ components khác
+            const handleNotificationRead = () => {
+                fetchNotificationsCount();
+            };
+            window.addEventListener('notification-read', handleNotificationRead);
+
+            // Thiết lập interval để cập nhật thông báo định kỳ
+            const intervalId = setInterval(fetchNotificationsCount, 60000); // Cập nhật mỗi phút
+
+            // Cleanup khi component unmount
+            return () => {
+                window.removeEventListener('notification-read', handleNotificationRead);
+                clearInterval(intervalId);
+            };
+        }
+    }, [user, fetchNotificationsCount]); // Thêm fetchNotificationsCount vào dependencies
+
     return (
-        <Navbar 
-            expand="lg" 
-            sticky="top" 
-            className="shadow-lg py-3" 
-            style={{ 
+        <Navbar
+            expand="lg"
+            sticky="top"
+            className="shadow-lg py-3"
+            style={{
                 background: 'linear-gradient(to right, #0d6efd, #20c997)',
                 color: '#fff'
             }}
@@ -78,20 +101,20 @@ const Header = () => {
             <Container>
                 {/* Logo */}
                 <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
-                    <FaHospital 
-                        size={40} 
-                        className="me-2 text-white" 
-                        style={{ transition: 'transform 0.3s' }} 
+                    <FaHospital
+                        size={40}
+                        className="me-2 text-white"
+                        style={{ transition: 'transform 0.3s' }}
                         onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
                         onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                     />
-                    <span 
-                        className="fw-bold" 
-                        style={{ 
-                            fontSize: '2rem', 
-                            background: 'linear-gradient(to right, #fff, #e0f7fa)', 
-                            WebkitBackgroundClip: 'text', 
-                            WebkitTextFillColor: 'transparent' 
+                    <span
+                        className="fw-bold"
+                        style={{
+                            fontSize: '2rem',
+                            background: 'linear-gradient(to right, #fff, #e0f7fa)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent'
                         }}
                     >
                         Heal<span style={{ color: '#20c997' }}>Care</span>
@@ -102,8 +125,8 @@ const Header = () => {
                 <Navbar.Collapse>
                     {/* Navigation links */}
                     <Nav className="me-auto ms-4">
-                        <Link 
-                            to="/" 
+                        <Link
+                            to="/"
                             className="nav-link text-white fw-semibold px-3 py-2 rounded"
                             style={{ transition: 'background 0.2s' }}
                             onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
@@ -111,20 +134,20 @@ const Header = () => {
                         >
                             Trang Chủ
                         </Link>
-                        <NavDropdown 
+                        <NavDropdown
                             title={
                                 <span className="text-white fw-semibold">
                                     <FaHospital className="me-1 text-light" /> Bệnh Viện
                                 </span>
-                            } 
+                            }
                             className="px-3 py-2 rounded"
                             style={{ transition: 'background 0.2s' }}
                             onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
                             onMouseLeave={(e) => e.target.style.background = 'transparent'}
                         >
                             {hospitals.map(h => (
-                                <NavDropdown.Item 
-                                    key={h.id} 
+                                <NavDropdown.Item
+                                    key={h.id}
                                     className="py-2 bg-white text-dark hover:bg-teal-100"
                                 >
                                     <Link
@@ -137,20 +160,20 @@ const Header = () => {
                                 </NavDropdown.Item>
                             ))}
                         </NavDropdown>
-                        <NavDropdown 
+                        <NavDropdown
                             title={
                                 <span className="text-white fw-semibold">
                                     <FaStethoscope className="me-1 text-light" /> Chuyên Khoa
                                 </span>
-                            } 
+                            }
                             className="px-3 py-2 rounded"
                             style={{ transition: 'background 0.2s' }}
                             onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
                             onMouseLeave={(e) => e.target.style.background = 'transparent'}
                         >
                             {specialization.map(s => (
-                                <NavDropdown.Item 
-                                    key={s.id} 
+                                <NavDropdown.Item
+                                    key={s.id}
                                     className="py-2 bg-white text-dark hover:bg-teal-100"
                                 >
                                     <Link
@@ -163,8 +186,8 @@ const Header = () => {
                                 </NavDropdown.Item>
                             ))}
                         </NavDropdown>
-                        <Link 
-                            to="/appointment" 
+                        <Link
+                            to="/appointment"
                             className="nav-link text-white fw-semibold px-3 py-2 rounded"
                             style={{ transition: 'background 0.2s' }}
                             onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
@@ -174,49 +197,49 @@ const Header = () => {
                             Lịch Hẹn
                         </Link>
                         {user && user.role === 'DOCTOR' && (
-                            <Link to="/doctor/statistic" 
-                            className="nav-link fs-6 text-dark fw-semibold"
-                            onClick={(e) => checkVerified(e)}
-                        >
-                            Thống kê bệnh nhân
-                        </Link>
+                            <Link to="/doctor/statistic"
+                                className="nav-link fs-6 text-dark fw-semibold"
+                                onClick={(e) => checkVerified(e)}
+                            >
+                                Thống kê bệnh nhân
+                            </Link>
                         )}
                         {user && user.role === 'PATIENT' && (
                             <Link to="/pending-rating" className="nav-link fs-6 text-dark fw-semibold">Quản lý đánh giá</Link>
                         )}
                         {user && user.role === 'DOCTOR' && (
                             <Link to="/doctor/ratings" className="nav-link fs-6 text-dark fw-semibold">
-                                 Quản lý gửi phản hồi
+                                Quản lý gửi phản hồi
                             </Link>
                         )}
                         {user && user.role === 'PATIENT' && (
-                        <div className="mx-3 position-relative" style={{ cursor: 'pointer' }}>
-                            <Link to="/notifications" className="text-decoration-none">
-                                <FaBell 
-                                    size={22} 
-                                    className="text-white"
-                                    style={{ 
-                                        transition: 'transform 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.2)'}
-                                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-                                />
-                                {unreadNotifications > 0 && (
-                                    <Badge 
-                                        pill 
-                                        bg="danger" 
-                                        className="position-absolute top-0 start-100 translate-middle"
-                                        style={{ 
-                                            fontSize: '0.6rem',
-                                            padding: '0.25rem 0.4rem'
+                            <div className="mx-3 position-relative" style={{ cursor: 'pointer' }}>
+                                <Link to="/notifications" className="text-decoration-none">
+                                    <FaBell
+                                        size={22}
+                                        className="text-white"
+                                        style={{
+                                            transition: 'transform 0.2s'
                                         }}
-                                    >
-                                        {unreadNotifications}
-                                    </Badge>
-                                )}
-                            </Link>
-                        </div>
-                    )}
+                                        onMouseEnter={(e) => e.target.style.transform = 'scale(1.2)'}
+                                        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                                    />
+                                    {unreadNotifications > 0 && (
+                                        <Badge
+                                            pill
+                                            bg="danger"
+                                            className="position-absolute top-0 start-100 translate-middle"
+                                            style={{
+                                                fontSize: '0.6rem',
+                                                padding: '0.25rem 0.4rem'
+                                            }}
+                                        >
+                                            {unreadNotifications}
+                                        </Badge>
+                                    )}
+                                </Link>
+                            </div>
+                        )}
                     </Nav>
 
                     {/* Search bar */}
@@ -230,9 +253,9 @@ const Header = () => {
                                 className="border-0 rounded-start-pill"
                                 style={{ background: '#fff', color: '#333' }}
                             />
-                            <Button 
-                                type="submit" 
-                                variant="primary" 
+                            <Button
+                                type="submit"
+                                variant="primary"
                                 className="rounded-end-pill"
                                 style={{ backgroundColor: '#20c997', borderColor: '#20c997' }}
                             >
@@ -243,7 +266,7 @@ const Header = () => {
 
                     {/* User menu */}
                     {user ? (
-                        <NavDropdown 
+                        <NavDropdown
                             title={
                                 <span className="text-white fw-semibold">
                                     <FaUser className="me-1" /> {user.firstName}
@@ -263,15 +286,15 @@ const Header = () => {
                         </NavDropdown>
                     ) : (
                         <>
-                            <Link 
-                                to="/login" 
+                            <Link
+                                to="/login"
                                 className="btn btn-outline-light me-2 rounded-pill px-4"
                                 style={{ borderColor: '#fff', color: '#fff' }}
                             >
                                 Đăng Nhập
                             </Link>
-                            <Link 
-                                to="/register" 
+                            <Link
+                                to="/register"
                                 className="btn btn-success rounded-pill px-4"
                                 style={{ backgroundColor: '#20c997', borderColor: '#20c997' }}
                             >
