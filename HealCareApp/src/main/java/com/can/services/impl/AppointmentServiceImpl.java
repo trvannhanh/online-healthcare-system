@@ -130,7 +130,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         // Gán giá trị mặc định
         appointment.setPatient(patient);
         appointment.setDoctor(doctor);
-        appointment.setStatus(AppointmentStatus.PENDING);
+        appointment.setStatus(AppointmentStatus.CONFIRMED);
         appointment.setCreatedAt(new Date());
 
         Appointment savedAppointment = appRepo.addAppointment(appointment);

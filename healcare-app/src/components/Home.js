@@ -543,8 +543,7 @@ const Home = () => {
                                                     className="me-2 rounded-pill px-3"
                                                     onClick={() => openRescheduleModal(appt)}
                                                     disabled={
-                                                        appt.status !== "PENDING" ||
-                                                        (user && user.role === "DOCTOR" && !user.isVerified)
+                                                        appt.status === 'COMPLETED' || appt.status === 'CANCELLED'
                                                     }
                                                     style={{ transition: "background 0.2s" }}
                                                 >
@@ -555,11 +554,7 @@ const Home = () => {
                                                     size="sm"
                                                     className="rounded-pill px-3"
                                                     onClick={() => cancelAppointment(appt.id)}
-                                                    disabled={
-                                                        appt.status !== "PENDING" ||
-                                                        loadingCancel ||
-                                                        (user && user.role === "DOCTOR" && !user.isVerified)
-                                                    }
+                                                    disabled={appt.status !== "PENDING" && appt.status !== "CONFIRMED"}
                                                     style={{ transition: "background 0.2s" }}
                                                 >
                                                     {loadingCancel ? (
@@ -590,7 +585,7 @@ const Home = () => {
                                                     )}
                                                 {user.role === "PATIENT" &&
                                                     appt.status === "COMPLETED" &&
-                                                    appt.payment && (
+                                                    appt.payment && appt.payment.paymentStatus !== "SUCCESSFUL" &&(
                                                         <Button
                                                             as={Link}
                                                             to={`/payment/${appt.id}`}
@@ -604,7 +599,7 @@ const Home = () => {
                                                         </Button>
                                                     )}
 
-                                                {user.role === "DOCTOR" && appt.status === "PENDING" && (
+                                                {user.role === "DOCTOR" && (appt.status === "PENDING" ||  appt.status === "CONFIRMED") &&(
                                                     <Button
                                                     as={Link}
                                                     to={`/health-record/create/${appt.id}`}
@@ -618,7 +613,7 @@ const Home = () => {
                                                     </Button>
                                                 )}
                                                                                                 
-                                                {appt.status === "PENDING" && (
+                                                {(appt.status === "PENDING" ||  appt.status === "CONFIRMED") &&(
                                                     <Button
                                                         as={Link}
                                                         to={`/chat/${user.role === "PATIENT" ? appt.doctor.id : appt.patient.id}`}
