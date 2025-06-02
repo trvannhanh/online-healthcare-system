@@ -137,7 +137,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public String processPayment(int paymentId, PaymentMethod paymentMethod, Principal principal) throws Exception {
         String username = principal.getName();
-        User u = uServ.getUserByUsername(username); // Cần triển khai UserService
+        User u = uServ.getUserByUsername(username); 
         String role = u.getRole().toString().toUpperCase();
         Payment payment = paymentRepository.getPaymentById(paymentId);
         if (payment == null) {
@@ -178,7 +178,7 @@ public class PaymentServiceImpl implements PaymentService {
     private String createMoMoPayment(Payment payment) throws Exception {
         String requestId = String.valueOf(System.currentTimeMillis());
         String orderId = "ORDER_" + payment.getId() + "_" + System.currentTimeMillis();
-        long amount = (long) (payment.getAmount() * 100); // MoMo yêu cầu đơn vị nhỏ nhất
+        long amount = (long) (payment.getAmount()); // MoMo yêu cầu đơn vị nhỏ nhất
         String extraData = "{}";
         String orderInfo = "ThanhToanLichHen" + payment.getAppointment().getId();
         String ipnUrl = PaymentConfig.NOTIFY_URL;
@@ -276,10 +276,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public void handlePaymentCallback(String paymentMethod, Map<String, String> params) {
         String transactionId = params.get("orderId");
-        if (transactionId == null) {
-            System.out.println("Invalid callback: Missing orderId");
-            throw new RuntimeException("Thiếu orderId trong callback");
-        }
 
         Payment payment = paymentRepository.getPaymentByTransactionId(transactionId);
         if (payment == null) {
@@ -288,11 +284,6 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         if ("MOMO".equalsIgnoreCase(paymentMethod)) {
-            String signature = params.get("signature");
-            if (signature == null) {
-                System.out.println("Invalid MoMo callback: Missing signature for transactionId: " + transactionId);
-                throw new RuntimeException("Callback MoMo thiếu chữ ký");
-            }
 
             String resultCode = params.get("resultCode");
             if ("0".equals(resultCode)) { // Thanh toán thành công

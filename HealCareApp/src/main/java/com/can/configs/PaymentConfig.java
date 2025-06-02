@@ -23,6 +23,6 @@ public class PaymentConfig {
     public static final String VNPAY_HASH_SECRET = "8LXZFHGSKTVNSCDL6D9LRYN661HFGM6K";
     public static final String VNPAY_ENDPOINT = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
 
-    public static final String RETURN_URL = "http://localhost:3000/";
+    public static final String RETURN_URL = "http://localhost:8080/HealCareApp/api/payment/return";
     public static final String NOTIFY_URL = "http://localhost:8080/HealCareApp/api/payment/notify";
 }
