@@ -46,7 +46,7 @@ const Payment = () => {
             const res = await authApis().post(`${endpoints['createPayment'](appointmentId)}?amount=${amount}`);
             setPayment(res.data);
             setSuccess('Tạo hóa đơn thành công!');
-            setTimeout(() => setSuccess(null), 3000);
+            setTimeout(() => navigate("/appointment"), 2000);
         } catch (ex) {
             setError(ex.response?.data || 'Tạo hóa đơn thất bại. Vui lòng thử lại.');
         } finally {
@@ -265,7 +265,7 @@ const Payment = () => {
                                      'Thất Bại'}
                                 </span>
                             </p>
-                            {payment.paymentStatus === 'PENDING' && (
+                            {payment.paymentStatus !== 'SUCCESSFUL' && (
                                 <>
                                     <Form.Group className="mb-4">
                                         <Form.Label className="fw-semibold">Phương Thức Thanh Toán</Form.Label>

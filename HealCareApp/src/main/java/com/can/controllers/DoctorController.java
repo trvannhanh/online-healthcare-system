@@ -15,6 +15,7 @@ import com.can.services.SpecializationService;
 import com.can.services.UserService;
 import jakarta.validation.Valid;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -34,43 +36,49 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  */
 @Controller
 public class DoctorController {
-    
+
     @Autowired
     private DoctorService docService;
-    
+
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private HospitalService hospitalService;
 
     @Autowired
     private SpecializationService specializationService;
-    
+
     @GetMapping("/doctors")
-    public String doctors(Model model, @RequestParam Map<String, String> params){
+    public String doctors(Model model, @RequestParam Map<String, String> params) {
         model.addAttribute("doctors", this.docService.getDoctors(params));
         return "doctors/doctors";
     }
-    
+
+    @GetMapping("/doctors/loadMore")
+    @ResponseBody
+    public List<Doctor> loadMoreDoctors(@RequestParam Map<String, String> params) {
+        return docService.getDoctors(params);
+    }
+
     @GetMapping("/doctors/add")
     public String addDoctorForm(Model model) {
         model.addAttribute("doctor", new Doctor());
         return "doctors/add_doctors";
     }
-    
+
     @PostMapping("/doctors/verify/{id}")
     public String verifyDoctor(@PathVariable("id") int id) {
         docService.verifyDoctor(id);
         return "redirect:/doctors";
     }
-    
+
     @PostMapping("/doctors/delete/{id}")
     public String deleteDoctor(@PathVariable("id") int id) {
         docService.deleteDoctor(id);
         return "redirect:/doctors";
     }
-    
+
     @GetMapping("/doctors/edit/{id}")
     public String editDoctorForm(@PathVariable("id") int id, Model model) {
         Doctor doctor = docService.getDoctorById(id);
@@ -95,12 +103,12 @@ public class DoctorController {
             RedirectAttributes redirectAttributes) {
         try {
             // Validate required fields
-            if (firstName == null || firstName.trim().isEmpty() ||
-                lastName == null || lastName.trim().isEmpty() ||
-                phoneNumber == null || phoneNumber.trim().isEmpty() ||
-                email == null || email.trim().isEmpty() ||
-                hospitalName == null || hospitalName.trim().isEmpty() ||
-                specializationName == null || specializationName.trim().isEmpty()) {
+            if (firstName == null || firstName.trim().isEmpty()
+                    || lastName == null || lastName.trim().isEmpty()
+                    || phoneNumber == null || phoneNumber.trim().isEmpty()
+                    || email == null || email.trim().isEmpty()
+                    || hospitalName == null || hospitalName.trim().isEmpty()
+                    || specializationName == null || specializationName.trim().isEmpty()) {
                 throw new IllegalArgumentException("Các trường bắt buộc (Họ, Tên, Số điện thoại, Email, Bệnh viện, Chuyên khoa) không được để trống.");
             }
 
@@ -121,9 +129,15 @@ public class DoctorController {
             user.setEmail(email);
 
             // Cập nhật thông tin Doctor
-            if (licenseNumber != null) doctor.setLicenseNumber(licenseNumber);
-            if (experienceYears != null) doctor.setExperienceYears(experienceYears);
-            if (bio != null) doctor.setBio(bio);
+            if (licenseNumber != null) {
+                doctor.setLicenseNumber(licenseNumber);
+            }
+            if (experienceYears != null) {
+                doctor.setExperienceYears(experienceYears);
+            }
+            if (bio != null) {
+                doctor.setBio(bio);
+            }
 
             // Cập nhật bệnh viện
             Hospital hospital = hospitalService.getHospitalByName(hospitalName);
@@ -145,7 +159,7 @@ public class DoctorController {
 
             // Cập nhật ảnh đại diện nếu có
             if (avatar != null && !avatar.isEmpty()) {
-                userService.updateAvatar( doctor.getId() ,avatar);
+                userService.updateAvatar(doctor.getId(), avatar);
             }
 
             // Giữ nguyên verificationStatus
@@ -158,7 +172,7 @@ public class DoctorController {
             return "edit_doctor";
         }
     }
-    
+
     @PostMapping("/doctors/add")
     public String addDoctor(
             @RequestParam("firstName") String firstName,
