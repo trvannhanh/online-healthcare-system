@@ -54,10 +54,6 @@ public interface StatisticRepository {
     Map<String, Map<String, Object>> getPaymentMethodStats(Date fromDate, Date toDate) throws ParseException;
 
     Map<Integer, Map<String, Double>> getMonthlyRevenueByPaymentMethod(int year) throws ParseException;
-
-    // Map<String, Long> getTopDiseaseTypes(Date fromDate, Date toDate, int topN) throws ParseException;
-    // Map<Integer, Map<String, Long>> getMostCommonDiseaseByMonth(int year) throws ParseException;
-    // Map<Integer, Map<String, Long>> getMostCommonDiseaseByQuarter(int year) throws ParseException;
     Map<String, Long> getTopDiseaseTypesByDoctorSortedByMonth(int doctorId, int year) throws ParseException;
     Map<String, Long> getTopDiseaseTypesByDoctorSortedByQuarter(int doctorId, int year) throws ParseException;
 }

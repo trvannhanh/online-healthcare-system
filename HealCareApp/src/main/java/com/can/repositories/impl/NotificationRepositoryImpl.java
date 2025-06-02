@@ -52,13 +52,11 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         List<Predicate> predicates = new ArrayList<>();
 
         if (params != null) {
-            // Lọc theo role
             String role = params.get("role");
             if (role != null && !role.isEmpty()) {
                 predicates.add(builder.equal(userJoin.get("role"), role));
             }
 
-            // Lọc theo khoảng thời gian gửi (sentAt)
             String fromDateStr = params.get("fromDate");
             String toDateStr = params.get("toDate");
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -74,7 +72,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
             q.where(predicates.toArray(Predicate[]::new));
         }
 
-        q.orderBy(builder.desc(root.get("sentAt"))); // sắp xếp mới nhất trước
+        q.orderBy(builder.desc(root.get("sentAt"))); 
 
         Query query = session.createQuery(q);
 
@@ -101,20 +99,16 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
         Root<Notifications> root = query.from(Notifications.class);
 
-        // Join với bảng user để lọc theo userId
         Join<Notifications, User> userJoin = root.join("user");
 
         Date now = new Date();
 
-        // Thiết lập điều kiện để sắp xếp thông báo mới nhất vào hiện tại lên trước
         query.where(
                 builder.and(
                         builder.equal(userJoin.get("id"), userId),
-                        builder.lessThanOrEqualTo(root.get("sentAt"), now) // Chỉ lấy các thông báo đến thời điểm hiện
-                                                                           // tại hoặc trước đó
+                        builder.lessThanOrEqualTo(root.get("sentAt"), now) 
                 ));
-        query.orderBy(builder.desc(root.get("sentAt"))); // Thông báo mới nhất trước
-
+        query.orderBy(builder.desc(root.get("sentAt"))); 
         Query hqlQuery = session.createQuery(query);
         return hqlQuery.getResultList();
     }
@@ -166,12 +160,10 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         CriteriaQuery<Notifications> query = builder.createQuery(Notifications.class);
         Root<Notifications> root = query.from(Notifications.class);
 
-        // Join với bảng user để lọc theo userId
         Join<Notifications, User> userJoin = root.join("user");
 
-        // Thiết lập điều kiện where và sắp xếp
         query.where(builder.equal(userJoin.get("id"), userId));
-        query.orderBy(builder.desc(root.get("sentAt"))); // Thông báo mới nhất trước
+        query.orderBy(builder.desc(root.get("sentAt"))); 
 
         Query hqlQuery = session.createQuery(query);
         int start = (page - 1) * PAGE_SIZE;
@@ -231,27 +223,23 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         CriteriaQuery<Notifications> q = builder.createQuery(Notifications.class);
         Root<Notifications> root = q.from(Notifications.class);
 
-        // Join với bảng user để lọc theo userId
         Join<Notifications, User> userJoin = root.join("user");
 
-        // Lấy thời gian hiện tại
         Date now = new Date();
 
-        // Lấy thời gian là 30 phút trước
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(now);
-        calendar.add(Calendar.MINUTE, -30); // Lấy thông báo trong 30 phút gần đây
+        calendar.add(Calendar.MINUTE, -30); 
         Date thirtyMinutesAgo = calendar.getTime();
 
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(builder.equal(userJoin.get("id"), userId));
-        predicates.add(builder.equal(root.get("isRead"), false)); // Chưa đọc
+        predicates.add(builder.equal(root.get("isRead"), false)); 
 
-        // Chỉ lấy thông báo trong khoảng 30 phút gần đây
         predicates.add(builder.between(root.get("sentAt"), thirtyMinutesAgo, now));
 
         q.where(predicates.toArray(new Predicate[0]));
-        q.orderBy(builder.desc(root.get("sentAt"))); // Sắp xếp theo thời gian gửi từ mới đến cũ
+        q.orderBy(builder.desc(root.get("sentAt"))); 
 
         Query query = session.createQuery(q);
         return query.getResultList();
@@ -261,8 +249,6 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     public void markNotificationAsRead(int notificationId, Integer userId) {
         Session session = this.factory.getObject().getCurrentSession();
 
-        // Lấy thông báo theo ID và userId để đảm bảo người dùng chỉ có thể đánh dấu
-        // đã đọc các thông báo của chính họ
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Notifications> q = builder.createQuery(Notifications.class);
         Root<Notifications> root = q.from(Notifications.class);
@@ -278,7 +264,6 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 
         Notifications notification = (Notifications) query.getSingleResult();
 
-        // Đánh dấu đã đọc và cập nhật
         notification.setIsRead(true);
         session.update(notification);
 
