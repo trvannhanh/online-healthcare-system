@@ -5,29 +5,23 @@ import com.can.pojo.AppointmentStatus;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.can.pojo.Payment;
 import com.can.pojo.PaymentMethod;
 import com.can.pojo.PaymentStatus;
 import com.can.repositories.AppointmentRepository;
 import com.can.repositories.PaymentRepository;
 import jakarta.persistence.NoResultException;
-
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import java.time.LocalDate;
 import java.util.Date;
 import org.hibernate.Session;
-
 /**
  *
  * @author DELL
@@ -43,7 +37,29 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     private AppointmentRepository appRepo;
 
     private static final int PAGE_SIZE = 10;
+    
+    @Override
+    public Payment createPaymentForAppointment(int appointmentId, double amount) {
+        Session session = this.factory.getObject().getCurrentSession();
+        Appointment appointment = appRepo.getAppointmentById(appointmentId);
+        if (appointment == null) {
+            System.out.println("Lịch hẹn không tồn tại");
+        }
+        if (appointment.getStatus() != AppointmentStatus.COMPLETED) {
+            throw new IllegalStateException("Lịch hẹn chưa hoàn thành, không thể tạo thanh toán");
+        }
 
+        Payment payment = new Payment();
+        payment.setAppointment(appointment);
+        payment.setAmount(amount);
+        payment.setPaymentStatus(PaymentStatus.PENDING);
+        payment.setCreateAt(new Date());
+        session.persist(payment);
+        return payment;
+    }
+
+    
+    
     @Override
     public Payment getPaymentById(Integer id) {
         Session session = this.factory.getObject().getCurrentSession();
@@ -69,7 +85,7 @@ public class PaymentRepositoryImpl implements PaymentRepository {
         try {
             return (Payment) q.getSingleResult();
         } catch (NoResultException e) {
-            return null; // Trả về null nếu không tìm thấy Payment
+            return null; 
         }
     }
 
@@ -82,7 +98,6 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 
         List<Predicate> predicates = new ArrayList<>();
 
-        // Kiểm tra các tham số lọc trong Map
         if (params != null) {
             String paymentMethod = params.get("paymentMethod");
             if (paymentMethod != null && !paymentMethod.isEmpty()) {
@@ -115,7 +130,6 @@ public class PaymentRepositoryImpl implements PaymentRepository {
                         .add(criteriaBuilder.equal(root.get("appointment").get("id"), Integer.parseInt(appointmentId)));
             }
 
-            // Lọc theo ngày tạo (createdAt)
             String startDate = params.get("startDate");
             String endDate = params.get("endDate");
 
@@ -131,12 +145,10 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 
         }
 
-        // Nếu có predicate, thêm vào điều kiện where
         if (!predicates.isEmpty()) {
             query.where(predicates.toArray(new Predicate[0]));
         }
 
-        // Thực thi truy vấn và trả về kết quả
         Query q = session.createQuery(query);
         return q.getResultList();
     }
@@ -214,29 +226,8 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     }
 
     @Override
-    public Payment createPaymentForAppointment(int appointmentId, double amount) {
-        Session session = this.factory.getObject().getCurrentSession();
-        Appointment appointment = appRepo.getAppointmentById(appointmentId);
-        if (appointment == null) {
-            System.out.println("Lịch hẹn không tồn tại");
-//            throw new ResourceNotFoundException("Lịch hẹn không tồn tại: " + appointmentId);
-        }
-        if (appointment.getStatus() != AppointmentStatus.COMPLETED) {
-            throw new IllegalStateException("Lịch hẹn chưa hoàn thành, không thể tạo thanh toán");
-        }
-
-        Payment payment = new Payment();
-        payment.setAppointment(appointment);
-        payment.setAmount(amount);
-        payment.setPaymentStatus(PaymentStatus.PENDING);
-        payment.setCreateAt(new Date());
-        session.save(payment);
-        return payment;
-    }
-
-    @Override
     public void updatePayment(Payment payment) {
         Session session = this.factory.getObject().getCurrentSession();
-        session.update(payment);
+        session.merge(payment);
     }
 }

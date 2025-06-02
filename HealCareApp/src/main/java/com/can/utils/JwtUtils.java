@@ -19,9 +19,8 @@ import java.util.Date;
  * @author Giidavibe
  */
 public class JwtUtils {
-    // SECRET nên được lưu bằng biến môi trường,
-    private static final String SECRET = "12345678901234567890123456789012"; // 32 ký tự (AES key)
-    private static final long EXPIRATION_MS = 86400000; // 1 ngày
+    private static final String SECRET = "12345678901234567890123456789012"; 
+    private static final long EXPIRATION_MS = 86400000; 
 
     public static String generateToken(String username) throws Exception {
         JWSSigner signer = new MACSigner(SECRET);

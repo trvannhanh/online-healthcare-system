@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
-
 /**
  *
  * @author Giidavibe
@@ -23,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional
 public class HospitalRepositoryImpl implements HospitalRepository{
+    
     @Autowired
     private LocalSessionFactoryBean sessionFactory;
 
@@ -47,7 +46,7 @@ public class HospitalRepositoryImpl implements HospitalRepository{
             query.setParameter("name", name);
             return query.getSingleResult();
         } catch (NoResultException ex) {
-            return null; // hoặc throw nếu bạn muốn
+            return null;
         }
     }
 
@@ -76,7 +75,7 @@ public class HospitalRepositoryImpl implements HospitalRepository{
             Session session = sessionFactory.getObject().getCurrentSession();
             Hospital hospital = session.get(Hospital.class, id);
             if (hospital != null) {
-                session.delete(hospital);
+                session.remove(hospital);
                 return true;
             }
             return false;

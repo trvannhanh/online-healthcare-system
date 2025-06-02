@@ -22,18 +22,16 @@ public class MessageController {
     @Autowired
     private MessageService messageService;
 
-    // Lấy tin nhắn theo id
     @GetMapping("/{messageId}")
     public ResponseEntity<Messages> getMessageById(@PathVariable Integer messageId) {
         Messages message = messageService.getMessageById(messageId);
         return message != null ? ResponseEntity.ok(message) : ResponseEntity.notFound().build();
     }
 
-    // Lấy danh sách tin nhắn theo người gửi
     @GetMapping("/sender/{senderId}")
     public ResponseEntity<List<Messages>> getMessagesBySender(@PathVariable Integer senderId) {
         try {
-            User sender = new User(); // Bạn cần lấy thông tin người gửi từ database.
+            User sender = new User(); 
             sender.setId(senderId);
             List<Messages> messages = messageService.getMessagesBySender(sender);
             return ResponseEntity.ok(messages);
@@ -42,11 +40,10 @@ public class MessageController {
         }
     }
 
-    // Lấy danh sách tin nhắn theo người nhận
     @GetMapping("/receiver/{receiverId}")
     public ResponseEntity<List<Messages>> getMessagesByReceiver(@PathVariable Integer receiverId) {
         try {
-            User receiver = new User(); // Bạn cần lấy thông tin người nhận từ database.
+            User receiver = new User(); 
             receiver.setId(receiverId);
             List<Messages> messages = messageService.getMessagesByReceiver(receiver);
             return ResponseEntity.ok(messages);
@@ -55,7 +52,6 @@ public class MessageController {
         }
     }
 
-    // Lấy tin nhắn theo tham số động (chỉ cần dùng Map)
     @GetMapping
     public ResponseEntity<List<Messages>> getMessagesByCriteria(@RequestParam Map<String, String> params) {
         try {
@@ -66,7 +62,6 @@ public class MessageController {
         }
     }
 
-    // Lấy tin nhắn theo timestamp (ngày tháng cụ thể)
     @GetMapping("/timestamp")
     public ResponseEntity<List<Messages>> getMessagesByTimestamp(@RequestParam Date timestamp) {
         try {

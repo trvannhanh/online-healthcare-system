@@ -1,10 +1,5 @@
 package com.can.repositories.impl;
 
-import java.util.ArrayList;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
-
 import com.can.pojo.Messages;
 import com.can.pojo.User;
 import java.util.Date;
@@ -12,20 +7,16 @@ import com.can.repositories.MessageRepository;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;  
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
-
 /**
  *
  * @author DELL
@@ -82,26 +73,22 @@ public class MessageRepositoryImpl implements MessageRepository {
         if (params != null) {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Lọc theo nội dung tin nhắn
             String content = params.get("content");
             if (content != null && !content.isEmpty()) {
                 String searchPattern = String.format("%%%s%%", content.toLowerCase());
                 predicates.add(b.like(b.lower(root.get("content")), searchPattern));
             }
 
-            // Lọc theo ID người gửi
             String senderId = params.get("senderId");
             if (senderId != null && !senderId.isEmpty()) {
                 predicates.add(b.equal(root.get("sender").get("id"), Integer.parseInt(senderId)));
             }
 
-            // Lọc theo ID người nhận
             String receiverId = params.get("receiverId");
             if (receiverId != null && !receiverId.isEmpty()) {
                 predicates.add(b.equal(root.get("receiver").get("id"), Integer.parseInt(receiverId)));
             }
 
-            // Lọc theo ngày gửi
             String timestamp = params.get("timestamp");
             if (timestamp != null && !timestamp.isEmpty()) {
                 try {

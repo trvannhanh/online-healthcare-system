@@ -14,10 +14,9 @@ import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatche
  *
  * @author Giidavibe
  */
-// đầu não của hệ thống, làm gì cũng phải khai báo
 public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherServletInitializer{
 
-    @Override // cấu hình chỉ @configuration không có kể thừa ai viết trong đây
+    @Override 
     protected Class<?>[] getRootConfigClasses() {
         return new Class[] {
             ThymeleafConfig.class,
@@ -28,14 +27,14 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
         };
     }
 
-    @Override // cấu hình mà implements configure viết trong đây
+    @Override 
     protected Class<?>[] getServletConfigClasses() {
         return new Class[] {
             WebAppContextConfigs.class
         };
     }
 
-    @Override // chỉ định kí hiệu ánh xạ
+    @Override
     protected String[] getServletMappings() {
         return new String[] {"/"};
     }
@@ -43,8 +42,8 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
     @Override
     protected void customizeRegistration(ServletRegistration.Dynamic registration) {
         String location = "/";
-        long maxFileSize = 5242880; // 5MB
-        long maxRequestSize = 20971520; // 20MB
+        long maxFileSize = 5242880; 
+        long maxRequestSize = 20971520; 
         int fileSizeThreshold = 0;
 
         registration.setMultipartConfig(new MultipartConfigElement(location, maxFileSize, maxRequestSize, fileSizeThreshold));
@@ -52,7 +51,7 @@ public class DispatcherServletInit extends AbstractAnnotationConfigDispatcherSer
     
     @Override
     protected Filter[] getServletFilters() {
-        return new Filter[] { new JwtFilter() }; // Filter sẽ áp dụng cho mọi request
+        return new Filter[] { new JwtFilter() }; 
     }
     
 }

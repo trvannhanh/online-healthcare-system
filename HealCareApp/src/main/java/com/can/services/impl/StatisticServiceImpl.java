@@ -4,9 +4,7 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
-
 import com.can.pojo.Appointment;
 import com.can.pojo.Payment;
 import com.can.pojo.User;
@@ -31,7 +29,40 @@ public class StatisticServiceImpl implements StatisticService {
 
     @Autowired
     private UserService userService;
+    
+    
+    @Override
+    public Map<String, Long> getTopDiseaseTypesByDoctorSortedByMonth(String username, int year) throws ParseException {
+        User currentUser = userService.getUserByUsername(username);
 
+        if (!currentUser.getRole().name().equals("DOCTOR")) {
+            throw new RuntimeException("Chỉ bác sĩ mới có thể xem thống kê này");
+        }
+
+        if (!doctorService.isDoctorVerified(currentUser.getId())) {
+            throw new RuntimeException("Bác sĩ chưa được xác minh không thể xem thống kê");
+        }
+
+        return this.statisticRepo.getTopDiseaseTypesByDoctorSortedByMonth(currentUser.getId(), year);
+    }
+
+    @Override
+    public Map<String, Long> getTopDiseaseTypesByDoctorSortedByQuarter(String username, int year)
+            throws ParseException {
+        User currentUser = userService.getUserByUsername(username);
+
+        if (!currentUser.getRole().name().equals("DOCTOR")) {
+            throw new RuntimeException("Chỉ bác sĩ mới có thể xem thống kê này");
+        }
+
+        if (!doctorService.isDoctorVerified(currentUser.getId())) {
+            throw new RuntimeException("Bác sĩ chưa được xác minh không thể xem thống kê");
+        }
+
+        return this.statisticRepo.getTopDiseaseTypesByDoctorSortedByQuarter(currentUser.getId(), year);
+    }
+    
+    
     @Override
     public List<Appointment> getAppointmentsCompleteByDateRange(Date fromDateStr, Date toDateStr)
             throws ParseException {
@@ -135,34 +166,5 @@ public class StatisticServiceImpl implements StatisticService {
         return this.statisticRepo.getMonthlyRevenueByPaymentMethod(year);
     }
 
-    @Override
-    public Map<String, Long> getTopDiseaseTypesByDoctorSortedByMonth(String username, int year) throws ParseException {
-        User currentUser = userService.getUserByUsername(username);
-
-        if (!currentUser.getRole().name().equals("DOCTOR")) {
-            throw new RuntimeException("Chỉ bác sĩ mới có thể xem thống kê này");
-        }
-
-        if (!doctorService.isDoctorVerified(currentUser.getId())) {
-            throw new RuntimeException("Bác sĩ chưa được xác minh không thể xem thống kê");
-        }
-
-        return this.statisticRepo.getTopDiseaseTypesByDoctorSortedByMonth(currentUser.getId(), year);
-    }
-
-    @Override
-    public Map<String, Long> getTopDiseaseTypesByDoctorSortedByQuarter(String username, int year)
-            throws ParseException {
-        User currentUser = userService.getUserByUsername(username);
-
-        if (!currentUser.getRole().name().equals("DOCTOR")) {
-            throw new RuntimeException("Chỉ bác sĩ mới có thể xem thống kê này");
-        }
-
-        if (!doctorService.isDoctorVerified(currentUser.getId())) {
-            throw new RuntimeException("Bác sĩ chưa được xác minh không thể xem thống kê");
-        }
-
-        return this.statisticRepo.getTopDiseaseTypesByDoctorSortedByQuarter(currentUser.getId(), year);
-    }
+    
 }

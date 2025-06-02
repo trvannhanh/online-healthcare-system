@@ -14,7 +14,6 @@ const initialState = {
 export const MyUserProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  // Kiểm tra token và khôi phục thông tin người dùng khi ứng dụng khởi động
   useEffect(() => {
     const loadUser = async () => {
       const token = cookie.load("token");

@@ -43,7 +43,7 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
     "com.can.controllers",
     "com.can.repositories",
     "com.can.services"
-})// chỉ định những nơi sử dụng annotaion
+})
 public class SpringSecurityConfigs {
 
     @Autowired
@@ -89,7 +89,7 @@ public class SpringSecurityConfigs {
                 .requestMatchers("/statistics/**").hasRole("ADMIN")
                 .requestMatchers("/notifications/**").hasRole("ADMIN")
                 .requestMatchers("/api/secure/appointments/**").hasRole("PATIENT")
-                .requestMatchers("/api/appointments/**").access(new DoctorAuthorizationManager())
+                .requestMatchers("/api/**").access(new DoctorAuthorizationManager())
                 .anyRequest().authenticated()
         )
                 .formLogin(form -> form.loginPage("/login")
@@ -103,7 +103,7 @@ public class SpringSecurityConfigs {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000")); // Đảm bảo khớp với frontend
+        config.setAllowedOrigins(List.of("http://localhost:3000")); 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setExposedHeaders(List.of("Authorization"));
@@ -113,7 +113,8 @@ public class SpringSecurityConfigs {
         return source;
     }
     
-    // Custom AuthorizationManager để kiểm tra role DOCTOR và isVerified
+    
+    
     public class DoctorAuthorizationManager implements AuthorizationManager<RequestAuthorizationContext> {
 
         @Override
@@ -123,14 +124,12 @@ public class SpringSecurityConfigs {
                 return new AuthorizationDecision(false);
             }
 
-            // Kiểm tra vai trò DOCTOR
             boolean hasDoctorRole = authentication.getAuthorities().stream()
                     .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_DOCTOR"));
             if (!hasDoctorRole) {
                 return new AuthorizationDecision(false);
             }
 
-            // Kiểm tra trạng thái isVerified
             String username = authentication.getName();
             User user = (User) userDetailService.loadUserByUsername(username);
             if (user == null) {

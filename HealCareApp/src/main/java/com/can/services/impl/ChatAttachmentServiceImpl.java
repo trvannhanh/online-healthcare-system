@@ -62,24 +62,20 @@ public class ChatAttachmentServiceImpl implements ChatAttachmentService {
             Map<String, Object> options = new HashMap<>();
             if ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet".equals(contentType)
                     || "application/vnd.ms-excel".equals(contentType)) {
-                options.put("resource_type", "raw"); // Sử dụng 'raw' cho file Excel
+                options.put("resource_type", "raw"); 
             } else {
-                options.put("resource_type", "auto"); // Mặc định 'auto' cho hình ảnh
+                options.put("resource_type", "auto"); 
             }
 
-            // Chuyển MultipartFile thành File tạm thời
             File tempFile = File.createTempFile("upload-", "." + FilenameUtils.getExtension(file.getOriginalFilename()));
             file.transferTo(tempFile);
 
-            // Upload file tạm thời lên Cloudinary
             Map<String, Object> uploadResult = cloudinary.uploader().upload(tempFile, options);
             String url = uploadResult.get("url").toString();
             String fileName = file.getOriginalFilename();
 
-            // Xóa file tạm sau khi upload
             tempFile.deleteOnExit();
 
-            // Tạo ChatAttachment
             ChatAttachment attachment = new ChatAttachment();
             attachment.setMessageId(messageId);
             attachment.setChatRoomId(chatRoomId);

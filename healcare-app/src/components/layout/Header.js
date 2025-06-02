@@ -6,7 +6,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaHospital, FaUser, FaBell } from "react-icons/fa";
 import { useMyDispatcher, useMyUser } from "../../configs/MyContexts";
 import cookie from 'react-cookies';
-import { useState } from "react";
 
 const Header = () => {
     const nav = useNavigate();

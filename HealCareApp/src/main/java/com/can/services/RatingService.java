@@ -27,10 +27,8 @@ public interface RatingService {
 
     Double getAverageRatingForDoctor(Integer doctorId);
 
-    // Kiểm tra xem bệnh nhân có thể đánh giá cuộc hẹn không
     boolean canPatientRateAppointment(int appointmentId, int patientId);
 
-    // Kiểm tra xem lịch hẹn đã được đánh giá chưa?
     boolean isAppointmentRated(int appointmentId);
 
     List<RatingResponse> getRatingResponsesByDoctorId(Integer doctorId);

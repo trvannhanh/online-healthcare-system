@@ -49,19 +49,55 @@ import org.springframework.web.servlet.view.RedirectView;
  */
 @RestController
 @RequestMapping("/api")
+@CrossOrigin
 public class ApiAppointmentController {
 
     @Autowired
     private AppointmentService appService;
 
-    @Autowired
-    private com.can.services.PatientService patientService;
+    @PostMapping("/secure/appointments")
+    public ResponseEntity<?> createAppointment(@RequestBody Appointment appointment, Principal principal) {
+        try {
+            Appointment newAppointment = appService.addAppointment(appointment, principal.getName());
+            return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
+            
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    @PatchMapping("/secure/appointments/{id}/cancel")
+    public ResponseEntity<?> cancelAppointment(@PathVariable("id") int id, Principal principal) {
+        try {
+            Appointment updatedAppointment = appService.cancelAppointment(id, principal.getName());
+            return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
+        } catch (IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
-    @Autowired
-    private com.can.services.DoctorService doctorService;
+    @PatchMapping("/secure/appointments/{id}/reschedule")
+    public ResponseEntity<?> rescheduleAppointment(@PathVariable("id") int id, @RequestBody Map<String, String> body,
+            Principal principal) {
+        try {
+            String newDateStr = body.get("newDateTime");
+            Date newDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newDateStr);
+            Appointment updatedAppointment = appService.rescheduleAppointment(id, newDate, principal.getName());
+            return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
+        } catch (IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @GetMapping("/appointments/filter")
-    @CrossOrigin
     public ResponseEntity<List<Appointment>> getAppointmentsWithFilters(
             @RequestParam Map<String, String> params) {
         try {
@@ -72,27 +108,7 @@ public class ApiAppointmentController {
         }
     }
 
-    @Autowired
-    private NotificationService notiService;
-
-    @PostMapping("/secure/appointments")
-    @CrossOrigin
-    public ResponseEntity<?> createAppointment(@RequestBody Appointment appointment, Principal principal) {
-        try {
-            Appointment newAppointment = appService.addAppointment(appointment, principal.getName());
-            notiService.createAppointmentNotification(newAppointment.getId(), newAppointment.getPatient().getUser().getUsername());
-            return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    
     @GetMapping("secure/doctors/{doctorId}/available-slots")
-    @CrossOrigin
     public ResponseEntity<?> getAvailableSlots(
             @PathVariable("doctorId") int doctorId,
             @RequestParam("date") String date,
@@ -117,34 +133,7 @@ public class ApiAppointmentController {
         this.appService.deleteAppointment(id);
     }
 
-    @PatchMapping("/secure/appointments/{id}/cancel")
-    @CrossOrigin
-    public ResponseEntity<?> cancelAppointment(@PathVariable("id") int id, Principal principal) {
-        try {
-            Appointment updatedAppointment = appService.cancelAppointment(id, principal.getName());
-            return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
-        } catch (IllegalStateException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @PatchMapping("/secure/appointments/{id}/reschedule")
-    @CrossOrigin
-    public ResponseEntity<?> rescheduleAppointment(@PathVariable("id") int id, @RequestBody Map<String, String> body,
-            Principal principal) {
-        try {
-            String newDateStr = body.get("newDateTime");
-            Date newDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newDateStr);
-            Appointment updatedAppointment = appService.rescheduleAppointment(id, newDate, principal.getName());
-            return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
-        } catch (IllegalStateException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+    
 
     @PutMapping("/appointments/{id}")
     public ResponseEntity<Appointment> updateAppointment(@PathVariable Long id, @RequestBody Appointment appointment) {
@@ -163,7 +152,6 @@ public class ApiAppointmentController {
     }
 
     @PatchMapping("/secure/appointments/{id}/confirm")
-    @CrossOrigin
     public ResponseEntity<?> confirmAppointment(@PathVariable("id") int id, Principal principal) {
         try {
             Appointment updatedAppointment = appService.confirmAppointment(id, principal.getName());

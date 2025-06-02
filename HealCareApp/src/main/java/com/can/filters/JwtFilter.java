@@ -27,7 +27,6 @@ public class JwtFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         
-        // Bỏ qua và xử lý OPTIONS request (preflight)
         if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
             httpResponse.setStatus(HttpServletResponse.SC_OK);
             httpResponse.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");

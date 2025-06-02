@@ -2,36 +2,45 @@ package com.can.controllers;
 
 import com.can.pojo.Rating;
 import com.can.pojo.RatingResponse;
-import com.can.pojo.Response;
 import com.can.services.RatingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
-
 import java.util.List;
-import java.util.Map;
-
 /**
  *
  * @author DELL
  */
 @RestController
 @RequestMapping("/api")
+@CrossOrigin
 public class ApiRatingController {
 
     @Autowired
     private RatingService ratingService;
+    
+    @PostMapping("/secure/patient/rating")
+    public ResponseEntity<Rating> addRating(@RequestBody Rating rating, Principal principal) {
+        try {
+            String username = principal.getName();
+            Rating newRating = ratingService.addRating(rating, username);
+            return new ResponseEntity<>(newRating, HttpStatus.CREATED);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
-    // Lấy đánh giá theo ID
+
     @GetMapping("/rating/{id}")
     public ResponseEntity<Rating> getRatingById(@PathVariable("id") Integer id) {
         Rating rating = ratingService.getRatingById(id);
         return rating != null ? ResponseEntity.ok(rating) : ResponseEntity.notFound().build();
     }
 
-    // Lấy tất cả các đánh giá về bác sĩ theo ID
+
     @GetMapping("/rating/doctor/{doctorId}")
     public ResponseEntity<List<RatingResponse>> getRatingsByDoctorId(@PathVariable("doctorId") Integer doctorId) {
         try {
@@ -43,21 +52,6 @@ public class ApiRatingController {
         }
     }
 
-    // Thêm một đánh giá mới
-    @PostMapping("/secure/patient/rating")
-    public ResponseEntity<Rating> addRating(@RequestBody Rating rating, Principal principal) {
-        try {
-            String username = principal.getName();
-
-            Rating newRating = ratingService.addRating(rating, username);
-            return new ResponseEntity<>(newRating, HttpStatus.CREATED);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    // Cập nhật đánh giá
     @PutMapping("/secure/patient/rating/{id}")
     public ResponseEntity<Rating> updateRating(@RequestBody Rating rating, Principal principal) {
         try {
@@ -71,12 +65,10 @@ public class ApiRatingController {
         }
     }
 
-    // Xóa đánh giá theo ID
     @DeleteMapping("/secure/rating/{id}")
     public ResponseEntity<Void> deleteRating(@PathVariable("id") Integer id, Principal principal) {
         try {
             String username = principal.getName();
-
             ratingService.deleteRating(id, username);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
@@ -85,11 +77,9 @@ public class ApiRatingController {
         }
     }
 
-    // Tính trung bình đánh giá cho bác sĩ
     @GetMapping("/average/{doctorId}")
     public ResponseEntity<Double> getAverageRatingForDoctor(@PathVariable("doctorId") Integer doctorId) {
         try {
-            // Tính trung bình đánh giá cho bác sĩ
             Double averageRating = ratingService.getAverageRatingForDoctor(doctorId);
             return ResponseEntity.ok(averageRating);
         } catch (Exception e) {
@@ -99,7 +89,6 @@ public class ApiRatingController {
         }
     }
 
-    // Kiểm tra lịch hẹn đã được đánh giá hay chưa
     @GetMapping("/rating/appointment/{appointmentId}")
     public ResponseEntity<Boolean> isAppointmentRated(@PathVariable("appointmentId") Integer appointmentId) {
         try {

@@ -16,9 +16,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import java.time.LocalDateTime;
 import java.util.Date;
-import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  *

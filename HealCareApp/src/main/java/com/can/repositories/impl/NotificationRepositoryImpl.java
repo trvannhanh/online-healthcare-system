@@ -1,19 +1,14 @@
 package com.can.repositories.impl;
 
-import com.can.pojo.Appointment;
-import com.can.pojo.NotificationType;
 import com.can.pojo.Notifications;
 import com.can.pojo.User;
 import com.can.repositories.NotificationRepository;
-
-import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -22,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Date;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
@@ -39,6 +33,69 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     private LocalSessionFactoryBean factory;
 
     private static final int PAGE_SIZE = 10;
+    
+    @Override
+    public List<Notifications> getUpcomingNotifications(Integer userId) {
+        Session session = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Notifications> q = builder.createQuery(Notifications.class);
+        Root<Notifications> root = q.from(Notifications.class);
+
+        Join<Notifications, User> userJoin = root.join("user");
+
+        Date now = new Date();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(now);
+        calendar.add(Calendar.MINUTE, -30); 
+        Date thirtyMinutesAgo = calendar.getTime();
+
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(userJoin.get("id"), userId));
+        predicates.add(builder.equal(root.get("isRead"), false)); 
+
+        predicates.add(builder.between(root.get("sentAt"), thirtyMinutesAgo, now));
+
+        q.where(predicates.toArray(new Predicate[0]));
+        q.orderBy(builder.desc(root.get("sentAt"))); 
+
+        Query query = session.createQuery(q);
+        return query.getResultList();
+    }
+
+    @Override
+    public void markNotificationAsRead(int notificationId, Integer userId) {
+        Session session = this.factory.getObject().getCurrentSession();
+
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Notifications> q = builder.createQuery(Notifications.class);
+        Root<Notifications> root = q.from(Notifications.class);
+
+        Join<Notifications, User> userJoin = root.join("user");
+
+        q.where(
+                builder.and(
+                        builder.equal(root.get("id"), notificationId),
+                        builder.equal(userJoin.get("id"), userId)));
+
+        Query query = session.createQuery(q);
+
+        Notifications notification = (Notifications) query.getSingleResult();
+
+        notification.setIsRead(true);
+        session.merge(notification);
+
+    }
+    
+    @Override
+    public Notifications addNotification(Notifications notification) {
+        if (notification.getType() == null) {
+            throw new IllegalArgumentException("Loại thông báo là bắt buộc");
+        }
+        Session session = this.factory.getObject().getCurrentSession();
+        session.persist(notification);
+        return notification;
+    }
 
     @Override
     public List<Notifications> getNotificationsByCriteria(Map<String, String> params) throws ParseException {
@@ -125,15 +182,6 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         return hqlQuery.getResultList();
     }
 
-    @Override
-    public Notifications addNotification(Notifications notification) {
-        if (notification.getType() == null) {
-            throw new IllegalArgumentException("Notification type is required.");
-        }
-        Session session = this.factory.getObject().getCurrentSession();
-        session.persist(notification);
-        return notification;
-    }
 
     @Override
     public List<Notifications> getNotificationsByVerificationStatus(boolean isVerified, int page) {
@@ -199,7 +247,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         if (notification != null && (notification.getSentAt() == null ||
                 notification.getSentAt().after(new Date()))) {
             notification.setMessage(message);
-            session.update(notification);
+            session.merge(notification);
         }
     }
 
@@ -215,58 +263,4 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         if (notification != null)
             session.remove(notification);
     }
-
-    @Override
-    public List<Notifications> getUpcomingNotifications(Integer userId) {
-        Session session = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Notifications> q = builder.createQuery(Notifications.class);
-        Root<Notifications> root = q.from(Notifications.class);
-
-        Join<Notifications, User> userJoin = root.join("user");
-
-        Date now = new Date();
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(now);
-        calendar.add(Calendar.MINUTE, -30); 
-        Date thirtyMinutesAgo = calendar.getTime();
-
-        List<Predicate> predicates = new ArrayList<>();
-        predicates.add(builder.equal(userJoin.get("id"), userId));
-        predicates.add(builder.equal(root.get("isRead"), false)); 
-
-        predicates.add(builder.between(root.get("sentAt"), thirtyMinutesAgo, now));
-
-        q.where(predicates.toArray(new Predicate[0]));
-        q.orderBy(builder.desc(root.get("sentAt"))); 
-
-        Query query = session.createQuery(q);
-        return query.getResultList();
-    }
-
-    @Override
-    public void markNotificationAsRead(int notificationId, Integer userId) {
-        Session session = this.factory.getObject().getCurrentSession();
-
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<Notifications> q = builder.createQuery(Notifications.class);
-        Root<Notifications> root = q.from(Notifications.class);
-
-        Join<Notifications, User> userJoin = root.join("user");
-
-        q.where(
-                builder.and(
-                        builder.equal(root.get("id"), notificationId),
-                        builder.equal(userJoin.get("id"), userId)));
-
-        Query query = session.createQuery(q);
-
-        Notifications notification = (Notifications) query.getSingleResult();
-
-        notification.setIsRead(true);
-        session.update(notification);
-
-    }
-
 }

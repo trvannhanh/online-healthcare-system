@@ -11,25 +11,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
-
 import com.can.pojo.Appointment;
 import com.can.pojo.AppointmentStatus;
 import com.can.pojo.HealthRecord;
-import com.can.pojo.Patient;
 import com.can.pojo.Payment;
 import com.can.pojo.PaymentMethod;
 import com.can.repositories.StatisticRepository;
-
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-
-import com.can.repositories.ResponseRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Repository;
 
@@ -42,24 +36,7 @@ public class StatisticRepositoryImpl implements StatisticRepository {
 
     private static final int PAGE_SIZE = 10;
 
-    @Override
-    public List<Appointment> getAppointmentsCompleteByDateRange(Date fromDateStr, Date toDateStr)
-            throws ParseException {
-        Session s = this.factory.getObject().getCurrentSession();
-        CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Appointment> q = b.createQuery(Appointment.class);
-        Root<Appointment> root = q.from(Appointment.class);
-        root.fetch("doctor").fetch("user");
-        root.fetch("patient").fetch("user");
-
-        q.where(
-                b.equal(root.get("status"), AppointmentStatus.COMPLETED),
-                b.between(root.get("appointmentDate"), fromDateStr, toDateStr));
-        q.orderBy(b.asc(root.get("appointmentDate")));
-
-        Query query = s.createQuery(q);
-        return query.getResultList();
-    }
+    
 
     @Override
     public Integer countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr)
@@ -439,6 +416,25 @@ public class StatisticRepositoryImpl implements StatisticRepository {
                         Map.Entry::getValue,
                         (e1, e2) -> e1,
                         LinkedHashMap::new));
+    }
+    
+    @Override
+    public List<Appointment> getAppointmentsCompleteByDateRange(Date fromDateStr, Date toDateStr)
+            throws ParseException {
+        Session s = this.factory.getObject().getCurrentSession();
+        CriteriaBuilder b = s.getCriteriaBuilder();
+        CriteriaQuery<Appointment> q = b.createQuery(Appointment.class);
+        Root<Appointment> root = q.from(Appointment.class);
+        root.fetch("doctor").fetch("user");
+        root.fetch("patient").fetch("user");
+
+        q.where(
+                b.equal(root.get("status"), AppointmentStatus.COMPLETED),
+                b.between(root.get("appointmentDate"), fromDateStr, toDateStr));
+        q.orderBy(b.asc(root.get("appointmentDate")));
+
+        Query query = s.createQuery(q);
+        return query.getResultList();
     }
     
 }

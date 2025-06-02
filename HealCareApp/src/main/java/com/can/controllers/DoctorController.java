@@ -6,30 +6,25 @@ package com.can.controllers;
 
 import com.can.pojo.Doctor;
 import com.can.pojo.Hospital;
-import com.can.pojo.Role;
 import com.can.pojo.Specialization;
 import com.can.pojo.User;
 import com.can.services.DoctorService;
 import com.can.services.HospitalService;
 import com.can.services.SpecializationService;
 import com.can.services.UserService;
-import jakarta.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 /**
  *
  * @author Giidavibe
@@ -102,7 +97,6 @@ public class DoctorController {
             Model model,
             RedirectAttributes redirectAttributes) {
         try {
-            // Validate required fields
             if (firstName == null || firstName.trim().isEmpty()
                     || lastName == null || lastName.trim().isEmpty()
                     || phoneNumber == null || phoneNumber.trim().isEmpty()
@@ -112,13 +106,11 @@ public class DoctorController {
                 throw new IllegalArgumentException("Các trường bắt buộc (Họ, Tên, Số điện thoại, Email, Bệnh viện, Chuyên khoa) không được để trống.");
             }
 
-            // Lấy Doctor hiện tại từ cơ sở dữ liệu
             Doctor doctor = docService.getDoctorById(id);
             if (doctor == null) {
                 throw new RuntimeException("Doctor with ID " + id + " not found");
             }
 
-            // Cập nhật thông tin User
             User user = doctor.getUser();
             if (user == null) {
                 throw new RuntimeException("User information is required for a Doctor");
@@ -128,7 +120,6 @@ public class DoctorController {
             user.setPhoneNumber(phoneNumber);
             user.setEmail(email);
 
-            // Cập nhật thông tin Doctor
             if (licenseNumber != null) {
                 doctor.setLicenseNumber(licenseNumber);
             }
@@ -139,7 +130,6 @@ public class DoctorController {
                 doctor.setBio(bio);
             }
 
-            // Cập nhật bệnh viện
             Hospital hospital = hospitalService.getHospitalByName(hospitalName);
             if (hospital == null) {
                 hospital = new Hospital();
@@ -148,7 +138,6 @@ public class DoctorController {
             }
             doctor.setHospital(hospital);
 
-            // Cập nhật chuyên khoa
             Specialization specialization = specializationService.getSpecializationByName(specializationName);
             if (specialization == null) {
                 specialization = new Specialization();
@@ -157,12 +146,10 @@ public class DoctorController {
             }
             doctor.setSpecialization(specialization);
 
-            // Cập nhật ảnh đại diện nếu có
             if (avatar != null && !avatar.isEmpty()) {
                 userService.updateAvatar(doctor.getId(), avatar);
             }
 
-            // Giữ nguyên verificationStatus
             docService.updateDoctor(doctor);
             redirectAttributes.addFlashAttribute("success", "Cập nhật bác sĩ thành công!");
             return "redirect:/doctors";

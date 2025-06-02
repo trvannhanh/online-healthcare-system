@@ -1,28 +1,19 @@
 package com.can.controllers;
 
-import com.can.pojo.Appointment;
-import com.can.pojo.NotificationType;
 import com.can.pojo.Notifications;
 import com.can.pojo.User;
 import com.can.services.NotificationService;
 import com.can.services.UserService;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
-
 import java.beans.PropertyEditorSupport;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
 import javax.management.Notification;
-
 import org.springframework.stereotype.Controller;
 
 /**
@@ -45,14 +36,14 @@ public class NotificationController {
         model.addAttribute("notifications", notifications);
         model.addAttribute("users", this.userService.getAllUsers());
 
-        return "notifications/notifications"; // Tên file HTML hiển thị danh sách thông báo
+        return "notifications/notifications"; 
     }
 
     @GetMapping("/notifications/add")
     public String showAddForm(Model model) {
         model.addAttribute("notification", new Notifications());
         model.addAttribute("users", userService.getAllUsers());
-        return "notifications/notification_add"; // Tên file HTML hiển thị form thêm thông báo
+        return "notifications/notification_add"; 
     }
 
     @PostMapping("/notifications/add")
@@ -70,7 +61,7 @@ public class NotificationController {
             this.notificationService.addNotification(notification);
         }
 
-        return "redirect:/notifications"; // Quay lại danh sách thông báo
+        return "redirect:/notifications";
     }
 
     @GetMapping("/notifications/edit/{id}")
@@ -99,12 +90,11 @@ public class NotificationController {
     @PostMapping("/notifications/edit/{id}")
     public String editNotification(@PathVariable("id") int id,
             @RequestParam("message") String message) {
-        // Lấy thông báo từ cơ sở dữ liệu
         Notifications notification = this.notificationService.getNotificationById(id);
         if (notification != null) {
-            this.notificationService.updateNotificationMessage(id, message); // Lưu thay đổi
+            this.notificationService.updateNotificationMessage(id, message); 
         }
-        return "redirect:/notifications"; // Quay lại danh sách thông báo
+        return "redirect:/notifications"; 
     }
 
     @InitBinder

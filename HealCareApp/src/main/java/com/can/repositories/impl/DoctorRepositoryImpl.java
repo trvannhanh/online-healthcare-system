@@ -13,7 +13,6 @@ import com.can.repositories.DoctorRepository;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -56,7 +55,6 @@ public class DoctorRepositoryImpl implements DoctorRepository {
         if (params != null) {
             List<Predicate> predicates = new ArrayList<>();
 
-            //Lọc theo tên bác sĩ
             String doctorName = params.get("doctorName");
             if (doctorName != null && !doctorName.isEmpty()) {
                 String[] nameParts = doctorName.trim().toLowerCase().split("\\s+");
@@ -74,7 +72,6 @@ public class DoctorRepositoryImpl implements DoctorRepository {
                 predicates.add(b.and(namePredicates.toArray(Predicate[]::new)));
             }
 
-            //Lọc theo chuyên khoa
             String specialization = params.get("specialization");
             if (specialization != null && !specialization.isEmpty()) {
                 predicates.add(b.equal(
@@ -83,7 +80,7 @@ public class DoctorRepositoryImpl implements DoctorRepository {
                 ));
             }
 
-            //Lọc theo bệnh viện
+
             String hospital = params.get("hospital");
             if (hospital != null && !hospital.isEmpty()) {
                 predicates.add(b.equal(
@@ -92,7 +89,6 @@ public class DoctorRepositoryImpl implements DoctorRepository {
                 ));
             }
 
-            // Áp dụng các điều kiện lọc
             q.where(predicates.toArray(Predicate[]::new));
         }
 

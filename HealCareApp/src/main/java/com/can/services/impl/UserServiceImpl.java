@@ -22,8 +22,6 @@ import com.can.services.UserService;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeParseException;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -73,20 +71,19 @@ public class UserServiceImpl implements UserService {
     private Cloudinary cloudinary;
     
     private static final int MAX_LOGIN_ATTEMPTS = 5;
-
+    
+    
     @Override
-    public User getUserById(int id) {
-        return this.userRepo.getUserById(id);
-    }
-
-    @Override
-    public List<User> getAllUsers() {
-        return this.userRepo.getAllUsers();
-    }
-
-    @Override
-    public User getUserByUsername(String username) {
-        return this.userRepo.getUserByUsername(username);
+    public boolean authenticate(String username, String password) {
+        User user = userRepo.getUserByUsername(username);
+        if (user == null || user.getIsLocked()) {
+            return false;
+        }
+        boolean isAuthenticated = this.userRepo.authenticate(username, password);
+        if (isAuthenticated) {
+            resetFailedLoginAttempts(username);
+        }
+        return isAuthenticated;
     }
 
     @Override
@@ -166,7 +163,6 @@ public class UserServiceImpl implements UserService {
     }
 
     private void validateParams(Map<String, String> params) {
-        // Kiểm tra các trường bắt buộc
         if (params.get("firstName") == null || params.get("firstName").isBlank() || params.get("firstName").length() > 50) {
             throw new IllegalArgumentException("Họ không được để trống và tối đa 50 ký tự");
         }
@@ -189,7 +185,6 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Số CMND/CCCD phải là 12 chữ số");
         }
 
-        // Kiểm tra tính duy nhất
         if (userRepo.getUserByUsername(params.get("username")) != null) {
             throw new IllegalArgumentException("Tên đăng nhập đã tồn tại");
         }
@@ -203,10 +198,8 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Số CMND/CCCD đã tồn tại");
         }
 
-        // Kiểm tra vai trò
         String role = params.get("role") != null ? params.get("role").toUpperCase() : "PATIENT";
 
-        // Kiểm tra thông tin theo vai trò
         if ("PATIENT".equals(role)) {
             if (params.get("insuranceNumber") == null || !params.get("insuranceNumber").matches("^[A-Za-z0-9]{10,20}$")) {
                 throw new IllegalArgumentException("Số bảo hiểm phải từ 10-20 ký tự, chỉ chứa chữ và số");
@@ -237,16 +230,6 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private boolean isValidDate(String date) {
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            sdf.setLenient(false);
-            sdf.parse(date);
-            return true;
-        } catch (ParseException e) {
-            return false;
-        }
-    }
 
     @Override
     public boolean updateUser(User user) {
@@ -262,7 +245,7 @@ public class UserServiceImpl implements UserService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User u = this.userRepo.getUserByUsername(username);
         if (u == null) {
-            throw new UsernameNotFoundException("Invalid username!");
+            throw new UsernameNotFoundException("Username không hợp lệ!");
         }
 
         Set<GrantedAuthority> authorities = new HashSet<>();
@@ -271,22 +254,7 @@ public class UserServiceImpl implements UserService {
         return new org.springframework.security.core.userdetails.User(
                 u.getUsername(), u.getPassword(), authorities);
     }
-
-
     
-    @Override
-    public boolean authenticate(String username, String password) {
-        User user = userRepo.getUserByUsername(username);
-        if (user == null || user.getIsLocked()) {
-            return false;
-        }
-        boolean isAuthenticated = this.userRepo.authenticate(username, password);
-        if (isAuthenticated) {
-            resetFailedLoginAttempts(username);
-        }
-        return isAuthenticated;
-    }
-
     @Override
     public boolean isAccountLocked(String username) {
         User user = userRepo.getUserByUsername(username);
@@ -319,6 +287,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+
     @Override
     public List<User> getUsersByRole(String role) {
         return this.userRepo.getUsersByRole(role);
@@ -328,10 +297,10 @@ public class UserServiceImpl implements UserService {
     public String updateAvatar(int id, MultipartFile avatar) {
         User u = this.userRepo.getUserById(id);
         if (u == null) {
-            throw new IllegalArgumentException("User not found");
+            throw new IllegalArgumentException("Không tìm thấy người dùng");
         }
         if (avatar == null || avatar.isEmpty()) {
-            throw new IllegalArgumentException("Avatar is required");
+            throw new IllegalArgumentException("Avatar là bắt buộc");
         }
         try {
             Map res = cloudinary.uploader().upload(avatar.getBytes(),
@@ -362,7 +331,7 @@ public class UserServiceImpl implements UserService {
     public String updateUserAvatar(String username, MultipartFile avatar) {
         User user = this.userRepo.getUserByUsername(username);
         if (user == null) {
-            throw new RuntimeException("User not found");
+            throw new RuntimeException("Không tìm thấy người dùng");
         }
 
         return this.updateAvatar(user.getId(), avatar);
@@ -373,5 +342,20 @@ public class UserServiceImpl implements UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         return this.changePassword(username, currentPassword, newPassword);
+    }
+    
+    @Override
+    public User getUserById(int id) {
+        return this.userRepo.getUserById(id);
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return this.userRepo.getAllUsers();
+    }
+
+    @Override
+    public User getUserByUsername(String username) {
+        return this.userRepo.getUserByUsername(username);
     }
 }

@@ -58,7 +58,7 @@ public class ChatAttachmentRepositoryImpl implements ChatAttachmentRepository{
             Session session = sessionFactory.getObject().getCurrentSession();
             ChatAttachment attachment = session.get(ChatAttachment.class, id);
             if (attachment != null) {
-                session.delete(attachment);
+                session.remove(attachment);
                 return true;
             }
             return false;

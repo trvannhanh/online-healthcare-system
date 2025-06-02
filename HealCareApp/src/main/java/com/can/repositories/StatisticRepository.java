@@ -7,13 +7,13 @@ import java.util.Map;
 
 import com.can.pojo.Appointment;
 import com.can.pojo.Payment;
-import com.can.pojo.PaymentMethod;
 
 /**
  *
  * @author DELL
  */
 public interface StatisticRepository {
+
     List<Appointment> getAppointmentsCompleteByDateRange(Date fromDateStr, Date toDateStr) throws ParseException;
 
     Integer countDistinctPatientsByDoctorAndDateRange(int doctorId, Date fromDateStr, Date toDateStr)
@@ -54,6 +54,8 @@ public interface StatisticRepository {
     Map<String, Map<String, Object>> getPaymentMethodStats(Date fromDate, Date toDate) throws ParseException;
 
     Map<Integer, Map<String, Double>> getMonthlyRevenueByPaymentMethod(int year) throws ParseException;
+
     Map<String, Long> getTopDiseaseTypesByDoctorSortedByMonth(int doctorId, int year) throws ParseException;
+
     Map<String, Long> getTopDiseaseTypesByDoctorSortedByQuarter(int doctorId, int year) throws ParseException;
 }

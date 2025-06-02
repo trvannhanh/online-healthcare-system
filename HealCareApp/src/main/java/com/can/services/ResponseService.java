@@ -17,9 +17,7 @@ public interface ResponseService {
     void deleteResponse(Integer responseId);
     boolean isResponseExist(int responseId);
     Response getResponsesByRating(Integer ratingId);  
-    // Kiểm tra xem đánh giá đã được phản hồi chưa
     boolean isRatingResponsed(int ratingId);
-    // Kiểm tra xem bác sĩ có thể phản hồi đánh giá không
     boolean canDoctorRespondToRating(int ratingId, int doctorId);
 
 }

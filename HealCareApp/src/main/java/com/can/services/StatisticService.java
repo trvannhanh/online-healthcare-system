@@ -4,7 +4,6 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
 import com.can.pojo.Appointment;
 import com.can.pojo.Payment;
 
@@ -54,10 +53,6 @@ public interface StatisticService {
 
     Map<Integer, Map<String, Double>> getMonthlyRevenueByPaymentMethod(int year) throws ParseException;
 
-    //Thống kê loại bệnh phổ biến nhất trong một khoảng thời gian
-    // Map<String, Long> getTopDiseaseTypes(Date fromDate, Date toDate, int topN) throws ParseException;
-    // Map<Integer, Map<String, Long>> getMostCommonDiseaseByMonth(int year) throws ParseException;
-    // Map<Integer, Map<String, Long>> getMostCommonDiseaseByQuarter(int year) throws ParseException;
     Map<String, Long> getTopDiseaseTypesByDoctorSortedByMonth(String username, int year) throws ParseException;
     Map<String, Long> getTopDiseaseTypesByDoctorSortedByQuarter(String username, int year) throws ParseException;
 

@@ -49,9 +49,8 @@ public class ApiChatController {
     @Autowired
     private UserService userService;
 
-    private final FirebaseDatabase firebaseDatabase; // Không khởi tạo trực tiếp
+    private final FirebaseDatabase firebaseDatabase; 
 
-    // Inject FirebaseDatabase qua constructor
     @Autowired
     public ApiChatController(FirebaseDatabase firebaseDatabase) {
         this.firebaseDatabase = firebaseDatabase;
@@ -61,11 +60,9 @@ public class ApiChatController {
     
     private static final String CHAT_ROOMS_PATH = "chat_rooms";
 
-    // Lấy danh sách tin nhắn trong một phòng chat
     @GetMapping("/messages/{otherUserId}")
     public ResponseEntity<List<Map<String, Object>>> getMessages(@PathVariable String otherUserId, Principal principal) {
         try {
-            // Lấy thông tin người dùng hiện tại từ Principal
             User currentUser = userService.getUserByUsername(principal.getName());
             if (currentUser == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -83,7 +80,7 @@ public class ApiChatController {
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for (DataSnapshot messageSnapshot : dataSnapshot.getChildren()) {
                         Map<String, Object> message = (Map<String, Object>) messageSnapshot.getValue();
-                        message.put("id", messageSnapshot.getKey()); // Thêm key làm id
+                        message.put("id", messageSnapshot.getKey());
                         messages.add(message);
                     }
                 }
@@ -94,8 +91,7 @@ public class ApiChatController {
                 }
             });
 
-            // Chờ dữ liệu từ Firebase (cần xử lý bất đồng bộ tốt hơn trong thực tế)
-            Thread.sleep(1000); // Giả lập chờ dữ liệu
+            Thread.sleep(1000); 
             return ResponseEntity.ok(messages);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -103,7 +99,6 @@ public class ApiChatController {
         }
     }
 
-    // Gửi tin nhắn (văn bản, file, hoặc ảnh)
     @PostMapping("/send")
     public ResponseEntity<?> sendMessage(
             @RequestParam(value = "text", required = false) String text,
@@ -113,7 +108,6 @@ public class ApiChatController {
             Principal principal) {
 
         try {
-            // Lấy thông tin người dùng hiện tại từ Principal
             User currentUser = userService.getUserByUsername(principal.getName());
             if (currentUser == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -155,7 +149,6 @@ public class ApiChatController {
 
             chatRef.child(messageId).setValueAsync(messageData);
 
-            // Cập nhật participants
             DatabaseReference participantsRef = firebaseDatabase.getReference(CHAT_ROOMS_PATH + "/" + chatRoomId + "/participants");
             Map<String, String> participants = new HashMap<>();
             participants.put("userId", currentUserId);
@@ -170,11 +163,9 @@ public class ApiChatController {
         }
     }
 
-    // (Tùy chọn) Xóa tin nhắn
     @DeleteMapping("/messages/{messageId}")
     public ResponseEntity<?> deleteMessage(@PathVariable String messageId, @RequestParam String otherUserId, Principal principal) {
         try {
-            // Lấy thông tin người dùng hiện tại từ Principal
             User currentUser = userService.getUserByUsername(principal.getName());
             if (currentUser == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -191,16 +182,13 @@ public class ApiChatController {
                         Map<String, Object> message = (Map<String, Object>) dataSnapshot.getValue();
                         if (message.get("senderId").equals(currentUserId)) {
                             messageRef.removeValueAsync();
-                            // Xóa file/ảnh trên Cloudinary nếu có
                             if (message.containsKey("attachmentId")) {
                                 ChatAttachment attachment = chatAttachmentService.getChatAttachmentById(
                                     Integer.parseInt(message.get("attachmentId").toString())
                                 );
                                 if (attachment != null) {
-                                    // Giả định publicId có thể trích xuất từ url
                                     String publicId = attachment.getUrl().substring(attachment.getUrl().lastIndexOf("/") + 1, attachment.getUrl().lastIndexOf("."));
-                                    chatAttachmentService.deleteChatAttachment(attachment.getId()); // Xóa từ MySQL
-                                    // Xóa từ Cloudinary (cần cấu hình thêm)
+                                    chatAttachmentService.deleteChatAttachment(attachment.getId()); 
                                 }
                             }
                         }
@@ -220,7 +208,6 @@ public class ApiChatController {
         }
     }
 
-    // Helper method để tạo chatRoomId
     private String getChatRoomId(String userId, String otherUserId) {
         return userId.compareTo(otherUserId) < 0 ? userId + "_" + otherUserId : otherUserId + "_" + userId;
     }

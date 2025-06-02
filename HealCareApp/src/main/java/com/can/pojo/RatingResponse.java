@@ -2,9 +2,7 @@ package com.can.pojo;
 
 import java.io.Serializable;
 
-/**
- * Lớp kết hợp thông tin từ Rating và Response
- */
+
 public class RatingResponse implements Serializable {
     private Rating rating;
     private Response response;

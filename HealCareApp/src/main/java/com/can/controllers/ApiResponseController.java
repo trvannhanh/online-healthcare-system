@@ -10,18 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
 import java.security.Principal;
 import java.util.List;
-import java.util.Map;
-
 /**
  *
  * @author DELL
  */
 @RestController
 @RequestMapping("/api")
+@CrossOrigin
 public class ApiResponseController {
 
     @Autowired
@@ -32,8 +29,17 @@ public class ApiResponseController {
 
     @Autowired
     private RatingService ratingService;
+    
+    @PostMapping("/secure/response")
+    public ResponseEntity<Response> addResponse(@RequestBody Response response, Principal principal) {
+        try {
+            Response newResponse = responseService.addResponse(response, principal.getName());
+            return new ResponseEntity<>(newResponse, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
-    // Lấy phản hồi theo ID
     @GetMapping("/response/{id}")
     public ResponseEntity<Response> getResponseById(@PathVariable("id") Integer id, Principal principal) {
         
@@ -42,17 +48,7 @@ public class ApiResponseController {
         return response != null ? ResponseEntity.ok(response) : ResponseEntity.notFound().build();
     }
 
-    // Thêm một phản hồi mới
-    @PostMapping("/secure/response")
-    public ResponseEntity<Response> addResponse(@RequestBody Response response, Principal principal) {
-        try {
-            
-            Response newResponse = responseService.addResponse(response, principal.getName());
-            return new ResponseEntity<>(newResponse, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+    
 
     // Cập nhật phản hồi
     @PutMapping("/secure/response/{id}")

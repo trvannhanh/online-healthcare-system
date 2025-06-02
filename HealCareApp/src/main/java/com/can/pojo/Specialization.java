@@ -18,6 +18,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "specialization")
 public class Specialization {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "specialization_id")
@@ -26,9 +27,19 @@ public class Specialization {
     @Column(name = "specialization_name", length = 100, nullable = false, unique = true)
     private String name;
 
-    // Getters, setters, constructors
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

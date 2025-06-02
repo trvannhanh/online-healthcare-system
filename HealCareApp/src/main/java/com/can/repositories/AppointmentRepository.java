@@ -6,10 +6,7 @@ package com.can.repositories;
 
 import com.can.pojo.Appointment;
 import com.can.pojo.AppointmentStatus;
-import java.security.Principal;
 import java.text.ParseException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;

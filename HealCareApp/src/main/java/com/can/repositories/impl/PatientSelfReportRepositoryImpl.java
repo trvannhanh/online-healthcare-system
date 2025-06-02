@@ -19,7 +19,32 @@ public class PatientSelfReportRepositoryImpl implements PatientSelfReportReposit
 
     @Autowired
     private LocalSessionFactoryBean factory;
+    
+    @Override
+    public PatientSelfReport addPatientSelfReport(PatientSelfReport patientSelfReport) {
+        Session s = this.factory.getObject().getCurrentSession();
+        
+        if (existsByPatientId(patientSelfReport.getPatient().getId())) {
+            throw new RuntimeException("Bệnh nhân đã có hồ sơ sức khỏe");
+        }
+        
+        s.persist(patientSelfReport);
+        return patientSelfReport;
+    }
 
+    @Override
+    public PatientSelfReport updatePatientSelfReport(PatientSelfReport patientSelfReport) {
+        Session s = this.factory.getObject().getCurrentSession();
+        
+        PatientSelfReport existingReport = getPatientSelfReportById(patientSelfReport.getId());
+        if (existingReport == null) {
+            throw new RuntimeException("Không tìm thấy hồ sơ sức khỏe bệnh nhân");
+        }
+        
+        return (PatientSelfReport) s.merge(patientSelfReport);
+    }
+
+    
     @Override
     public PatientSelfReport getPatientSelfReportById(int id) {
         Session s = this.factory.getObject().getCurrentSession();
@@ -44,36 +69,7 @@ public class PatientSelfReportRepositoryImpl implements PatientSelfReportReposit
         }
     }
 
-    @Override
-    public PatientSelfReport addPatientSelfReport(PatientSelfReport patientSelfReport) {
-        Session s = this.factory.getObject().getCurrentSession();
-        
-        // Check if patient already has a self report
-        if (existsByPatientId(patientSelfReport.getPatient().getId())) {
-            throw new RuntimeException("Patient already has a self report");
-        }
-        
-        s.persist(patientSelfReport);
-        return patientSelfReport;
-    }
-
-    @Override
-    public PatientSelfReport updatePatientSelfReport(PatientSelfReport patientSelfReport) {
-        Session s = this.factory.getObject().getCurrentSession();
-        
-        // Get existing report
-        PatientSelfReport existingReport = getPatientSelfReportById(patientSelfReport.getId());
-        if (existingReport == null) {
-            throw new RuntimeException("Patient self report not found");
-        }
-        
-        // Make sure patient ID hasn't changed
-        if (existingReport.getPatient().getId()!=(patientSelfReport.getPatient().getId())) {
-            throw new RuntimeException("Cannot change patient association");
-        }
-        
-        return (PatientSelfReport) s.merge(patientSelfReport);
-    }
+    
 
     @Override
     public boolean existsByPatientId(int patientId) {

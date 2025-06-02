@@ -11,22 +11,10 @@ import com.can.services.StatisticService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.ui.Model;
 
 @Controller
@@ -39,7 +27,6 @@ public class StatisticsController {
         return "statistics/statistics";
     }
 
-    // Thống kê số lượng bệnh nhân theo quý
     @GetMapping("statistics/patients-count-by-quarter")
     public String countPatientsByQuarter(
             @RequestParam(name = "year") Integer year,
@@ -50,14 +37,13 @@ public class StatisticsController {
             model.addAttribute("year", year);
             model.addAttribute("quarter", quarter);
             model.addAttribute("count", count);
-            return "statistics/statistics"; // Tên của file HTML hoặc JSP
+            return "statistics/statistics"; 
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            return "errorPage"; // Tên của file HTML hoặc JSP cho trang lỗi
+            return "errorPage";
         }
     }
 
-    // Thống kê số lượng bệnh nhân theo tháng
     @GetMapping("statistics/patients-count-by-month")
     public String countPatientsByMonth(
             @RequestParam(name = "year") Integer year,
@@ -69,10 +55,10 @@ public class StatisticsController {
             model.addAttribute("month", month);
             model.addAttribute("count", count);
 
-            return "statistics/statistics"; // Tên của file HTML hoặc JSP
+            return "statistics/statistics"; 
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            return "errorPage"; // Tên của file HTML hoặc JSP cho trang lỗi
+            return "errorPage"; 
         }
     }
 
@@ -80,12 +66,11 @@ public class StatisticsController {
     @ResponseBody
     public List<Integer> getMonthlyDataAjax(@RequestParam(name = "year") Integer year) {
         try {
-            // Lấy dữ liệu thống kê theo từng tháng
             return statisticService.getMonthlyStatistics(year);
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Error fetching monthly statistics for year: " + year);
-            return List.of(); // Trả về danh sách rỗng nếu có lỗi
+            return List.of(); 
         }
     }
 
@@ -93,18 +78,16 @@ public class StatisticsController {
     @ResponseBody
     public List<Integer> getQuarterlyDataAjax(@RequestParam(name = "year") Integer year) {
         try {
-            // Lấy dữ liệu thống kê theo từng tháng
             return statisticService.getQuarterlyStatistics(year);
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Error fetching monthly statistics for year: " + year);
-            return List.of(); // Trả về danh sách rỗng nếu có lỗi
+            return List.of(); 
         }
     }
 
     @GetMapping("statistics/revenue")
     public String showRevenueStatisticsPage(Model model) {
-        // Add any default data you want to show
         return "statistics/revenue";
     }
 
@@ -125,7 +108,6 @@ public class StatisticsController {
         }
     }
 
-    // Doanh thu theo khoảng thời gian
     @GetMapping("statistics/revenue/payments-date-range")
     public String getRevenueByDateRange(
             @RequestParam(name = "fromDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
@@ -143,7 +125,6 @@ public class StatisticsController {
         }
     }
 
-    // Doanh thu theo quý
     @GetMapping("statistics/revenue/payments-revenue-quarter")
     public String getRevenueByQuarter(
             @RequestParam(name = "year") Integer year,
@@ -161,7 +142,6 @@ public class StatisticsController {
         }
     }
 
-    // Doanh thu theo tháng
     @GetMapping("statistics/revenue/payments-revenue-month")
     public String getRevenueByMonth(
             @RequestParam(name = "year") Integer year,
@@ -179,7 +159,6 @@ public class StatisticsController {
         }
     }
 
-    // Lấy dữ liệu doanh thu theo tháng trong năm
     @GetMapping("statistics/revenue/monthly-revenue-ajax")
     @ResponseBody
     public List<Double> getMonthlyRevenueAjax(@RequestParam(name = "year") Integer year) {
@@ -187,11 +166,10 @@ public class StatisticsController {
             return statisticService.getMonthlyRevenue(year);
         } catch (Exception e) {
             e.printStackTrace();
-            return List.of(); // Trả về danh sách rỗng nếu có lỗi
+            return List.of(); 
         }
     }
 
-    // Lấy dữ liệu doanh thu theo quý trong năm
     @GetMapping("statistics/revenue/quarterly-revenue-ajax")
     @ResponseBody
     public List<Double> getQuarterlyRevenueAjax(@RequestParam(name = "year") Integer year) {
@@ -199,11 +177,10 @@ public class StatisticsController {
             return statisticService.getQuarterlyRevenue(year);
         } catch (Exception e) {
             e.printStackTrace();
-            return List.of(); // Trả về danh sách rỗng nếu có lỗi
+            return List.of(); 
         }
     }
 
-    // Thống kê chi tiết theo phương thức thanh toán
     @GetMapping("statistics/revenue/payment-method/stats")
     public String getPaymentMethodStats(
             @RequestParam(name = "fromDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
@@ -221,7 +198,6 @@ public class StatisticsController {
         }
     }
 
-    // Thống kê doanh thu theo tháng và phương thức thanh toán
     @GetMapping("statistics/revenue/monthly-by-method")
     public String getMonthlyRevenueByPaymentMethod(
             @RequestParam(name = "year") Integer year,
@@ -243,10 +219,8 @@ public class StatisticsController {
             @RequestParam(name = "year") Integer year,
             @RequestParam(name = "month") Integer month) {
         try {
-            // Sử dụng phương thức bạn đã có sẵn
             Map<String, Double> revenueByMethod = statisticService.getRevenueByPaymentMethodAndMonth(year, month);
 
-            // Chuyển đổi sang format phù hợp với biểu đồ tròn
             Map<String, Object> result = new HashMap<>();
             result.put("labels", new ArrayList<>(revenueByMethod.keySet()));
             result.put("values", new ArrayList<>(revenueByMethod.values()));

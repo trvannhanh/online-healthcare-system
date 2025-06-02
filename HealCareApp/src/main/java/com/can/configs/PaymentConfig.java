@@ -16,7 +16,7 @@ public class PaymentConfig {
     public static final String MOMO_PARTNER_CODE = "MOMO";
     public static final String MOMO_ACCESS_KEY = "F8BBA842ECF85";
     public static final String MOMO_SECRET_KEY = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
-    public static final String MOMO_ENDPOINT = "https://test-payment.momo.vn/v2/gateway/api/create"; // Sandbox URL
+    public static final String MOMO_ENDPOINT = "https://test-payment.momo.vn/v2/gateway/api/create"; 
 
     // VNPAY
     public static final String VNPAY_TMN_CODE = "0C228W61";
