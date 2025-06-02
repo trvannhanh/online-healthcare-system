@@ -66,7 +66,6 @@ public class StatisticRepositoryImpl implements StatisticRepository {
             throws ParseException {
         List<Appointment> appointments = getAppointmentsCompleteByDateRange(fromDateStr, toDateStr);
 
-        // Lọc theo bác sĩ và đếm số bệnh nhân duy nhất
         return (int) appointments.stream()
                 .filter(a -> a.getDoctor().getId() == doctorId)
                 .map(a -> a.getPatient().getId())
@@ -79,29 +78,25 @@ public class StatisticRepositoryImpl implements StatisticRepository {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date fromDate = sdf.parse(year + "-" + month + "-01");
 
-        // Tính ngày cuối cùng của tháng
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(fromDate);
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
         Date toDate = calendar.getTime();
-        // Tận dụng phương thức countDistinctPatientsByDoctorAndDateRange
         return countDistinctPatientsByDoctorAndDateRange(doctorId, fromDate, toDate);
     }
 
     @Override
     public Integer countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException {
-        int startMonth = (quarter - 1) * 3 + 1; // Tháng bắt đầu của quý
+        int startMonth = (quarter - 1) * 3 + 1; 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date fromDate = sdf.parse(year + "-" + startMonth + "-01");
 
-        // Tính ngày cuối cùng của quý
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(fromDate);
-        calendar.add(Calendar.MONTH, 2); // Thêm 2 tháng để đến tháng cuối của quý
+        calendar.add(Calendar.MONTH, 2); 
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
         Date toDate = calendar.getTime();
 
-        // Tận dụng phương thức countDistinctPatientsByDoctorAndDateRange
         return countDistinctPatientsByDoctorAndDateRange(doctorId, fromDate, toDate);
     }
 
@@ -109,23 +104,18 @@ public class StatisticRepositoryImpl implements StatisticRepository {
     public Integer countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException {
         List<Appointment> appointments = this.getAppointmentsCompleteByDateRange(fromDateStr, toDateStr);
 
-        return (int) appointments.stream()
-                .map(Appointment::getPatient)
-                .map(Patient::getId)
-                .distinct()
-                .count();
+        return (int) appointments.size();
     }
 
     @Override
     public Integer countDistinctPatientsByQuarter(int year, int quarter) throws ParseException {
-        int startMonth = (quarter - 1) * 3 + 1; // Tháng bắt đầu của quý
+        int startMonth = (quarter - 1) * 3 + 1; 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date fromDate = sdf.parse(year + "-" + startMonth + "-01");
 
-        // Tính ngày cuối cùng của quý
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(fromDate);
-        calendar.add(Calendar.MONTH, 2); // Thêm 2 tháng để đến tháng cuối của quý
+        calendar.add(Calendar.MONTH, 2); 
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
         Date toDate = calendar.getTime();
 
@@ -137,7 +127,6 @@ public class StatisticRepositoryImpl implements StatisticRepository {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date fromDate = sdf.parse(year + "-" + month + "-01");
 
-        // Tính ngày cuối cùng của tháng
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(fromDate);
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
@@ -193,10 +182,8 @@ public class StatisticRepositoryImpl implements StatisticRepository {
 
     @Override
     public Double getRevenueByDateRange(Date fromDate, Date toDate) throws ParseException {
-        // Lấy danh sách payment hoàn thành trong khoảng thời gian
         List<Payment> payments = getPaymentCompleteByDateRange(fromDate, toDate);
 
-        // Sử dụng stream để tính tổng doanh thu
         Double totalRevenue = payments.stream()
                 .mapToDouble(payment -> payment.getAmount())
                 .sum();
@@ -206,21 +193,18 @@ public class StatisticRepositoryImpl implements StatisticRepository {
 
     @Override
     public Double getRevenueByQuarter(int year, int quarter) throws ParseException {
-        int startMonth = (quarter - 1) * 3 + 1; // First month of quarter (1, 4, 7, 10)
+        int startMonth = (quarter - 1) * 3 + 1; 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date fromDate = sdf.parse(year + "-" + startMonth + "-01");
 
-        // Calculate last day of the quarter
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(fromDate);
-        calendar.add(Calendar.MONTH, 2); // Add 2 months to get to last month of quarter
+        calendar.add(Calendar.MONTH, 2); 
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
         Date toDate = calendar.getTime();
 
-        // Lấy danh sách payment hoàn thành trong khoảng thời gian
         List<Payment> payments = getPaymentCompleteByDateRange(fromDate, toDate);
 
-        // Calculate total revenue
         Double totalRevenue = payments.stream()
                 .mapToDouble(payment -> payment.getAmount())
                 .sum();
@@ -233,7 +217,6 @@ public class StatisticRepositoryImpl implements StatisticRepository {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date fromDate = sdf.parse(year + "-" + month + "-01");
 
-        // Calculate last day of the month
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(fromDate);
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
@@ -272,17 +255,13 @@ public class StatisticRepositoryImpl implements StatisticRepository {
 
     @Override
     public Map<String, Double> getRevenueByPaymentMethodAndDateRange(Date fromDate, Date toDate) throws ParseException {
-        // Lấy tất cả các thanh toán đã hoàn thành trong khoảng thời gian
         List<Payment> payments = getPaymentCompleteByDateRange(fromDate, toDate);
 
-        // Khởi tạo map kết quả
         Map<String, Double> result = new HashMap<>();
 
-        // Nhóm các thanh toán theo phương thức thanh toán và tính tổng
         for (PaymentMethod method : PaymentMethod.values()) {
             String methodName = method.toString();
 
-            // Tính tổng doanh thu cho phương thức thanh toán này
             Double total = payments.stream()
                     .filter(p -> p.getPaymentMethod() == method)
                     .mapToDouble(Payment::getAmount)
@@ -296,7 +275,6 @@ public class StatisticRepositoryImpl implements StatisticRepository {
 
     @Override
     public Map<String, Double> getRevenueByPaymentMethodAndMonth(int year, int month) throws ParseException {
-        // Chuyển đổi tháng sang khoảng thời gian
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date fromDate = sdf.parse(year + "-" + month + "-01");
 
@@ -305,47 +283,39 @@ public class StatisticRepositoryImpl implements StatisticRepository {
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
         Date toDate = calendar.getTime();
 
-        // Tận dụng phương thức đã có
         return getRevenueByPaymentMethodAndDateRange(fromDate, toDate);
     }
 
     @Override
     public Map<String, Double> getRevenueByPaymentMethodAndQuarter(int year, int quarter) throws ParseException {
-        // Tính ngày đầu quý
         int startMonth = (quarter - 1) * 3 + 1;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date fromDate = sdf.parse(year + "-" + startMonth + "-01");
 
-        // Tính ngày cuối quý
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(fromDate);
         calendar.add(Calendar.MONTH, 2);
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
         Date toDate = calendar.getTime();
 
-        // Tận dụng phương thức đã có
         return getRevenueByPaymentMethodAndDateRange(fromDate, toDate);
     }
 
     @Override
     public Map<String, Map<String, Object>> getPaymentMethodStats(Date fromDate, Date toDate) throws ParseException {
-        // Lấy tất cả các thanh toán đã hoàn thành trong khoảng thời gian
         List<Payment> payments = getPaymentCompleteByDateRange(fromDate, toDate);
 
-        // Khởi tạo map kết quả
         Map<String, Map<String, Object>> result = new HashMap<>();
 
-        // Tính toán thống kê cho từng phương thức thanh toán
         for (PaymentMethod method : PaymentMethod.values()) {
             String methodName = method.toString();
 
-            // Lọc thanh toán theo phương thức
             List<Payment> methodPayments = payments.stream()
                     .filter(p -> p.getPaymentMethod() == method)
                     .collect(Collectors.toList());
 
             Map<String, Object> stats = new HashMap<>();
-            stats.put("count", methodPayments.size()); // Số lượng giao dịch
+            stats.put("count", methodPayments.size()); 
 
             if (methodPayments.isEmpty()) {
                 stats.put("total", 0.0);
@@ -353,15 +323,14 @@ public class StatisticRepositoryImpl implements StatisticRepository {
                 stats.put("min", 0.0);
                 stats.put("max", 0.0);
             } else {
-                // Tính các giá trị thống kê
                 DoubleSummaryStatistics summaryStatistics = methodPayments.stream()
                         .mapToDouble(Payment::getAmount)
                         .summaryStatistics();
 
-                stats.put("total", summaryStatistics.getSum()); // Tổng doanh thu
-                stats.put("average", summaryStatistics.getAverage()); // Trung bình
-                stats.put("min", summaryStatistics.getMin()); // Giá trị thấp nhất
-                stats.put("max", summaryStatistics.getMax()); // Giá trị cao nhất
+                stats.put("total", summaryStatistics.getSum()); 
+                stats.put("average", summaryStatistics.getAverage()); 
+                stats.put("min", summaryStatistics.getMin()); 
+                stats.put("max", summaryStatistics.getMax()); 
             }
 
             result.put(methodName, stats);
@@ -374,10 +343,7 @@ public class StatisticRepositoryImpl implements StatisticRepository {
     public Map<Integer, Map<String, Double>> getMonthlyRevenueByPaymentMethod(int year) throws ParseException {
         Map<Integer, Map<String, Double>> result = new HashMap<>();
 
-        // Tính toán cho từng tháng trong năm
         for (int month = 1; month <= 12; month++) {
-            // Tận dụng phương thức đã có để lấy doanh thu theo phương thức thanh toán cho
-            // tháng này
             Map<String, Double> monthRevenue = getRevenueByPaymentMethodAndMonth(year, month);
             result.put(month, monthRevenue);
         }
@@ -385,103 +351,16 @@ public class StatisticRepositoryImpl implements StatisticRepository {
         return result;
     }
 
-    // @Override
-    // public Map<String, Long> getTopDiseaseTypes(Date fromDate, Date toDate, int topN) throws ParseException {
-    //     Session s = this.factory.getObject().getCurrentSession();
-
-    //     // Lấy danh sách health records trong khoảng thời gian
-    //     CriteriaBuilder b = s.getCriteriaBuilder();
-    //     CriteriaQuery<HealthRecord> q = b.createQuery(HealthRecord.class);
-    //     Root<HealthRecord> root = q.from(HealthRecord.class);
-
-    //     // Thêm điều kiện thời gian và disease_type không null
-    //     q.where(
-    //             b.and(
-    //                     b.between(root.get("createdDate"), fromDate, toDate),
-    //                     b.isNotNull(root.get("diseaseType")),
-    //                     b.notEqual(root.get("diseaseType"), "")));
-
-    //     // Thực thi truy vấn để lấy danh sách health records
-    //     List<HealthRecord> records = s.createQuery(q).getResultList();
-
-    //     // Sử dụng Java Stream để nhóm và đếm loại bệnh
-    //     Map<String, Long> diseaseCount = records.stream()
-    //             .filter(hr -> hr.getDiseaseType() != null && !hr.getDiseaseType().trim().isEmpty())
-    //             .collect(Collectors.groupingBy(
-    //                     HealthRecord::getDiseaseType,
-    //                     Collectors.counting()));
-
-    //     // Sắp xếp theo số lượng giảm dần và giới hạn số lượng kết quả
-    //     return diseaseCount.entrySet().stream()
-    //             .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-    //             .limit(topN)
-    //             .collect(Collectors.toMap(
-    //                     Map.Entry::getKey,
-    //                     Map.Entry::getValue,
-    //                     (e1, e2) -> e1,
-    //                     LinkedHashMap::new));
-    // }
-
-    // @Override
-    // public Map<Integer, Map<String, Long>> getMostCommonDiseaseByMonth(int year) throws ParseException {
-    //     Map<Integer, Map<String, Long>> result = new HashMap<>();
-
-    //     // Tính toán cho từng tháng trong năm
-    //     for (int month = 1; month <= 12; month++) {
-    //         // Tạo khoảng thời gian cho tháng
-    //         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-    //         Date fromDate = sdf.parse(year + "-" + month + "-01");
-
-    //         // Tính ngày cuối cùng của tháng
-    //         Calendar calendar = Calendar.getInstance();
-    //         calendar.setTime(fromDate);
-    //         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-    //         Date toDate = calendar.getTime();
-
-    //         // Lấy bệnh phổ biến nhất trong tháng này
-    //         Map<String, Long> topDisease = getTopDiseaseTypes(fromDate, toDate, 1);
-    //         result.put(month, topDisease);
-    //     }
-
-    //     return result;
-    // }
-
-    // @Override
-    // public Map<Integer, Map<String, Long>> getMostCommonDiseaseByQuarter(int year) throws ParseException {
-    //     Map<Integer, Map<String, Long>> result = new HashMap<>();
-
-    //     // Tính toán cho từng quý trong năm
-    //     for (int quarter = 1; quarter <= 4; quarter++) {
-    //         int startMonth = (quarter - 1) * 3 + 1; // Tháng bắt đầu của quý
-    //         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-    //         Date fromDate = sdf.parse(year + "-" + startMonth + "-01");
-
-    //         // Tính ngày cuối cùng của quý
-    //         Calendar calendar = Calendar.getInstance();
-    //         calendar.setTime(fromDate);
-    //         calendar.add(Calendar.MONTH, 2); // Thêm 2 tháng để đến tháng cuối của quý
-    //         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-    //         Date toDate = calendar.getTime();
-
-    //         // Lấy bệnh phổ biến nhất trong quý này
-    //         Map<String, Long> topDisease = getTopDiseaseTypes(fromDate, toDate, 1);
-    //         result.put(quarter, topDisease);
-    //     }
-
-    //     return result;
-    // }
 
     @Override
     public Map<String, Long> getTopDiseaseTypesByDoctorSortedByMonth(int doctorId, int year)
             throws ParseException {
         Session s = this.factory.getObject().getCurrentSession();
 
-        // Tạo khoảng thời gian cho cả năm
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date fromDate = sdf.parse(year + "-01-01");
         Date toDate = sdf.parse((year + 1) + "-01-01");
 
-        // Sử dụng Criteria API
         CriteriaBuilder b = s.getCriteriaBuilder();
         CriteriaQuery<HealthRecord> q = b.createQuery(HealthRecord.class);
         Root<HealthRecord> root = q.from(HealthRecord.class);
@@ -489,7 +368,6 @@ public class StatisticRepositoryImpl implements StatisticRepository {
         root.fetch("appointment");
         q.distinct(true);
 
-        // Điều kiện: doctorId, khoảng thời gian, và diseaseType không null
         q.where(
                 b.and(
                         b.equal(root.get("appointment").get("doctor").get("id"), doctorId),
@@ -497,17 +375,14 @@ public class StatisticRepositoryImpl implements StatisticRepository {
                         b.isNotNull(root.get("diseaseType")),
                         b.notEqual(root.get("diseaseType"), "")));
 
-        // Thực thi truy vấn để lấy danh sách health records
         List<HealthRecord> records = s.createQuery(q).getResultList();
 
-        // Sử dụng Java Stream để nhóm và đếm loại bệnh
         Map<String, Long> diseaseCount = records.stream()
                 .filter(hr -> hr.getDiseaseType() != null && !hr.getDiseaseType().trim().isEmpty())
                 .collect(Collectors.groupingBy(
                         HealthRecord::getDiseaseType,
                         Collectors.counting()));
 
-        // Sắp xếp theo số lượng giảm dần
         return diseaseCount.entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
                 .collect(Collectors.toMap(
@@ -522,12 +397,10 @@ public class StatisticRepositoryImpl implements StatisticRepository {
             throws ParseException {
         Session s = this.factory.getObject().getCurrentSession();
 
-        // Tạo khoảng thời gian cho cả năm
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date fromDate = sdf.parse(year + "-01-01");
         Date toDate = sdf.parse((year + 1) + "-01-01");
 
-        // Sử dụng Criteria API
         CriteriaBuilder b = s.getCriteriaBuilder();
         CriteriaQuery<HealthRecord> q = b.createQuery(HealthRecord.class);
         Root<HealthRecord> root = q.from(HealthRecord.class);
@@ -535,7 +408,6 @@ public class StatisticRepositoryImpl implements StatisticRepository {
         root.fetch("appointment");
         q.distinct(true);
 
-        // Điều kiện: doctorId, khoảng thời gian, và diseaseType không null
         q.where(
                 b.and(
                         b.equal(root.get("appointment").get("doctor").get("id"), doctorId),
@@ -543,28 +415,23 @@ public class StatisticRepositoryImpl implements StatisticRepository {
                         b.isNotNull(root.get("diseaseType")),
                         b.notEqual(root.get("diseaseType"), "")));
 
-        // Thực thi truy vấn để lấy danh sách health records
         List<HealthRecord> records = s.createQuery(q).getResultList();
 
-        // Nhóm records theo quý và sau đó thống kê
         Map<String, Long> diseaseCountByQuarter = new HashMap<>();
 
         for (HealthRecord record : records) {
             Calendar cal = Calendar.getInstance();
             cal.setTime(record.getCreatedDate());
-            int month = cal.get(Calendar.MONTH); // 0-11
-            int quarter = (month / 3) + 1; // 1-4
+            int month = cal.get(Calendar.MONTH); 
+            int quarter = (month / 3) + 1; 
 
-            // Thêm thông tin quý vào tên bệnh để phân biệt
             String diseaseWithQuarter = record.getDiseaseType();
 
-            // Cập nhật số lượng
             diseaseCountByQuarter.put(
                     diseaseWithQuarter,
                     diseaseCountByQuarter.getOrDefault(diseaseWithQuarter, 0L) + 1);
         }
 
-        // Sắp xếp theo số lượng giảm dần
         return diseaseCountByQuarter.entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
                 .collect(Collectors.toMap(
@@ -573,4 +440,5 @@ public class StatisticRepositoryImpl implements StatisticRepository {
                         (e1, e2) -> e1,
                         LinkedHashMap::new));
     }
+    
 }

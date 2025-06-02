@@ -370,8 +370,6 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalStateException("Chỉ lịch hẹn chờ xác nhận mới có thể được xác nhận");
         }
 
-        notificationService.createAppointmentNotification(id, existingAppointment.getPatient().getUser().getUsername());
-
         return this.appRepo.confirmAppointment(id);
     }
     

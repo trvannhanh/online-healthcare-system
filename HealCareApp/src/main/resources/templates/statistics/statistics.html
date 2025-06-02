@@ -31,16 +31,13 @@
       <div class="d-flex bg-secondary">
         <div th:replace="base :: sidebar" class="p-2"></div>
         <div class="p-2 bg-light flex-grow-1">
-          <h1 class="text-center text-primary mb-4">Thống Kê Bệnh Nhân</h1>
+          <h1 class="text-center text-primary mb-4">Thống Kê Lượt Khám</h1>
 
           <button>
             <a th:href="@{statistics/revenue}">Xem báo cáo doanh thu</a>
           </button>
-          <!-- Tab Content -->
           <div class="tab-content" id="statsTabContent">
-            <!-- Form thống kê tab -->
             <div class="form-container">
-              <!-- Form chung -->
               <form id="dynamicStatsForm" method="get">
                 <div class="mb-3">
                   <label for="statsType" class="form-label"
@@ -60,7 +57,6 @@
                   </select>
                 </div>
 
-                <!-- Trường nhập năm (dùng chung) -->
                 <div class="mb-3">
                   <label for="year" class="form-label">Năm</label>
                   <input
@@ -73,7 +69,6 @@
                   />
                 </div>
 
-                <!-- Trường chọn quý -->
                 <div class="mb-3" id="quarterField">
                   <label for="quarter" class="form-label">Quý</label>
                   <select
@@ -89,7 +84,6 @@
                   </select>
                 </div>
 
-                <!-- Trường chọn tháng -->
                 <div class="mb-3" id="monthField" style="display: none">
                   <label for="month" class="form-label">Tháng</label>
                   <select class="form-select" id="month" name="month">
@@ -112,24 +106,21 @@
               </form>
             </div>
 
-            <!-- Kết quả thống kê -->
             <div th:if="${count != null}" class="result-container">
               <h3>Kết Quả Thống Kê</h3>
-              <!-- Hiển thị kết quả theo quý -->
               <div th:if="${year != null && quarter != null && month == null}">
                 <p><strong>Năm:</strong> <span th:text="${year}"></span></p>
                 <p><strong>Quý: </strong> <span th:text="${quarter}"></span></p>
                 <p>
-                  <strong>Số Lượng Bệnh Nhân:</strong>
+                  <strong>Số Lượng Lượt Khám:</strong>
                   <span th:text="${count}" class="badge bg-primary fs-5"></span>
                 </p>
               </div>
-              <!-- Hiển thị kết quả theo tháng -->
               <div th:if="${year != null && month != null}">
                 <p><strong>Năm:</strong> <span th:text="${year}"></span></p>
                 <p><strong>Tháng:</strong> <span th:text="${month}"></span></p>
                 <p>
-                  <strong>Số Lượng Bệnh Nhân:</strong>
+                  <strong>Số Lượng Lượt Khám:</strong>
                   <span th:text="${count}"></span>
                 </p>
               </div>
@@ -183,7 +174,6 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        // Xử lý chuyển đổi form
         const statsTypeSelect = document.getElementById("statsType");
         const dynamicForm = document.getElementById("dynamicStatsForm");
         const quarterField = document.getElementById("quarterField");
@@ -191,15 +181,12 @@
         const quarterSelect = document.getElementById("quarter");
         const monthSelect = document.getElementById("month");
 
-        // Khởi tạo form
         updateFormAction();
 
-        // Xử lý khi người dùng chọn loại thống kê
         statsTypeSelect.addEventListener("change", function () {
           updateFormAction();
         });
 
-        // Hàm cập nhật form action và hiển thị các trường
         function updateFormAction() {
           const selectedType = statsTypeSelect.value;
 
@@ -220,7 +207,6 @@
           }
         }
 
-        // Xử lý biểu đồ
         const apiUrlBaseMontly = "/HealCareApp/statistics/monthly-data-ajax";
         const apiUrlBaseQuarterly =
           "/HealCareApp/statistics/quarterly-data-ajax";
@@ -231,25 +217,20 @@
         const updateChartBtn = document.getElementById("updateChartBtn");
         const chartTypeSelect = document.getElementById("chartType");
 
-        // Thiết lập giá trị mặc định cho trường năm biểu đồ
         if (!chartYearInput.value) {
           chartYearInput.value = currentYear;
         }
 
-        // Tự động tải biểu đồ ban đầu
         updateChart(chartYearInput.value, chartTypeSelect.value);
 
-        // Xử lý sự kiện cập nhật biểu đồ
         updateChartBtn.addEventListener("click", function () {
           updateChart(chartYearInput.value, chartTypeSelect.value);
         });
 
-        // Xử lý khi người dùng thay đổi loại biểu đồ
         chartTypeSelect.addEventListener("change", function () {
           updateChart(chartYearInput.value, chartTypeSelect.value);
         });
 
-        // Xử lý khi người dùng nhấn Enter trong input năm
         chartYearInput.addEventListener("keypress", function (e) {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -257,7 +238,6 @@
           }
         });
 
-        // Hàm cập nhật biểu đồ
         function updateChart(year, type) {
           const apiUrl =
             type === "month"
@@ -303,8 +283,8 @@
                   {
                     label:
                       type === "month"
-                        ? "Số Bệnh Nhân Theo Tháng"
-                        : "Số Bệnh Nhân Theo Quý",
+                        ? "Số Lượt Khám Theo Tháng"
+                        : "Số Lượt Khám Theo Quý",
                     data: chartData,
                     backgroundColor: backgroundColor,
                     borderColor: borderColor,
@@ -315,8 +295,8 @@
 
               const chartTitle =
                 type === "month"
-                  ? `Thống kê bệnh nhân theo tháng năm ${year}`
-                  : `Thống kê bệnh nhân theo quý năm ${year}`;
+                  ? `Thống kê lượt khám theo tháng năm ${year}`
+                  : `Thống kê lượt khám theo quý năm ${year}`;
 
               const config = {
                 type: "bar",
@@ -338,7 +318,7 @@
                       beginAtZero: true,
                       title: {
                         display: true,
-                        text: "Số lượng bệnh nhân",
+                        text: "Số lượng lượt khám",
                       },
                     },
                     x: {
@@ -359,26 +339,10 @@
                 statisticsChart = new Chart(chartCanvas, config);
               }
 
-              // Cập nhật thống kê tổng quan
-              updateChartSummary(chartData, type);
             })
             .catch((error) => {
               console.error("Error loading chart data:", error);
             });
-        }
-
-        // Hàm cập nhật thống kê tổng quan
-        function updateChartSummary(data, type) {
-          const total = data.reduce((sum, value) => sum + value, 0);
-          const max = Math.max(...data);
-          const maxIndex = data.indexOf(max);
-          const avg = total / data.length;
-
-          document.getElementById("totalPatients").textContent = total;
-          document.getElementById("maxPatients").textContent = max;
-          document.getElementById("maxPatientsPeriod").textContent =
-            type === "month" ? `Tháng ${maxIndex + 1}` : `Quý ${maxIndex + 1}`;
-          document.getElementById("avgPatients").textContent = avg.toFixed(1);
         }
       });
     </script>

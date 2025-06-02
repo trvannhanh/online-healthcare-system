@@ -35,7 +35,7 @@ public interface NotificationService {
 
     void deleteNotification(int id);
 
-    List<Notifications> getUpcomingAppointmentNotifications(String username);
+    List<Notifications> getUpcomingNotifications(String username);
 
     void markNotificationAsRead(int notificationId, String username);
 
