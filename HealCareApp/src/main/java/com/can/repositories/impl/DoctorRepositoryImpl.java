@@ -39,7 +39,7 @@ public class DoctorRepositoryImpl implements DoctorRepository {
     @Autowired
     private LocalSessionFactoryBean factory;
 
-    private static final int PAGE_SIZE = 10;
+    private static final int PAGE_SIZE = 4;
 
     @Override
     public List<Doctor> getDoctors(Map<String, String> params) {

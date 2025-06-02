@@ -1,36 +1,17 @@
-import { useEffect, useState } from "react";
-import { Button, Container, Form, InputGroup, Nav, Navbar, NavDropdown, Badge } from "react-bootstrap";
-import Apis, { authApis, endpoints } from "../../configs/Apis";
+import { useEffect } from "react";
+import { Button, Container, Nav, Navbar, NavDropdown, Badge } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-import { FaSearch, FaHospital, FaStethoscope, FaUser } from "react-icons/fa";
-import { FaBell } from "react-icons/fa";  // Import FaBell separately
+import { FaHospital, FaUser, FaBell } from "react-icons/fa";
 import { useMyDispatcher, useMyUser } from "../../configs/MyContexts";
-import cookie from 'react-cookies'
+import cookie from 'react-cookies';
+import { authApis, endpoints } from "../../configs/Apis";
+import { useState } from "react";
 
 const Header = () => {
-    const [hospitals, setHospitals] = useState([]);
-    const [specialization, setSpecialization] = useState([]);
-    const [doctorName, setDoctorName] = useState("");
     const nav = useNavigate();
     const { user } = useMyUser();
     const dispatch = useMyDispatcher();
-        const [unreadNotifications, setUnreadNotifications] = useState(0);
-
-
-    const loadHospitals = async () => {
-        let res = await Apis.get(endpoints["hospitals"]);
-        setHospitals(res.data);
-    };
-
-    const loadSpecialization = async () => {
-        let res = await Apis.get(endpoints["specialization"]);
-        setSpecialization(res.data);
-    };
-
-    const search = (e) => {
-        e.preventDefault();
-        nav(`/?doctorName=${doctorName}`);
-    };
+    const [unreadNotifications, setUnreadNotifications] = useState(0);
 
     const logout = () => {
         cookie.remove("token");
@@ -39,7 +20,7 @@ const Header = () => {
     };
 
     const checkVerified = (e) => {
-        if (user && user.role === "DOCTOR" && user.isVerified === false) {
+        if (user && user.role === "DOCTOR" && !user.isVerified) {
             e.preventDefault();
             alert("Tài khoản của bạn chưa được xác nhận giấy phép hành nghề. Vui lòng chờ quản trị viên xác nhận.");
             return false;
@@ -47,12 +28,10 @@ const Header = () => {
         return true;
     };
 
-        const fetchNotificationsCount = async () => {
+    const fetchNotificationsCount = async () => {
         if (!user) return;
-        
         try {
             const res = await authApis().get(endpoints["allNotifications"]);
-            // Count unread notifications
             const unreadCount = res.data.filter(notif => !notif.isRead).length;
             setUnreadNotifications(unreadCount);
         } catch (error) {
@@ -61,9 +40,8 @@ const Header = () => {
     };
 
     useEffect(() => {
-        loadHospitals();
-        loadSpecialization();
-    }, []);
+        fetchNotificationsCount();
+    }, [user]);
 
     return (
         <Navbar 
@@ -111,58 +89,6 @@ const Header = () => {
                         >
                             Trang Chủ
                         </Link>
-                        <NavDropdown 
-                            title={
-                                <span className="text-white fw-semibold">
-                                    <FaHospital className="me-1 text-light" /> Bệnh Viện
-                                </span>
-                            } 
-                            className="px-3 py-2 rounded"
-                            style={{ transition: 'background 0.2s' }}
-                            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
-                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                        >
-                            {hospitals.map(h => (
-                                <NavDropdown.Item 
-                                    key={h.id} 
-                                    className="py-2 bg-white text-dark hover:bg-teal-100"
-                                >
-                                    <Link
-                                        to={`/?hospital=${h.name}`}
-                                        onClick={(e) => checkVerified(e)}
-                                        className="text-decoration-none text-dark hover:text-primary"
-                                    >
-                                        {h.name}
-                                    </Link>
-                                </NavDropdown.Item>
-                            ))}
-                        </NavDropdown>
-                        <NavDropdown 
-                            title={
-                                <span className="text-white fw-semibold">
-                                    <FaStethoscope className="me-1 text-light" /> Chuyên Khoa
-                                </span>
-                            } 
-                            className="px-3 py-2 rounded"
-                            style={{ transition: 'background 0.2s' }}
-                            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
-                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                        >
-                            {specialization.map(s => (
-                                <NavDropdown.Item 
-                                    key={s.id} 
-                                    className="py-2 bg-white text-dark hover:bg-teal-100"
-                                >
-                                    <Link
-                                        to={`/?specialization=${s.name}`}
-                                        onClick={(e) => checkVerified(e)}
-                                        className="text-decoration-none text-dark hover:text-primary"
-                                    >
-                                        {s.name}
-                                    </Link>
-                                </NavDropdown.Item>
-                            ))}
-                        </NavDropdown>
                         <Link 
                             to="/appointment" 
                             className="nav-link text-white fw-semibold px-3 py-2 rounded"
@@ -174,72 +100,63 @@ const Header = () => {
                             Lịch Hẹn
                         </Link>
                         {user && user.role === 'DOCTOR' && (
-                            <Link to="/doctor/statistic" 
-                            className="nav-link fs-6 text-dark fw-semibold"
-                            onClick={(e) => checkVerified(e)}
-                        >
-                            Thống kê bệnh nhân
-                        </Link>
+                            <Link 
+                                to="/doctor/statistic" 
+                                className="nav-link text-white fw-semibold px-3 py-2 rounded"
+                                onClick={(e) => checkVerified(e)}
+                                style={{ transition: 'background 0.2s' }}
+                                onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                            >
+                                Thống Kê Bệnh Nhân
+                            </Link>
                         )}
                         {user && user.role === 'PATIENT' && (
-                            <Link to="/pending-rating" className="nav-link fs-6 text-dark fw-semibold">Quản lý đánh giá</Link>
+                            <Link 
+                                to="/pending-rating" 
+                                className="nav-link text-white fw-semibold px-3 py-2 rounded"
+                                style={{ transition: 'background 0.2s' }}
+                                onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                            >
+                                Quản Lý Đánh Giá
+                            </Link>
                         )}
                         {user && user.role === 'DOCTOR' && (
-                            <Link to="/doctor/ratings" className="nav-link fs-6 text-dark fw-semibold">
-                                 Quản lý gửi phản hồi
+                            <Link 
+                                to="/doctor/ratings" 
+                                className="nav-link text-white fw-semibold px-3 py-2 rounded"
+                                style={{ transition: 'background 0.2s' }}
+                                onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                            >
+                                Quản Lý Phản Hồi
                             </Link>
                         )}
                         {user && user.role === 'PATIENT' && (
-                        <div className="mx-3 position-relative" style={{ cursor: 'pointer' }}>
-                            <Link to="/notifications" className="text-decoration-none">
-                                <FaBell 
-                                    size={22} 
-                                    className="text-white"
-                                    style={{ 
-                                        transition: 'transform 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.2)'}
-                                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-                                />
-                                {unreadNotifications > 0 && (
-                                    <Badge 
-                                        pill 
-                                        bg="danger" 
-                                        className="position-absolute top-0 start-100 translate-middle"
-                                        style={{ 
-                                            fontSize: '0.6rem',
-                                            padding: '0.25rem 0.4rem'
-                                        }}
-                                    >
-                                        {unreadNotifications}
-                                    </Badge>
-                                )}
-                            </Link>
-                        </div>
-                    )}
+                            <div className="mx-3 position-relative" style={{ cursor: 'pointer' }}>
+                                <Link to="/notifications" className="text-decoration-none">
+                                    <FaBell 
+                                        size={22} 
+                                        className="text-white"
+                                        style={{ transition: 'transform 0.2s' }}
+                                        onMouseEnter={(e) => e.target.style.transform = 'scale(1.2)'}
+                                        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                                    />
+                                    {unreadNotifications > 0 && (
+                                        <Badge 
+                                            pill 
+                                            bg="danger" 
+                                            className="position-absolute top-0 start-100 translate-middle"
+                                            style={{ fontSize: '0.6rem', padding: '0.25rem 0.4rem' }}
+                                        >
+                                            {unreadNotifications}
+                                        </Badge>
+                                    )}
+                                </Link>
+                            </div>
+                        )}
                     </Nav>
-
-                    {/* Search bar */}
-                    <Form onSubmit={search} className="d-flex me-3">
-                        <InputGroup className="shadow-sm">
-                            <Form.Control
-                                type="text"
-                                placeholder="Tìm bác sĩ..."
-                                value={doctorName}
-                                onChange={(e) => setDoctorName(e.target.value)}
-                                className="border-0 rounded-start-pill"
-                                style={{ background: '#fff', color: '#333' }}
-                            />
-                            <Button 
-                                type="submit" 
-                                variant="primary" 
-                                className="rounded-end-pill"
-                                style={{ backgroundColor: '#20c997', borderColor: '#20c997' }}
-                            >
-                                <FaSearch />
-                            </Button>
-                        </InputGroup>
-                    </Form>
 
                     {/* User menu */}
                     {user ? (
