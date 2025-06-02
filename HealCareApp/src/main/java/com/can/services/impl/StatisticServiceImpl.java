@@ -56,18 +56,18 @@ public class StatisticServiceImpl implements StatisticService {
     }
 
     @Override
-    public Integer countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException {
-        return this.statisticRepo.countDistinctPatientsByDateRange(fromDateStr, toDateStr);
+    public Integer countAppointmentsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException {
+        return this.statisticRepo.countAppointmentsByDateRange(fromDateStr, toDateStr);
     }
 
     @Override
-    public Integer countDistinctPatientsByQuarter(int year, int quarter) throws ParseException {
-        return this.statisticRepo.countDistinctPatientsByQuarter(year, quarter);
+    public Integer countAppointmentsByQuarter(int year, int quarter) throws ParseException {
+        return this.statisticRepo.countAppointmentsByQuarter(year, quarter);
     }
 
     @Override
-    public Integer countDistinctPatientsByMonth(int year, int month) throws ParseException {
-        return this.statisticRepo.countDistinctPatientsByMonth(year, month);
+    public Integer countAppointmentsByMonth(int year, int month) throws ParseException {
+        return this.statisticRepo.countAppointmentsByMonth(year, month);
     }
 
     @Override

@@ -23,11 +23,11 @@ public interface StatisticRepository {
 
     Integer countDistinctPatientsByDoctorAndQuarter(int doctorId, int year, int quarter) throws ParseException;
 
-    Integer countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException;
+    Integer countAppointmentsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException;
 
-    Integer countDistinctPatientsByQuarter(int year, int quarter) throws ParseException;
+    Integer countAppointmentsByQuarter(int year, int quarter) throws ParseException;
 
-    Integer countDistinctPatientsByMonth(int year, int month) throws ParseException;
+    Integer countAppointmentsByMonth(int year, int month) throws ParseException;
 
     List<Integer> getMonthlyStatistics(int year) throws ParseException;
 

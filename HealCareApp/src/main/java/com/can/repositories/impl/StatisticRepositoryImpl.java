@@ -101,14 +101,14 @@ public class StatisticRepositoryImpl implements StatisticRepository {
     }
 
     @Override
-    public Integer countDistinctPatientsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException {
+    public Integer countAppointmentsByDateRange(Date fromDateStr, Date toDateStr) throws ParseException {
         List<Appointment> appointments = this.getAppointmentsCompleteByDateRange(fromDateStr, toDateStr);
 
         return (int) appointments.size();
     }
 
     @Override
-    public Integer countDistinctPatientsByQuarter(int year, int quarter) throws ParseException {
+    public Integer countAppointmentsByQuarter(int year, int quarter) throws ParseException {
         int startMonth = (quarter - 1) * 3 + 1; 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date fromDate = sdf.parse(year + "-" + startMonth + "-01");
@@ -119,11 +119,11 @@ public class StatisticRepositoryImpl implements StatisticRepository {
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
         Date toDate = calendar.getTime();
 
-        return countDistinctPatientsByDateRange(fromDate, toDate);
+        return countAppointmentsByDateRange(fromDate, toDate);
     }
 
     @Override
-    public Integer countDistinctPatientsByMonth(int year, int month) throws ParseException {
+    public Integer countAppointmentsByMonth(int year, int month) throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date fromDate = sdf.parse(year + "-" + month + "-01");
 
@@ -132,7 +132,7 @@ public class StatisticRepositoryImpl implements StatisticRepository {
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
         Date toDate = calendar.getTime();
 
-        return countDistinctPatientsByDateRange(fromDate, toDate);
+        return countAppointmentsByDateRange(fromDate, toDate);
     }
 
     @Override
@@ -140,7 +140,7 @@ public class StatisticRepositoryImpl implements StatisticRepository {
         try {
             List<Integer> monthlyData = new ArrayList<>();
             for (int i = 1; i <= 12; i++) {
-                monthlyData.add(countDistinctPatientsByMonth(year, i));
+                monthlyData.add(countAppointmentsByMonth(year, i));
             }
             return monthlyData;
         } catch (Exception e) {
@@ -154,7 +154,7 @@ public class StatisticRepositoryImpl implements StatisticRepository {
         try {
             List<Integer> quarterlyData = new ArrayList<>();
             for (int i = 1; i <= 4; i++) {
-                quarterlyData.add(countDistinctPatientsByQuarter(year, i));
+                quarterlyData.add(countAppointmentsByQuarter(year, i));
             }
             return quarterlyData;
         } catch (Exception e) {
