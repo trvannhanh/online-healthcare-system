@@ -24,8 +24,9 @@ public class PatientSelfReportRepositoryImpl implements PatientSelfReportReposit
     public PatientSelfReport addPatientSelfReport(PatientSelfReport patientSelfReport) {
         Session s = this.factory.getObject().getCurrentSession();
         
+        // Checks if a health report already exists for the patient
         if (existsByPatientId(patientSelfReport.getPatient().getId())) {
-            throw new RuntimeException("Bệnh nhân đã có hồ sơ sức khỏe");
+            throw new RuntimeException("Patient already has a health report");
         }
         
         s.persist(patientSelfReport);
@@ -38,13 +39,12 @@ public class PatientSelfReportRepositoryImpl implements PatientSelfReportReposit
         
         PatientSelfReport existingReport = getPatientSelfReportById(patientSelfReport.getId());
         if (existingReport == null) {
-            throw new RuntimeException("Không tìm thấy hồ sơ sức khỏe bệnh nhân");
+            throw new RuntimeException("Patient health report not found");
         }
         
         return (PatientSelfReport) s.merge(patientSelfReport);
     }
 
-    
     @Override
     public PatientSelfReport getPatientSelfReportById(int id) {
         Session s = this.factory.getObject().getCurrentSession();
@@ -65,14 +65,14 @@ public class PatientSelfReportRepositoryImpl implements PatientSelfReportReposit
         try {
             return query.getSingleResult();
         } catch (NoResultException ex) {
+            // Returns null if no health report is found for the patient
             return null;
         }
     }
 
-    
-
     @Override
     public boolean existsByPatientId(int patientId) {
+        // Checks if a health report exists for the given patient ID
         Session s = this.factory.getObject().getCurrentSession();
         CriteriaBuilder b = s.getCriteriaBuilder();
         CriteriaQuery<Long> q = b.createQuery(Long.class);

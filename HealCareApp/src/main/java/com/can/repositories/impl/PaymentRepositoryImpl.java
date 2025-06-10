@@ -43,10 +43,11 @@ public class PaymentRepositoryImpl implements PaymentRepository {
         Session session = this.factory.getObject().getCurrentSession();
         Appointment appointment = appRepo.getAppointmentById(appointmentId);
         if (appointment == null) {
-            System.out.println("Lịch hẹn không tồn tại");
+            // Logs when the appointment does not exist
+            System.out.println("Appointment does not exist");
         }
         if (appointment.getStatus() != AppointmentStatus.COMPLETED) {
-            throw new IllegalStateException("Lịch hẹn chưa hoàn thành, không thể tạo thanh toán");
+            throw new IllegalStateException("Appointment is not completed, cannot create payment");
         }
 
         Payment payment = new Payment();
@@ -58,8 +59,6 @@ public class PaymentRepositoryImpl implements PaymentRepository {
         return payment;
     }
 
-    
-    
     @Override
     public Payment getPaymentById(Integer id) {
         Session session = this.factory.getObject().getCurrentSession();
@@ -85,6 +84,7 @@ public class PaymentRepositoryImpl implements PaymentRepository {
         try {
             return (Payment) q.getSingleResult();
         } catch (NoResultException e) {
+            // Returns null if no payment is found for the appointment
             return null; 
         }
     }

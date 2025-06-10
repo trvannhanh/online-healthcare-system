@@ -5,8 +5,8 @@ const BASE_URL = 'http://localhost:8080/HealCareApp/api';
 
 export const endpoints = {
     //USER
-    'register': '/users', //Đăng ký tài khoản
-    'login': '/login', // Đăng nhập
+    'register': '/users', 
+    'login': '/login', 
     'current-user': '/secure/profile',
     'chat': '/secure/chat',
 
@@ -14,50 +14,50 @@ export const endpoints = {
 
 
     //APPOINTMENT
-    'rescheduleAppointment': (id) => `/secure/appointments/${id}/reschedule`, //Đổi thời gian lịch hẹn
-    'appointments': '/appointments', // Danh sách lịch hẹn
+    'rescheduleAppointment': (id) => `/secure/appointments/${id}/reschedule`, 
+    'appointments': '/appointments', 
     'bookAppointment': 'secure/appointments',
-    'appointmentsFilter': '/appointments/filter', //Lọc danh sách lịch hẹn
-    'cancelAppointment': (id) => `/secure/appointments/${id}/cancel`, //Hủy lịch hẹn
-    'confirmAppointment': (id) => `/secure/appointments/${id}/confirm`, // Xác nhận lịch hẹn
+    'appointmentsFilter': '/appointments/filter', 
+    'cancelAppointment': (id) => `/secure/appointments/${id}/cancel`,
+    'confirmAppointment': (id) => `/secure/appointments/${id}/confirm`, 
     'createHealthRecord': (id) => `/secure/appointments/${id}/health-record`,
-    'appointmentDetail': (id) => `/appointments/detail/${id}`, // Chi tiết lịch hẹn
+    'appointmentDetail': (id) => `/appointments/detail/${id}`, 
 
 
     //DOCTOR
-    'createPayment': (appointmentId) => `/secure/payment/${appointmentId}/create`, //Tạo hóa đơn
+    'createPayment': (appointmentId) => `/secure/payment/${appointmentId}/create`, 
     'hospitals': '/hospitals', //Danh sách Bệnh Viện
     'specialization': '/specialization', // Danh sách Chuyên Khoa
     'doctors': '/doctors',
 
 
     //PATIENT
-    'processPayment': (paymentId) => `/secure/payment/${paymentId}/process`, //Thanh Toán Hóa Đơn
-    'paymentReturn': () => '/payment/return', //Trả về Thanh Toán
+    'processPayment': (paymentId) => `/secure/payment/${paymentId}/process`, 
+    'paymentReturn': () => '/payment/return', 
     'payment': '/payment',
     'patients': '/patients',
 
 
     // STATISTICS
-    'doctorStatistics': '/secure/statistics', // Thống kê của bác sĩ
+    'doctorStatistics': '/secure/statistics', 
     'diseaseByMonth': '/secure/statistics/disease-type-by-month',
     'diseaseByQuarter': '/secure/statistics/disease-type-by-quarter',
 
     // RATING
     'doctorAverageRating': (doctorId) => `/average/${doctorId}`,
-    'ratingById': (id) => `/rating/${id}`, // Lấy đánh giá theo ID
+    'ratingById': (id) => `/rating/${id}`, 
     'addRating': '/secure/patient/rating',
     'isAppointmentRated': (appointmentId) => `/rating/appointment/${appointmentId}`,
     'updateRating': (id) => `/secure/patient/rating/${id}`,
     'ratingForDoctor': (doctorId) => `/rating/doctor/${doctorId}`,
-    'appointmentRating': (appointmentId) => `/rating/by-appointment/${appointmentId}`,//Lấy đánh giá theo lịch hẹn
+    'appointmentRating': (appointmentId) => `/rating/by-appointment/${appointmentId}`,
 
     //RESPONSE
-    'responseById': (id) => `/response/${id}`,  // Lấy phản hồi theo ID
-    'addResponse': '/secure/response',           // Thêm phản hồi mới
-    'updateResponse': (id) => `/secure/response/${id}`, // Cập nhật phản hồi
-    'doctorRatings': (doctorId) => `/secure/doctor/ratings/${doctorId}`,  // Lấy đánh giá của bác sĩ  //  Lấy đánh giá của bác sĩ
-    'responseByRating': (ratingId) => `/response/by-rating/${ratingId}`, //  Lấy phản hồi theo rating ID
+    'responseById': (id) => `/response/${id}`,  
+    'addResponse': '/secure/response',         
+    'updateResponse': (id) => `/secure/response/${id}`, 
+    'doctorRatings': (doctorId) => `/secure/doctor/ratings/${doctorId}`,  
+    'responseByRating': (ratingId) => `/response/by-rating/${ratingId}`, 
     'isRatingResponsed': (ratingId) => `/response/rating/${ratingId}`,
 
 

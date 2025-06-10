@@ -41,14 +41,12 @@ const PendingRating = () => {
               percentage: (diffInMinutes / 30) * 100
             };
           } else {
-            // Thời gian đã hết
             updatedTimeRemaining[appointment.id] = {
               minutes: 0,
               seconds: 0,
               percentage: 0
             };
 
-            // Cập nhật lại trạng thái canEdit
             setCompletedRatings(prev => prev.map(item =>
               item.id === appointment.id ? { ...item, canEdit: false } : item
             ));
@@ -65,7 +63,6 @@ const PendingRating = () => {
   const loadPendingRatings = async () => {
     try {
       setLoading(true);
-      // Lấy tất cả lịch hẹn đã hoàn thành của bệnh nhân
       const response = await authApis().get(endpoints['appointmentsFilter'], {
         params: {
           patientId: user.id,
@@ -76,7 +73,6 @@ const PendingRating = () => {
 
       const appointments = response.data;
 
-      // Phân loại các lịch hẹn đã/chưa đánh giá
       const pendingArray = [];
       const completedArray = [];
 
@@ -84,7 +80,6 @@ const PendingRating = () => {
         try {
           const isRatedRes = await Apis.get(endpoints['isAppointmentRated'](appt.id));
           if (isRatedRes.data) {
-            // Nếu đã đánh giá, lấy thêm thông tin chi tiết
             try {
               const ratingDetails = await Apis.get(endpoints['appointmentRating'](appt.id));
               const ratingDate = new Date(ratingDetails.data.ratingDate || ratingDetails.data.createdAt);
@@ -94,7 +89,7 @@ const PendingRating = () => {
               completedArray.push({
                 ...appt,
                 ratingInfo: ratingDetails.data,
-                canEdit: diffInMinutes <= 30 // Cho phép sửa trong vòng 30 phút
+                canEdit: diffInMinutes <= 30 
               });
             } catch (err) {
               completedArray.push(appt);
@@ -237,7 +232,6 @@ const PendingRating = () => {
                             </div>
                           </div>
 
-                          {/* Nút chỉnh sửa và xóa */}
                           <div className="mt-3 d-flex justify-content-between">
                             <Button
                               as={Link}

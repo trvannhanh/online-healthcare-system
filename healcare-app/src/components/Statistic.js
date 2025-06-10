@@ -9,39 +9,32 @@ const Statistic = () => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     
-    // Tùy chọn loại báo cáo: 'patients' hoặc 'diseases'
     const [reportType, setReportType] = useState('patients');
     const [viewType, setViewType] = useState('dateRange'); // 'dateRange', 'month', 'quarter'
 
-    // Form states
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
     const [year, setYear] = useState(new Date().getFullYear());
     const [month, setMonth] = useState(new Date().getMonth() + 1);
     const [quarter, setQuarter] = useState(Math.floor((new Date().getMonth() + 3) / 3));
 
-    // Stats cho số lượng bệnh nhân
     const [patientCount, setPatientCount] = useState(null);
     const [monthlyData, setMonthlyData] = useState([]);
     const [quarterlyData, setQuarterlyData] = useState([]);
 
-    // Stats cho loại bệnh phổ biến
     const [diseaseData, setDiseaseData] = useState({});
     const [isLoadingDiseases, setIsLoadingDiseases] = useState(false);
 
-    // Chart refs
     const chartRef = useRef(null);
     const chartIdRef = useRef(`chart-${Math.random().toString(36).substring(2, 9)}`);
     const [chartInstance, setChartInstance] = useState(null);
 
-    // Check if user is doctor
     useEffect(() => {
         if (user && user.role !== 'DOCTOR') {
             setError('Chỉ bác sĩ mới có thể xem thống kê này');
         }
     }, [user]);
 
-    // Initialize current month and date values on component mount
     useEffect(() => {
         const today = new Date();
         const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -49,7 +42,6 @@ const Statistic = () => {
         setFromDate(firstDayOfMonth.toISOString().split('T')[0]);
         setToDate(today.toISOString().split('T')[0]);
 
-        // Cleanup function
         return () => {
             if (chartInstance) {
                 chartInstance.destroy();
@@ -57,9 +49,6 @@ const Statistic = () => {
         };
     }, []);
 
-    // ===== PHƯƠNG THỨC XỬ LÝ SỐ LƯỢNG BỆNH NHÂN =====
-
-    // Load data by date range
     const loadDateRangeData = async () => {
         if (!fromDate || !toDate) {
             setError('Vui lòng chọn khoảng thời gian');
@@ -85,7 +74,6 @@ const Statistic = () => {
         }
     };
 
-    // Load data by month
     const loadMonthlyData = async () => {
         if (loading) return;
         try {
@@ -117,7 +105,6 @@ const Statistic = () => {
         }
     };
 
-    // Load data by quarter
     const loadQuarterlyData = async () => {
         if (loading) return;
         try {
@@ -149,7 +136,6 @@ const Statistic = () => {
         }
     };
 
-    // Render date range chart
     const renderDateRangeChart = (count) => {
         if (chartInstance) {
             chartInstance.destroy();
@@ -201,7 +187,6 @@ const Statistic = () => {
         setChartInstance(newChart);
     };
 
-    // Render monthly chart
     const renderMonthlyChart = (data) => {
         if (chartInstance) {
             chartInstance.destroy();
@@ -266,7 +251,6 @@ const Statistic = () => {
         setChartInstance(newChart);
     };
 
-    // Render quarterly chart
     const renderQuarterlyChart = (data) => {
         if (chartInstance) {
             chartInstance.destroy();
@@ -327,9 +311,7 @@ const Statistic = () => {
         setChartInstance(newChart);
     };
 
-    // ===== PHƯƠNG THỨC XỬ LÝ LOẠI BỆNH PHỔ BIẾN =====
 
-    // Load loại bệnh phổ biến theo tháng
     const loadDiseasesByMonth = async () => {
         if (isLoadingDiseases) return;
         try {
@@ -347,7 +329,6 @@ const Statistic = () => {
         }
     };
 
-    // Load loại bệnh phổ biến theo quý
     const loadDiseasesByQuarter = async () => {
         if (isLoadingDiseases) return;
         try {
@@ -365,7 +346,6 @@ const Statistic = () => {
         }
     };
 
-    // Render biểu đồ loại bệnh phổ biến
     const renderDiseaseChart = (data, chartType) => {
         if (chartInstance) {
             chartInstance.destroy();
@@ -375,7 +355,6 @@ const Statistic = () => {
 
         const ctx = chartRef.current.getContext('2d');
         
-        // Lấy top 10 loại bệnh phổ biến nhất
         const sortedData = Object.entries(data)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10);
@@ -383,7 +362,6 @@ const Statistic = () => {
         const labels = sortedData.map(item => item[0]);
         const values = sortedData.map(item => item[1]);
         
-        // Cấu hình màu sắc
         const backgroundColors = [
             'rgba(255, 99, 132, 0.7)',
             'rgba(54, 162, 235, 0.7)',
@@ -399,7 +377,6 @@ const Statistic = () => {
         
         const borderColors = backgroundColors.map(color => color.replace('0.7', '1'));
         
-        // Tiêu đề dựa vào loại biểu đồ
         const titleText = chartType === 'bar' 
             ? `Top loại bệnh phổ biến nhất năm ${year} (theo tháng)` 
             : `Top loại bệnh phổ biến nhất năm ${year} (theo quý)`;
@@ -464,24 +441,18 @@ const Statistic = () => {
         setChartInstance(newChart);
     };
 
-    // ===== EVENT HANDLERS =====
-
-    // Handle form submission for date range
     const handleDateRangeSubmit = (e) => {
         e.preventDefault();
         loadDateRangeData();
     };
 
-    // Handle year change
     const handleYearChange = (e) => {
         const newYear = parseInt(e.target.value);
         setYear(newYear);
     };
 
-    // Handle view type change (dateRange, month, quarter)
     const handleViewTypeChange = (e) => {
         setViewType(e.target.value);
-        // Reset data when changing view type
         if (chartInstance) {
             chartInstance.destroy();
             setChartInstance(null);
@@ -492,13 +463,11 @@ const Statistic = () => {
         setQuarterlyData([]);
         setDiseaseData({});
     };
-    
-    // Handle report type change (patients, diseases)
+
     const handleReportTypeChange = (e) => {
         const newType = e.target.value;
         setReportType(newType);
         
-        // Reset data when changing report type
         if (chartInstance) {
             chartInstance.destroy();
             setChartInstance(null);
@@ -509,11 +478,9 @@ const Statistic = () => {
         setQuarterlyData([]);
         setDiseaseData({});
         
-        // Reset view type to default
         setViewType('dateRange');
     };
 
-    // If not a doctor, show access denied
     if (user && user.role !== 'DOCTOR') {
         return (
             <Container className="my-4">
@@ -536,7 +503,6 @@ const Statistic = () => {
 
             <Card className="mb-4">
                 <Card.Body>
-                    {/* Lựa chọn loại báo cáo */}
                     <Form.Group className="mb-4">
                         <Form.Label>Chọn loại báo cáo</Form.Label>
                         <Form.Select
@@ -549,7 +515,6 @@ const Statistic = () => {
                         </Form.Select>
                     </Form.Group>
 
-                    {/* THỐNG KÊ SỐ LƯỢNG BỆNH NHÂN */}
                     {reportType === 'patients' && (
                         <>
                             <Form.Group className="mb-4">
@@ -639,7 +604,6 @@ const Statistic = () => {
                         </>
                     )}
 
-                    {/* THỐNG KÊ LOẠI BỆNH PHỔ BIẾN */}
                     {reportType === 'diseases' && (
                         <>
                             <Form.Group className="mb-4">
@@ -682,7 +646,6 @@ const Statistic = () => {
                         </>
                     )}
 
-                    {/* Phần hiển thị biểu đồ - dùng chung cho mọi loại */}
                     <div style={{ height: '400px', position: 'relative' }}>
                         {(loading || isLoadingDiseases) && (
                             <div style={{
@@ -703,7 +666,6 @@ const Statistic = () => {
                         <canvas ref={chartRef}></canvas>
                     </div>
 
-                    {/* Hiển thị bảng dữ liệu khi xem thống kê loại bệnh */}
                     {reportType === 'diseases' && Object.keys(diseaseData).length > 0 && (
                         <div className="mt-4">
                             <h4>Bảng chi tiết loại bệnh</h4>
@@ -732,7 +694,6 @@ const Statistic = () => {
                         </div>
                     )}
 
-                    {/* Hiển thị thống kê tổng hợp khi đang ở chế độ xem theo tháng */}
                     {reportType === 'patients' && viewType === 'month' && monthlyData.length > 0 && (
                         <div className="mt-4">
                             <Row>
@@ -774,7 +735,6 @@ const Statistic = () => {
                         </div>
                     )}
 
-                    {/* Hiển thị thống kê tổng hợp khi đang ở chế độ xem theo quý */}
                     {reportType === 'patients' && viewType === 'quarter' && quarterlyData.length > 0 && (
                         <div className="mt-4">
                             <Row>

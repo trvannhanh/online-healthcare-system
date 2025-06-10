@@ -62,8 +62,8 @@ public class AppointmentController {
 
     @PostMapping("/appointments/add")
     public String addAppointment(@ModelAttribute("appointment") Appointment appointment) {
-        this.appRepo.addAppointment(appointment); // gọi lại phương thức đã có
-        return "redirect:/appointments"; // quay lại danh sách lịch hẹn
+        this.appRepo.addAppointment(appointment); 
+        return "redirect:/appointments"; 
     }
 
     @InitBinder

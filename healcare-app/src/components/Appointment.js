@@ -483,6 +483,7 @@ const Appointment = () => {
                             Tạo Kết Quả Khám
                           </Button>
                         )}
+                        
                         {user.role === 'DOCTOR' && appt.status === 'COMPLETED' && !appt.payment && (
                           <Button
                             as={Link}

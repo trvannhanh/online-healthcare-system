@@ -70,9 +70,11 @@ public class RatingRepositoryImpl implements RatingRepository {
         query.where(builder.equal(root.get("appointment").get("doctor").get("id"), doctorId));
         try {
             Double average = session.createQuery(query).getSingleResult();
+            // Returns 0.0 if no ratings are found for the doctor
             return average != null ? average : 0.0; 
         } catch (Exception e) {
-            System.err.println("Lỗi tính trung bình đánh giá cho bác sĩ id " + doctorId + ": " + e.getMessage());
+            // Logs error when calculating average rating for doctor
+            System.err.println("Error calculating average rating for doctor ID " + doctorId + ": " + e.getMessage());
             e.printStackTrace();
             return 0.0; 
         }
@@ -80,6 +82,7 @@ public class RatingRepositoryImpl implements RatingRepository {
 
     @Override
     public boolean isAppointmentRated(int appointmentId) {
+        // Checks if a rating exists for the given appointment
         Session session = this.factory.getObject().getCurrentSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Long> query = builder.createQuery(Long.class);
@@ -158,6 +161,7 @@ public class RatingRepositoryImpl implements RatingRepository {
         try {
             return s.createQuery(q).getSingleResult();
         } catch (NoResultException ex) {
+            // Returns null if no rating is found for the given ID
             return null;
         }
     }
@@ -203,6 +207,7 @@ public class RatingRepositoryImpl implements RatingRepository {
         try {
             return session.createQuery(query).getSingleResult();
         } catch (NoResultException e) {
+            // Returns null if no rating is found for the appointment
             return null; 
         }
     }

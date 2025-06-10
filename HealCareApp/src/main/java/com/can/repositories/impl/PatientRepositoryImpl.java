@@ -3,7 +3,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.can.repositories.impl;
-
 /**
  *
  * @author Giidavibe
@@ -39,6 +38,7 @@ public class PatientRepositoryImpl implements PatientRepository {
 
     @Override
     public boolean isUsernameExists(Session session, String username) {
+        // Checks if a username already exists in the database
         CriteriaBuilder b = session.getCriteriaBuilder();
         CriteriaQuery<Long> q = b.createQuery(Long.class);
         Root<User> root = q.from(User.class);
@@ -89,7 +89,7 @@ public class PatientRepositoryImpl implements PatientRepository {
                     Date dob = new SimpleDateFormat("yyyy-MM-dd").parse(dateOfBirth);
                     predicates.add(b.equal(root.get("dateOfBirth"), dob));
                 } catch (Exception e) {
-                    throw new RuntimeException("Định dạng ngày không hợp lệ: " + e.getMessage(), e);
+                    throw new RuntimeException("Invalid date format: " + e.getMessage(), e);
                 }
             }
 
@@ -118,10 +118,8 @@ public class PatientRepositoryImpl implements PatientRepository {
     public Patient getPatientById(Integer id) {
         Session s = this.factory.getObject().getCurrentSession();
         CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Patient> q = b.createQuery(Patient.class
-        );
-        Root<Patient> root = q.from(Patient.class
-        );
+        CriteriaQuery<Patient> q = b.createQuery(Patient.class);
+        Root<Patient> root = q.from(Patient.class);
 
         Join<Patient, User> userJoin = root.join("user");
 
@@ -129,17 +127,13 @@ public class PatientRepositoryImpl implements PatientRepository {
 
         Query query = s.createQuery(q);
         return (Patient) query.getSingleResult();
-
     }
 
     @Override
     public Patient addPatient(Patient patient) {
-
         Session s = this.factory.getObject().getCurrentSession();
-
         s.persist(patient);
         return patient;
-
     }
 
     @Override
@@ -149,20 +143,21 @@ public class PatientRepositoryImpl implements PatientRepository {
 
         Patient existingPatient = s.get(Patient.class, patient.getId());
         if (existingPatient == null) {
-            throw new RuntimeException("Bệnh nhân với Id " + patient.getId() + " không tìm thấy");
+            throw new RuntimeException("Patient with ID " + patient.getId() + " not found");
         }
 
         if (patient.getUser() == null) {
-            throw new RuntimeException("Thông tin người dùng là cần thiết");
+            throw new RuntimeException("User information is required");
         }
 
         if (patient.getUser().getId() != patient.getId()) {
-            throw new RuntimeException("Id user phải khớp với id bệnh nhân");
+            throw new RuntimeException("User ID must match patient ID");
         }
 
         User existingUser = s.get(User.class, patient.getUser().getId());
+        // Verifies if the new username is already taken by another user
         if (!existingUser.getUsername().equals(patient.getUser().getUsername()) && isUsernameExists(s, patient.getUser().getUsername())) {
-            throw new RuntimeException("Username '" + patient.getUser().getUsername() + "' đã tồn tại");
+            throw new RuntimeException("Username '" + patient.getUser().getUsername() + "' already exists");
         }
 
         s.merge(patient.getUser());
@@ -170,7 +165,6 @@ public class PatientRepositoryImpl implements PatientRepository {
 
         Patient updatedPatient = (Patient) s.merge(patient);
         return updatedPatient;
-
     }
 
     @Override
@@ -181,7 +175,7 @@ public class PatientRepositoryImpl implements PatientRepository {
 
         Patient patient = s.get(Patient.class, id);
         if (patient == null) {
-            throw new RuntimeException("Bệnh nhân với id " + id + " không tìm thấy");
+            throw new RuntimeException("Patient with ID " + id + " not found");
         }
 
         if (patient.getUser() != null) {
@@ -190,7 +184,5 @@ public class PatientRepositoryImpl implements PatientRepository {
 
         s.remove(patient);
         transaction.commit();
-
     }
-
 }

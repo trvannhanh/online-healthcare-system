@@ -46,6 +46,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         Session s = this.factory.getObject().getCurrentSession();
         Doctor doctor = s.get(Doctor.class, appointment.getDoctor().getId());
 
+        // Checks if the doctor already has an appointment at the specified time
         CriteriaBuilder b = s.getCriteriaBuilder();
         CriteriaQuery<Long> q = b.createQuery(Long.class);
         Root<Appointment> root = q.from(Appointment.class);
@@ -57,7 +58,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                 b.notEqual(root.get("status"), AppointmentStatus.CANCELLED));
         Long count = s.createQuery(q).getSingleResult();
         if (count > 0) {
-            throw new RuntimeException("Bác sĩ đã có lịch hẹn vào thời gian này");
+            throw new RuntimeException("Doctor already has an appointment at this time");
         }
 
         s.persist(appointment);
@@ -70,7 +71,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
         Appointment existingAppointment = s.get(Appointment.class, id);
         if (existingAppointment == null) {
-            throw new RuntimeException("Lịch Hẹn với id " + id + " không tìm thấy");
+            throw new RuntimeException("Appointment with ID " + id + " not found");
         }
 
         existingAppointment.setStatus(AppointmentStatus.CANCELLED);
@@ -85,11 +86,12 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
         Appointment existingAppointment = s.get(Appointment.class, id);
         if (existingAppointment == null) {
-            throw new RuntimeException("Lịch Hẹn với id " + id + " không tìm thấy");
+            throw new RuntimeException("Appointment with ID " + id + " not found");
         }
 
         Doctor doctor = existingAppointment.getDoctor();
         if (doctor != null) {
+            // Checks for doctor availability at the new date and time
             CriteriaBuilder b = s.getCriteriaBuilder();
             CriteriaQuery<Long> q = b.createQuery(Long.class);
             Root<Appointment> root = q.from(Appointment.class);
@@ -101,7 +103,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                     b.notEqual(root.get("id"), id));
             Long count = s.createQuery(q).getSingleResult();
             if (count > 0) {
-                throw new RuntimeException("Bác sĩ đã có lịch vào thời gian này");
+                throw new RuntimeException("Doctor already has an appointment at this time");
             }
         }
 
@@ -161,7 +163,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                         b.lower(doctorUserJoin.get("lastName")),
                         searchPattern);
                 predicates.add(b.or(firstNamePredicate, lastNamePredicate));
-
             }
 
             String patientName = params.get("patientName");
@@ -193,7 +194,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         }
 
         return query.getResultList();
-
     }
 
     @Override
@@ -215,7 +215,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
         Query query = s.createQuery(q);
         return (Appointment) query.getSingleResult();
-
     }
 
     @Override
@@ -228,7 +227,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         }
 
         if (appointment.getPatient() == null || appointment.getDoctor() == null) {
-            throw new RuntimeException("Patient and Doctor are required for an Appointment");
+            throw new RuntimeException("Patient and Doctor are required for an appointment");
         }
 
         Patient patient = s.get(Patient.class, appointment.getPatient().getId());
@@ -259,6 +258,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         }
 
         if (dateChanged || doctorChanged) {
+            // Checks for doctor availability if date or doctor has changed
             CriteriaBuilder b = s.getCriteriaBuilder();
             CriteriaQuery<Long> q = b.createQuery(Long.class);
             Root<Appointment> root = q.from(Appointment.class);
@@ -270,7 +270,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                     b.notEqual(root.get("id"), appointment.getId()));
             Long count = s.createQuery(q).getSingleResult();
             if (count > 0) {
-                throw new RuntimeException("Doctor is already booked at this time");
+                throw new RuntimeException("Doctor already has an appointment at this time");
             }
         }
 
@@ -330,7 +330,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         query.setMaxResults(PAGE_SIZE);
 
         return query.getResultList();
-
     }
 
     @Override
@@ -352,7 +351,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         query.setMaxResults(PAGE_SIZE);
 
         return query.getResultList();
-
     }
 
     @Override

@@ -45,6 +45,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 
         Date now = new Date();
 
+        // Calculates time 30 minutes ago for filtering recent notifications
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(now);
         calendar.add(Calendar.MINUTE, -30); 
@@ -53,7 +54,6 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(builder.equal(userJoin.get("id"), userId));
         predicates.add(builder.equal(root.get("isRead"), false)); 
-
         predicates.add(builder.between(root.get("sentAt"), thirtyMinutesAgo, now));
 
         q.where(predicates.toArray(new Predicate[0]));
@@ -84,13 +84,12 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 
         notification.setIsRead(true);
         session.merge(notification);
-
     }
     
     @Override
     public Notifications addNotification(Notifications notification) {
         if (notification.getType() == null) {
-            throw new IllegalArgumentException("Loại thông báo là bắt buộc");
+            throw new IllegalArgumentException("Notification type is required");
         }
         Session session = this.factory.getObject().getCurrentSession();
         session.persist(notification);
@@ -182,7 +181,6 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         return hqlQuery.getResultList();
     }
 
-
     @Override
     public List<Notifications> getNotificationsByVerificationStatus(boolean isVerified, int page) {
         Session session = this.factory.getObject().getCurrentSession();
@@ -244,6 +242,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     public void updateNotificationMessage(int notificationId, String message) {
         Session session = this.factory.getObject().getCurrentSession();
         Notifications notification = session.get(Notifications.class, notificationId);
+        // Updates message only if notification is not yet sent or is scheduled for the future
         if (notification != null && (notification.getSentAt() == null ||
                 notification.getSentAt().after(new Date()))) {
             notification.setMessage(message);

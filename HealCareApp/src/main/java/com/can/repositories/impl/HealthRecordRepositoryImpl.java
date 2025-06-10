@@ -25,12 +25,12 @@ public class HealthRecordRepositoryImpl implements HealthRecordRepository {
     @Autowired
     private LocalSessionFactoryBean factory;
     
-    
     @Override
     public HealthRecord createHealthRecord(HealthRecord healthRecord) {
         Session s = this.factory.getObject().getCurrentSession();
         s.persist(healthRecord);
-        System.out.println("Kết quả khám được tạo với id: " + healthRecord.getId());
+        // Logs the creation of a health record with its ID
+        System.out.println("Health record created with ID: " + healthRecord.getId());
         return healthRecord;
     }
 
@@ -42,9 +42,8 @@ public class HealthRecordRepositoryImpl implements HealthRecordRepository {
         Root<HealthRecord> root = query.from(HealthRecord.class);
         query.select(root).where(builder.equal(root.get("appointment").get("id"), appointmentId));
         HealthRecord result = s.createQuery(query).uniqueResult();
-        System.out.println("Truy vấn kết quả khám cho lịch hẹn: " + appointmentId + ", tìm thấy: " + (result != null));
+        // Logs the query result for the health record by appointment ID
+        System.out.println("Queried health record for appointment: " + appointmentId + ", found: " + (result != null));
         return result;
     }
-    
-
 }

@@ -50,7 +50,6 @@ public class ApiResponseController {
 
     
 
-    // Cập nhật phản hồi
     @PutMapping("/secure/response/{id}")
     public ResponseEntity<Response> updateResponse(
             @PathVariable("id") Integer id, 
@@ -67,14 +66,12 @@ public class ApiResponseController {
         }
     }
     
-    // Lấy tất cả các đánh giá về bác sĩ (dùng Principal)
     @GetMapping("/secure/doctor/ratings/{doctorId}")
     public ResponseEntity<List<Rating>> getDoctorRatings(@PathVariable("doctorId") Integer doctorId, Principal principal) {
         try {
-            // Lấy thông tin user đang đăng nhập
+            
             User currentUser = userService.getUserByUsername(principal.getName());
             
-            // Lấy ID bác sĩ từ người dùng đăng nhập
             doctorId = currentUser.getId();
             
             List<Rating> ratings = ratingService.getRatingsByDoctorId(doctorId);
@@ -85,7 +82,6 @@ public class ApiResponseController {
         }
     }
 
-        // Kiểm tra đánh giá đã được phản hồi hay chưa
     @GetMapping("/response/rating/{ratingId}")
     public ResponseEntity<Boolean> isRatingResponsed(@PathVariable("ratingId") Integer ratingId) {
         try {

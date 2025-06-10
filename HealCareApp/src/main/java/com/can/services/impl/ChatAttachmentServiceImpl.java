@@ -36,17 +36,7 @@ public class ChatAttachmentServiceImpl implements ChatAttachmentService {
 
     @Autowired
     private Cloudinary cloudinary;
-
-    @Override
-    public ChatAttachment getChatAttachmentById(int id) {
-        return chatAttachmentRepo.getChatAttachmentById(id);
-    }
-
-    @Override
-    public ChatAttachment getChatAttachmentByMessageId(String messageId) {
-        return chatAttachmentRepo.getChatAttachmentByMessageId(messageId);
-    }
-
+    
     @Override
     public ChatAttachment addChatAttachment(String messageId, String chatRoomId, String type, MultipartFile file, int uploadedBy) {
         if (file.getSize() > 5 * 1024 * 1024) {
@@ -89,6 +79,16 @@ public class ChatAttachmentServiceImpl implements ChatAttachmentService {
         } catch (Exception e) {
             throw new RuntimeException("Không thể upload tệp: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public ChatAttachment getChatAttachmentById(int id) {
+        return chatAttachmentRepo.getChatAttachmentById(id);
+    }
+
+    @Override
+    public ChatAttachment getChatAttachmentByMessageId(String messageId) {
+        return chatAttachmentRepo.getChatAttachmentByMessageId(messageId);
     }
 
     @Override

@@ -13,13 +13,6 @@ const firebaseConfig = {
   databaseURL: "https://healcarechat-default-rtdb.firebaseio.com/"
 };
 
-// try {
-//   if (!firebase.apps.length) {
-//     firebase.initializeApp(firebaseConfig);
-//   }
-// } catch (error) {
-//   console.error('Lỗi khởi tạo Firebase:', error);
-// }
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);

@@ -11,22 +11,17 @@ const DoctorRatings = () => {
     const [ratings, setRatings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    // Thêm state để lưu trạng thái filter
     const [filterStatus, setFilterStatus] = useState('all');
 
-    // Kiểm tra xem rating có phản hồi không
     const hasResponse = (rating) => {
-        // Nếu rating có thuộc tính hasResponded thì sử dụng nó
         if (rating.hasResponded !== undefined) {
             return rating.hasResponded;
         }
 
-        // Hoặc kiểm tra responses
         if (rating.responses && Array.isArray(rating.responses)) {
             return rating.responses.length > 0;
         }
 
-        // Hoặc nếu có một response object
         if (rating.response && typeof rating.response === 'object') {
             return true;
         }
@@ -34,7 +29,6 @@ const DoctorRatings = () => {
         return false;
     };
 
-    // Trong useEffect, cải thiện cách tải ratings:
     useEffect(() => {
         const loadRatings = async () => {
             if (!user || user.role !== 'DOCTOR') {
@@ -45,17 +39,13 @@ const DoctorRatings = () => {
 
             try {
                 setLoading(true);
-                // Lấy danh sách đánh giá
                 const response = await authApis().get(endpoints['doctorRatings'](user.id));
 
-                // Tạo một bản sao ratings để cập nhật trạng thái phản hồi
                 const ratingsWithResponseCheck = [...response.data];
 
-                // Kiểm tra từng đánh giá có phản hồi không
                 for (let i = 0; i < ratingsWithResponseCheck.length; i++) {
                     try {
                         const responseCheck = await authApis().get(endpoints['responseByRating'](ratingsWithResponseCheck[i].id));
-                        // Nếu có phản hồi, thêm thuộc tính hasResponded = true
                         if (responseCheck.data) {
                             ratingsWithResponseCheck[i].hasResponded = true;
                             ratingsWithResponseCheck[i].response = responseCheck.data;
@@ -63,7 +53,6 @@ const DoctorRatings = () => {
                             ratingsWithResponseCheck[i].hasResponded = false;
                         }
                     } catch (err) {
-                        // Nếu lỗi, giả định là chưa có phản hồi
                         ratingsWithResponseCheck[i].hasResponded = false;
                     }
                 }
@@ -80,7 +69,6 @@ const DoctorRatings = () => {
         loadRatings();
     }, [user]);
 
-    // Lọc ratings theo trạng thái phản hồi
     const filteredRatings = ratings.filter(rating => {
         switch (filterStatus) {
             case 'responded':
@@ -92,7 +80,6 @@ const DoctorRatings = () => {
         }
     });
 
-    // Đếm số lượng phần tử trong mỗi danh mục
     const respondedCount = ratings.filter(r => hasResponse(r)).length;
     const unrespondedCount = ratings.filter(r => !hasResponse(r)).length;
 
@@ -108,33 +95,26 @@ const DoctorRatings = () => {
         ));
     };
 
-    // Thêm hàm kiểm tra xem phản hồi còn trong thời gian cho phép chỉnh sửa không (1 giờ)
     const isWithinEditWindow = (rating) => {
-        // Nếu không có phản hồi thì không cần kiểm tra
         if (!hasResponse(rating)) {
             return false;
         }
 
-        // Lấy thời gian của phản hồi
         let responseDate;
         if (rating.responses && Array.isArray(rating.responses) && rating.responses.length > 0) {
             responseDate = new Date(rating.responses[0].responseDate);
         } else if (rating.response && rating.response.responseDate) {
             responseDate = new Date(rating.response.responseDate);
         } else {
-            return false; // Không tìm thấy thời gian phản hồi
+            return false; 
         }
 
-        // Tính thời gian hiện tại
         const now = new Date();
 
-        // Tính khoảng thời gian đã trôi qua (mili giây)
         const timeDiff = now - responseDate;
 
-        // Chuyển đổi sang giờ (1 giờ = 3600000 mili giây)
         const hoursDiff = timeDiff / 3600000;
 
-        // Cho phép chỉnh sửa nếu thời gian < 1 giờ
         return hoursDiff <= 1;
     };
 
@@ -248,7 +228,6 @@ const DoctorRatings = () => {
                                         <Card.Footer className="bg-white">
                                             <div className="d-grid">
                                                 {!hasResponse(rating) ? (
-                                                    // Nếu chưa có phản hồi, hiển thị nút phản hồi bình thường
                                                     <Button
                                                         as={Link}
                                                         to={`/doctor/response/${rating.id}`}
@@ -258,7 +237,7 @@ const DoctorRatings = () => {
                                                         Phản hồi đánh giá
                                                     </Button>
                                                 ) : isWithinEditWindow(rating) ? (
-                                                    // Nếu có phản hồi và trong thời gian chỉnh sửa
+    
                                                     <Button
                                                         as={Link}
                                                         to={`/doctor/response/${rating.id}`}
@@ -268,7 +247,7 @@ const DoctorRatings = () => {
                                                         Chỉnh sửa phản hồi
                                                     </Button>
                                                 ) : (
-                                                    // Nếu có phản hồi nhưng đã quá thời gian chỉnh sửa
+                
                                                     <Button
                                                         variant="secondary"
                                                         disabled

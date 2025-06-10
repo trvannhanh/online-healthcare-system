@@ -42,10 +42,12 @@ public class HospitalRepositoryImpl implements HospitalRepository{
     public Hospital getHospitalByName(String name) {
         try {
             Session session = sessionFactory.getObject().getCurrentSession();
-        Query<Hospital> query = session.createQuery("FROM Hospital WHERE name = :name", Hospital.class);
+            // Queries for a hospital by its name
+            Query<Hospital> query = session.createQuery("FROM Hospital WHERE name = :name", Hospital.class);
             query.setParameter("name", name);
             return query.getSingleResult();
         } catch (NoResultException ex) {
+            // Returns null if no hospital is found with the given name
             return null;
         }
     }
@@ -64,6 +66,7 @@ public class HospitalRepositoryImpl implements HospitalRepository{
             session.merge(hospital);
             return true;
         } catch (Exception ex) {
+            // Logs any unexpected errors during update
             ex.printStackTrace();
             return false;
         }
@@ -78,8 +81,10 @@ public class HospitalRepositoryImpl implements HospitalRepository{
                 session.remove(hospital);
                 return true;
             }
+            // Returns false if no hospital is found for the given ID
             return false;
         } catch (Exception ex) {
+            // Logs any unexpected errors during deletion
             ex.printStackTrace();
             return false;
         }

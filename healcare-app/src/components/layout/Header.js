@@ -34,7 +34,6 @@ const Header = () => {
 
         try {
             const res = await authApis().get(endpoints["allNotifications"]);
-            // Đếm những thông báo chưa đọc
             const unreadCount = res.data.filter(notif => !notif.read ).length;
             setUnreadNotifications(unreadCount);
         } catch (error) {
@@ -46,28 +45,23 @@ const Header = () => {
         fetchNotificationsCount();
     }, [user]);
 
-    // Thêm useEffect mới để xử lý thông báo
     useEffect(() => {
         if (user && user.role === 'PATIENT') {
-            // Gọi ngay khi component được tải
             fetchNotificationsCount();
 
-            // Thiết lập lắng nghe sự kiện từ components khác
             const handleNotificationRead = () => {
                 fetchNotificationsCount();
             };
             window.addEventListener('notification-read', handleNotificationRead);
 
-            // Thiết lập interval để cập nhật thông báo định kỳ
-            const intervalId = setInterval(fetchNotificationsCount, 60000); // Cập nhật mỗi phút
+            const intervalId = setInterval(fetchNotificationsCount, 60000); 
 
-            // Cleanup khi component unmount
             return () => {
                 window.removeEventListener('notification-read', handleNotificationRead);
                 clearInterval(intervalId);
             };
         }
-    }, [user, fetchNotificationsCount]); // Thêm fetchNotificationsCount vào dependencies
+    }, [user, fetchNotificationsCount]); 
 
     return (
         <Navbar
