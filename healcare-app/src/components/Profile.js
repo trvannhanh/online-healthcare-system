@@ -7,7 +7,6 @@ import { authApis, endpoints } from '../configs/Apis';
 const Profile = () => {
     const navigate = useNavigate();
     const { user } = useMyUser() || {};
-    // Thông tin bệnh nhân
     const [userInfo, setUserInfo] = useState({});
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -23,7 +22,6 @@ const Profile = () => {
     const [message, setMessage] = useState({ type: '', text: '' });
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('profile');
-    // Thông tin sức khỏe bệnh nhân
     const [selfReport, setSelfReport] = useState(null);
     const [hasSelfReport, setHasSelfReport] = useState(false);
     const [height, setHeight] = useState('');
@@ -35,7 +33,6 @@ const Profile = () => {
     const [medicationAllergies, setMedicationAllergies] = useState('');
     const [currentMedications, setCurrentMedications] = useState('');
     const [currentTreatments, setCurrentTreatments] = useState('');
-    //Thông tin bác sĩ
     const [specialization, setSpecialization] = useState('');
     const [hospital, setHospital] = useState('');
     const [licenseNumber, setLicenseNumber] = useState('');
@@ -53,7 +50,6 @@ const Profile = () => {
         }
     };
 
-    // Đơn giản hóa kiểm tra user
     useEffect(() => {
         if (!user) return;
 
@@ -65,15 +61,7 @@ const Profile = () => {
         fetchUserProfile();
     }, [user]);
 
-    // // Khởi tạo updatedMedicalHistory khi records thay đổi
-    // useEffect(() => {
-    //     if (healthRecords.length > 0 && selectedRecordIndex < healthRecords.length) {
-    //         setUpdatedMedicalHistory(healthRecords[selectedRecordIndex]?.medicalHistory || '');
-    //     }
-    // }, [healthRecords, selectedRecordIndex]);
-
     const fetchUserProfile = useCallback(async () => {
-        // Đơn giản hóa kiểm tra user
         if (!user) return;
 
         setLoading(true);
@@ -92,7 +80,6 @@ const Profile = () => {
                 const selfReportData = response.data.selfReport;
                 setSelfReport(selfReportData);
 
-                // Cải thiện việc truy cập dữ liệu
                 if (user) {
                     // Nếu API trả về { user: {...}, ... }
                     setFirstName(patient.user.firstName || '');
@@ -101,7 +88,6 @@ const Profile = () => {
                     setEmail(patient.user.email || user.username || '');
                     setAvatarPreview(patient.user.avatar || '');
                 } else {
-                    // Nếu API trả về thông tin user trực tiếp
                     setFirstName(patient.user.firstName || '');
                     setLastName(patient.user.lastName || '');
                     setPhoneNumber(patient.user.phoneNumber || '');
@@ -109,7 +95,6 @@ const Profile = () => {
                     setAvatarPreview(patient.user.avatar || '');
                 }
 
-                // Xử lý dateOfBirth từ nhiều vị trí có thể có
                 const dateOfBirthSource = patient.dateOfBirth ||
                     (patient.patient && patient.patient.dateOfBirth);
 
@@ -118,7 +103,6 @@ const Profile = () => {
                     setDateOfBirth(date.toISOString().split('T')[0]);
                 }
 
-                // Xử lý insuranceNumber từ nhiều vị trí có thể có
                 setInsuranceNumber(
                     patient.insuranceNumber ||
                     (patient.patient && patient.patient.insuranceNumber) ||
@@ -132,7 +116,6 @@ const Profile = () => {
                         setSelfReport(selfReportData.report);
                         setHasSelfReport(true);
 
-                        // Cập nhật các trường dữ liệu
                         setHeight(selfReportData.report.height || '');
                         setWeight(selfReportData.report.weight || '');
                         setPersonalMedicalHistory(selfReportData.report.personalMedicalHistory || '');
@@ -146,7 +129,6 @@ const Profile = () => {
                         setHasSelfReport(false);
                         setSelfReport(null);
 
-                        // Reset các trường form
                         setHeight('');
                         setWeight('');
                         setPersonalMedicalHistory('');
@@ -163,21 +145,18 @@ const Profile = () => {
                     setSelfReport(null);
                 }
             } else if (isDoctor) {
-                // Fetch doctor profile
                 response = await authApis().get(endpoints['doctorProfile']);
                 console.log("Doctor profile response:", response.data);
 
                 const doctor = response.data.doctor;
                 setUserInfo(doctor);
 
-                // Set doctor-specific fields
                 setSpecialization(doctor.specialization || '');
                 setHospital(doctor.hospital || '');
                 setLicenseNumber(doctor.licenseNumber || '');
                 setBio(doctor.bio || '');
                 setExperienceYears(doctor.experienceYears || '');
 
-                // Set common user fields from the nested user object
                 if (doctor.user) {
                     setFirstName(doctor.user.firstName || '');
                     setLastName(doctor.user.lastName || '');
@@ -209,7 +188,6 @@ const Profile = () => {
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
 
-        // Đơn giản hóa kiểm tra user
         if (!user) {
             setMessage({
                 type: 'warning',
@@ -221,7 +199,6 @@ const Profile = () => {
 
         setLoading(true);
 
-        // FormData không cần userId nữa
         const patientProfile = {
             user: {
                 firstName: firstName,
@@ -284,7 +261,6 @@ const Profile = () => {
             return;
         }
 
-        // Đơn giản hóa kiểm tra user
         if (!user) {
             setMessage({
                 type: 'warning',
@@ -293,7 +269,6 @@ const Profile = () => {
             return;
         }
 
-        // FormData không cần userId nữa
         const formData = new FormData();
         formData.append('avatar', avatar);
 
@@ -321,7 +296,6 @@ const Profile = () => {
     const handlePasswordChange = async (e) => {
         e.preventDefault();
 
-        // Đơn giản hóa kiểm tra user
         if (!user) {
             setMessage({
                 type: 'warning',
@@ -339,7 +313,6 @@ const Profile = () => {
         }
 
         setLoading(true);
-        // FormData không cần userId nữa
         const formData = new FormData();
         formData.append('currentPassword', currentPassword);
         formData.append('newPassword', newPassword);
@@ -366,7 +339,6 @@ const Profile = () => {
         }
     };
 
-    // Thêm vào sau handlePasswordChange và trước phần return
     const handleSelfReportSubmit = async (e) => {
         e.preventDefault();
 
@@ -395,9 +367,7 @@ const Profile = () => {
 
             let response;
 
-            // Trong hàm handleSelfReportSubmit
             if (hasSelfReport) {
-                // Cập nhật báo cáo hiện có
                 if (selfReport && selfReport.id) {
                     reportData.id = selfReport.id;
                 }
@@ -410,7 +380,6 @@ const Profile = () => {
                     text: 'Cập nhật thông tin sức khỏe thành công!'
                 });
             } else {
-                // Tạo báo cáo mới - đảm bảo endpoint này là đúng
                 console.log("Đang tạo báo cáo sức khỏe mới:", reportData);
                 response = await authApis().post(endpoints['createPatientSelfReport'], reportData);
 
@@ -422,11 +391,9 @@ const Profile = () => {
 
             console.log("Kết quả từ server:", response.data);
 
-            // Cập nhật state với dữ liệu từ response
             setSelfReport(response.data);
             setHasSelfReport(true);
 
-            // Cập nhật các trường form
             setHeight(response.data.height || '');
             setWeight(response.data.weight || '');
             setPersonalMedicalHistory(response.data.personalMedicalHistory || '');
@@ -440,7 +407,6 @@ const Profile = () => {
         } catch (error) {
             console.error('Error submitting self report:', error);
 
-            // Xử lý thông báo lỗi từ server
             if (error.response) {
                 const errorData = error.response.data;
                 let errorMessage = 'Có lỗi xảy ra khi gửi thông tin sức khỏe.';
@@ -466,7 +432,6 @@ const Profile = () => {
         }
     };
 
-    // Hàm helper để làm mới thông tin báo cáo sức khỏe
     const fetchSelfReport = async () => {
         try {
             setLoading(true);
@@ -477,14 +442,12 @@ const Profile = () => {
                 setSelfReport(response.data.selfReport.report);
                 setHasSelfReport(true);
 
-                // Cập nhật các trường form
                 setHeight(response.data.selfReport.report.height || '');
                 setWeight(response.data.selfReport.report.weight || '');
                 setPersonalMedicalHistory(response.data.selfReport.report.personalMedicalHistory || '');
                 setFamilyMedicalHistory(response.data.selfReport.report.familyMedicalHistory || '');
                 setPregnancyHistory(response.data.selfReport.report.pregnancyHistory || '');
             } else {
-                // Reset nếu không có báo cáo
                 setSelfReport(null);
                 setHasSelfReport(false);
                 setHeight('');
@@ -504,7 +467,6 @@ const Profile = () => {
         }
     };
 
-    // JSX render code remains unchanged...
     return (
         <Container className="mt-4">
             <h2 className="mb-4 text-center text-primary">Hồ sơ cá nhân</h2>

@@ -6,25 +6,13 @@ package com.can.services.impl;
 
 import com.can.pojo.Patient;
 import com.can.pojo.User;
-import com.can.pojo.HealthRecord;
 import com.can.repositories.PatientRepository;
 import com.can.services.PatientService;
-//import com.can.services.HealthRecordService;
-
-import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Map;
-import java.util.UUID;
-
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.security.core.Authentication;
 import com.can.services.UserService;
 
 /**
@@ -40,8 +28,6 @@ public class PatientServiceImpl implements PatientService {
     @Autowired
     private UserService userService;
 
-//    @Autowired
-//    private HealthRecordService healthRecordService;
 
     @Override
     public boolean isUsernameExists(Session session, String username) {
@@ -76,36 +62,32 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public Patient getCurrentPatientProfile(String username) {
 
-        // Lấy thông tin người dùng
         User currentUser = userService.getUserByUsername(username);
         if (currentUser == null) {
-            throw new RuntimeException("User not found");
+            throw new RuntimeException("Người dùng không tìm thấy");
         }
 
-        // Đảm bảo người dùng là bệnh nhân
         if (!currentUser.getRole().name().equals("PATIENT")) {
-            throw new RuntimeException("Access denied. Only patients can access this resource");
+            throw new RuntimeException("Chỉ Bệnh Nhân mới được truy cập");
         }
 
-        // Lấy thông tin bệnh nhân
         return this.patRepo.getPatientById(currentUser.getId());
     }
 
     @Override
     public Patient updatePatientProfile(String username, Patient patientData) {
-        // Lấy thông tin bệnh nhân hiện tại
 
         User currentUser = userService.getUserByUsername(username);
 
         if (currentUser == null) {
-            throw new RuntimeException("User not found");
+            throw new RuntimeException("Người dùng không tìm thấy");
         }
 
         if (!currentUser.getRole().name().equals("PATIENT")) {
-            throw new RuntimeException("Access denied. Only patients can access this resource");
+            throw new RuntimeException("Chỉ Bệnh Nhân mới được truy cập");
         }
         Patient patient = this.patRepo.getPatientById(currentUser.getId());
-        // Lưu các thay đổi
+        
         if (patientData.getDateOfBirth() != null) {
             patient.setDateOfBirth(patientData.getDateOfBirth());
         }
@@ -114,7 +96,6 @@ public class PatientServiceImpl implements PatientService {
             patient.setInsuranceNumber(patientData.getInsuranceNumber());
         }
 
-        // Quan trọng: Cập nhật thông tin User
         if (patientData.getUser() != null) {
             User existingUser = patient.getUser();
 
@@ -127,29 +108,13 @@ public class PatientServiceImpl implements PatientService {
             }
 
             if (patientData.getUser().getPhoneNumber() != null) {
-                System.out.println("Updating phone number to: " + patientData.getUser().getPhoneNumber());
+                System.out.println("Cập nhật số điện thoại cho: " + patientData.getUser().getPhoneNumber());
                 existingUser.setPhoneNumber(patientData.getUser().getPhoneNumber());
             }
 
-            // Lưu thay đổi vào User
             userService.updateUser(existingUser);
         }
         return patRepo.updatePatient(patient);
     }
 
-//    @Override
-//    public List<HealthRecord> getCurrentPatientHealthRecords(String username) {
-//        User currentUser = userService.getUserByUsername(username);
-//        if (currentUser == null) {
-//            throw new RuntimeException("User not found");
-//        }
-//
-//        // Đảm bảo người dùng là bệnh nhân
-//        if (!currentUser.getRole().name().equals("PATIENT")) {
-//            throw new RuntimeException("Access denied. Only patients can access this resource");
-//        }
-//
-//        // Lấy thông tin bệnh nhân
-//        return this.healthRecordService.getHealthRecordsByPatient(currentUser.getId());
-//    }
 }

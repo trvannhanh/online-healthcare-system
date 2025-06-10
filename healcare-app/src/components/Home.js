@@ -123,14 +123,12 @@ const Home = () => {
         loadSpecialization();
     }, []);
 
-    // Tách useEffect cho loadDoctors
     useEffect(() => {
         if (user?.role === "PATIENT" && page > 0 && hasMoreDoctors) {
             loadDoctors();
         }
     }, [page, q, user?.id]);
 
-    // Tách useEffect cho loadAppointments
     useEffect(() => {
         if (user && page > 0) {
             loadAppointments();
@@ -141,7 +139,7 @@ const Home = () => {
         setPage(1);
         setDoctors([]);
         setAppointments([]);
-        setHasMoreDoctors(true); // Reset khi thay đổi query
+        setHasMoreDoctors(true);
     }, [q]);
 
     const loadMore = () => {
@@ -279,7 +277,6 @@ const Home = () => {
 
     return (
         <>
-            {/* Hero Section */}
             <div
                 className="text-white py-5 px-4 mb-5 shadow-lg"
                 style={{
@@ -325,8 +322,6 @@ const Home = () => {
                         {success}
                     </Alert>
                 )}
-
-                {/* Search Bar */}
                 {user?.role === "PATIENT" && (
                     <div className="mb-5">
                         <h3 className="fw-bold text-primary mb-4">Tìm Kiếm Bác Sĩ</h3>
@@ -411,7 +406,6 @@ const Home = () => {
                     </div>
                 )}
 
-                {/* Guest User Section */}
                 {!user && (
                     <div className="mb-5">
                         <h2 className="text-center fw-bold text-primary mb-4">Tại Sao Chọn HealCare?</h2>
@@ -458,7 +452,6 @@ const Home = () => {
                     </div>
                 )}
 
-                {/* Doctor Dashboard */}
                 {user?.role === "DOCTOR" && (
                     <div className="mb-5">
                         <h2 className="text-center fw-bold text-primary mb-4">
@@ -510,7 +503,6 @@ const Home = () => {
                     </div>
                 )}
 
-                {/* Patient Section */}
                 {user?.role === "PATIENT" && (
                     <>
                         {/* Doctors List */}
@@ -619,7 +611,6 @@ const Home = () => {
                     </>
                 )}
 
-                {/* Appointments Section */}
                 {user && (
                     <>
                         <h3 className="fw-bold text-primary mb-4 mt-5">Lịch Hẹn Của Bạn</h3>
@@ -750,7 +741,6 @@ const Home = () => {
                     </>
                 )}
 
-                {/* Modal đổi lịch hẹn */}
                 <Modal show={showRescheduleModal} onHide={closeRescheduleModal} centered>
                     <Modal.Header closeButton className="bg-primary text-white" style={{ borderTopLeftRadius: "10px", borderTopRightRadius: "10px" }}>
                         <Modal.Title>Đổi Lịch Hẹn</Modal.Title>
@@ -793,8 +783,7 @@ const Home = () => {
                     </Modal.Footer>
                 </Modal>
             </Container>
-
-            {/* CSS Animations */}
+            
             <style>
                 {`
                     @keyframes fadeIn {

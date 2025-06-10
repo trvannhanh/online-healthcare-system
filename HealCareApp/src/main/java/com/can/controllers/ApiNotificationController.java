@@ -2,7 +2,6 @@ package com.can.controllers;
 
 import com.can.pojo.Notifications;
 import com.can.services.NotificationService;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +21,7 @@ public class ApiNotificationController {
     @GetMapping("/secure/notifications/{id}")
     public ResponseEntity<?> getNotificationById(@PathVariable("id") int id) {
         try {
-            // Lấy thông báo theo ID
+            
             Notifications notification = notificationService.getNotificationById(id);
 
             return new ResponseEntity<>(notification, HttpStatus.OK);
@@ -43,7 +42,6 @@ public class ApiNotificationController {
         }
     }
 
-    // Lấy thông báo sắp tới cho người dùng hiện tại
     @GetMapping("/secure/notifications/upcoming")
     public ResponseEntity<?> getUpcomingNotifications(Principal principal) {
 
@@ -56,7 +54,6 @@ public class ApiNotificationController {
         }
     }
 
-    // Đánh dấu thông báo đã đọc
     @PatchMapping("/secure/notifications/{id}/mark-read")
     public ResponseEntity<?> markNotificationAsRead(@PathVariable("id") int id, Principal principal) {
 

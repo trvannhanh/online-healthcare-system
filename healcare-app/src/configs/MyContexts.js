@@ -14,7 +14,6 @@ const initialState = {
 export const MyUserProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  // Kiểm tra token và khôi phục thông tin người dùng khi ứng dụng khởi động
   useEffect(() => {
     const loadUser = async () => {
       const token = cookie.load("token");
@@ -23,7 +22,6 @@ export const MyUserProvider = ({ children }) => {
           const userRes = await authApis().get(endpoints["current-user"]);
           let baseUser = userRes.data;
 
-          // Nếu là bác sĩ, lấy thêm thông tin chi tiết
           if (baseUser.role === "DOCTOR") {
             const doctorRes = await authApis().get(
               `${endpoints["doctors"]}/${baseUser.id}`

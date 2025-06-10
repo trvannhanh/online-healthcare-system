@@ -15,8 +15,6 @@ const PatientHealthRecord = () => {
     const [success, setSuccess] = useState(null);
     const [patient, setPatient] = useState(null);
     const [selfReport, setSelfReport] = useState(null);
-
-    // Selfreport
     const [height, setHeight] = useState('');
     const [weight, setWeight] = useState('');
     const [personalMedicalHistory, setPersonalMedicalHistory] = useState('');
@@ -28,7 +26,6 @@ const PatientHealthRecord = () => {
     const [currentTreatments, setCurrentTreatments] = useState('');
     const [doctorNotes, setDoctorNotes] = useState('');
 
-    // Lấy dữ liệu bệnh nhân và báo cáo tự đánh giá
     useEffect(() => {
         if (!user || user.role !== 'DOCTOR') {
             setError("Bạn không có quyền truy cập trang này");
@@ -41,11 +38,9 @@ const PatientHealthRecord = () => {
     const fetchPatientData = async () => {
         try {
             setLoading(true);
-            // Fetch thông tin bệnh nhân
             const patientResponse = await authApis().get(`${endpoints['patients']}/${patientId}`);
             setPatient(patientResponse.data);
 
-            // Fetch thông tin hồ sơ cá nhân
             const selfReportResponse = await authApis().get(endpoints.patientHealthRecord(patientId)); if (selfReportResponse.data) {
                 setSelfReport(selfReportResponse.data);
 
@@ -87,7 +82,6 @@ const PatientHealthRecord = () => {
             setSaving(true);
             setError(null);
 
-            // Chuẩn bị dữ liệu để cập nhật
             const updatedSelfReport = {
                 id: selfReport.id,
                 patient: { id: parseInt(patientId) },
@@ -103,13 +97,11 @@ const PatientHealthRecord = () => {
                 doctorNotes
             };
 
-            // Gửi yêu cầu cập nhật đến endpoint
             const response = await authApis().put(endpoints['updatePatientSelfReport'], updatedSelfReport);
 
             setSelfReport(response.data);
             setSuccess("Cập nhật hồ sơ sức khỏe bệnh nhân thành công!");
 
-            // Clear success message after 3 seconds
             setTimeout(() => setSuccess(null), 3000);
         } catch (err) {
             console.error("Error updating patient health record:", err);
@@ -119,7 +111,6 @@ const PatientHealthRecord = () => {
         }
     };
 
-    // Nếu người dùng không phải bác sĩ hay chưa đăng nhập
     if (!user || user.role !== 'DOCTOR') {
         return (
             <Container className="my-5">
@@ -132,7 +123,6 @@ const PatientHealthRecord = () => {
 
     return (
         <Container className="my-5">
-            {/* Page Header */}
             <div className="d-flex align-items-center justify-content-between mb-4">
                 <h2 className="mb-0">
                     <FaFileMedical className="me-2 text-primary" />
@@ -147,7 +137,6 @@ const PatientHealthRecord = () => {
                 </Button>
             </div>
 
-            {/* Alert Messages */}
             {error && (
                 <Alert variant="danger" onClose={() => setError(null)} dismissible>
                     {error}
@@ -188,7 +177,6 @@ const PatientHealthRecord = () => {
                         </Card>
                     )}
 
-                    {/* Health Record Form */}
                     {selfReport ? (
                         <Card className="shadow-sm">
                             <Card.Header className="bg-primary text-white">

@@ -4,33 +4,21 @@
  */
 package com.can.controllers;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.Map;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.text.ParseException;
-import org.springframework.security.core.Authentication;
 
-import com.can.pojo.HealthRecord;
 import com.can.pojo.Patient;
 import com.can.pojo.PatientSelfReport;
 import com.can.services.PatientService;
 import com.can.services.PatientSelfReportService;
-import com.can.pojo.User;
-import com.can.repositories.PatientRepository;
-import com.can.services.UserService;
 
 /**
  *
@@ -60,25 +48,15 @@ public class ApiPatientController {
     }
     
     
-    // Get the current patient's profile
     @GetMapping("/secure/patient/profile")
     public ResponseEntity<?> getPatientProfile(Principal principal) {
         try {
             String username = principal.getName();
             System.out.println("Username: " + username);
             Patient patient = patientService.getCurrentPatientProfile(username);
-            // Tạo đối tượng phản hồi
             Map<String, Object> response = new HashMap<>();
             response.put("patient", patient);
 
-            // try {
-            //     List<HealthRecord> records = patientService.getCurrentPatientHealthRecords(username);
-            //     response.put("healthRecords", records);
-            // } catch (Exception e) {
-            //     // Just log it and continue
-            //     System.err.println("Failed to load health records: " + e.getMessage());
-            //     response.put("healthRecords", new ArrayList<>());
-            // }
             try {
             boolean hasReport = patientSelfReportService.hasCurrentPatientSelfReport(username);
             Map<String, Object> selfReportData = new HashMap<>();
@@ -98,10 +76,8 @@ public class ApiPatientController {
         }
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            // Log lỗi để debug
             e.printStackTrace();
 
-            // Tạo response lỗi chi tiết hơn
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("message", "Không thể tải thông tin hồ sơ");
             errorResponse.put("error", e.getMessage());
@@ -113,7 +89,6 @@ public class ApiPatientController {
         }
     }
 
-    // Cập nhật thông tin cá nhân
     @PutMapping("/secure/patient/profile")
     public ResponseEntity<?> updatePatientProfile(
             @RequestBody Patient patient, Principal principal) {

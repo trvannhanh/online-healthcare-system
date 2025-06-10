@@ -5,8 +5,6 @@
 package com.can.repositories;
 import com.can.pojo.HealthRecord;
 
-import java.util.List;
-import java.util.Map;
 /**
  *
  * @author DELL

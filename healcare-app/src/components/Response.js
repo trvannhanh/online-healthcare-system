@@ -34,27 +34,22 @@ const Response = () => {
             }
 
             try {
-                // Lấy thông tin đánh giá
                 const ratingRes = await authApis().get(endpoints['ratingById'](ratingId));
                 setRating(ratingRes.data);
 
-                // Kiểm tra xem đánh giá có phải dành cho bác sĩ này hay không
                 if (ratingRes.data.appointment.doctor.id !== user.id) {
                     setError("Bạn không có quyền phản hồi đánh giá này");
                     setLoading(false);
                     return;
                 }
 
-                // Kiểm tra xem đã có phản hồi chưa
                 try {
-                    // Sử dụng endPoint dạng hàm nếu nó được định nghĩa là hàm
                     const responseRes = await authApis().get(endpoints['responseByRating'](ratingId));
                     if (responseRes.data) {
                         setExistingResponse(responseRes.data);
                         setResponseContent(responseRes.data.content || '');
                     }
                 } catch (err) {
-                    // Không có phản hồi - điều này là bình thường
                     console.log("Chưa có phản hồi cho đánh giá này");
                 }
             } catch (err) {
@@ -80,7 +75,7 @@ const Response = () => {
         setError(null);
 
         try {
-            // Chuẩn bị dữ liệu phản hồi
+
             const responseData = {
                 rating: { id: parseInt(ratingId) },
                 content: responseContent,
@@ -88,20 +83,18 @@ const Response = () => {
             };
 
             if (existingResponse) {
-                // Cập nhật phản hồi hiện có
+    
                 responseData.id = existingResponse.id;
-                // Sử dụng endpoint dưới dạng hàm nếu được định nghĩa như vậy
+         
                 await authApis().put(endpoints['updateResponse'](existingResponse.id), responseData);
 
                 setSuccess("Cập nhật phản hồi thành công!");
             } else {
-                // Tạo phản hồi mới
                 responseData.responseDate = new Date().toISOString();
                 await authApis().post(endpoints['addResponse'], responseData);
                 setSuccess("Phản hồi thành công!");
             }
 
-            // Sau 2 giây, chuyển về trang quản lý đánh giá
             setTimeout(() => navigate('/doctor/ratings'), 2000);
         } catch (err) {
             console.error("Error submitting response:", err);
@@ -111,7 +104,6 @@ const Response = () => {
         }
     };
 
-    // Hiển thị các sao đánh giá (chỉ để hiển thị, không thể tương tác)
     const renderStars = (score) => {
         return [1, 2, 3, 4, 5].map((star) => (
             <span key={star} className="fs-5 me-1">

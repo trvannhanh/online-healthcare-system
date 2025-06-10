@@ -5,12 +5,8 @@
 package com.can.services;
 
 import com.can.pojo.Doctor;
-import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.web.multipart.MultipartFile;
-
 /**
  *
  * @author Giidavibe
@@ -29,6 +25,4 @@ public interface DoctorService {
     void updateLicenseNumber(int doctorId, String licenseNumber);
     Doctor getCurrentDoctorProfile(String username);
     Doctor updateDoctorProfile(String username, Doctor doctorData);
-    // String updateDoctorAvatar(String username, MultipartFile avatar);
-    // boolean changePassword(String currentPassword, String newPassword);
 }

@@ -4,16 +4,10 @@
  */
 package com.can.services;
 
-import com.can.pojo.HealthRecord;
 import com.can.pojo.Patient;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.Session;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.Date;
-
 /**
  *
  * @author Giidavibe
@@ -34,10 +28,4 @@ public interface PatientService {
     Patient getCurrentPatientProfile(String username);
 
     Patient updatePatientProfile(String username, Patient patient);
-
-    // boolean changePassword(String currentPassword, String newPassword);
-
-    // String updatePatientAvatar(String username, MultipartFile avatar) throws IOException;
-
-//    List<HealthRecord> getCurrentPatientHealthRecords(String username);
 }

@@ -21,47 +21,28 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * @author Giidavibe
  */
-
 @Repository
 @Transactional
-public class UserRepositoryImpl implements UserRepository{
+public class UserRepositoryImpl implements UserRepository {
 
     @Autowired
     private LocalSessionFactoryBean sessionFactory;
-    
+
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
     @Override
-    public User getUserById(int id) {
-        Session session = sessionFactory.getObject().getCurrentSession();
-        return session.get(User.class, id);
-    }
+    public boolean authenticate(String username, String password) {
+        User u = this.getUserByUsername(username);
 
-    @Override
-    public List<User> getAllUsers() {
-        Session session = sessionFactory.getObject().getCurrentSession();
-        Query<User> query = session.createQuery("FROM User", User.class);
-        return query.getResultList();
-    }
-
-    @Override
-    public User getUserByUsername(String username) {
-        try {
-            Session session = sessionFactory.getObject().getCurrentSession();
-            Query<User> query = session.createQuery("FROM User WHERE username = :uname", User.class);
-            query.setParameter("uname", username);
-            return query.getSingleResult();
-        } catch (NoResultException ex) {
-            return null; // hoặc throw nếu bạn muốn
-        }
+        return this.passwordEncoder.matches(password, u.getPassword());
     }
 
     @Override
     public User addUser(User u) {
         Session s = this.sessionFactory.getObject().getCurrentSession();
         s.persist(u);
-        
+
         return u;
     }
 
@@ -76,14 +57,14 @@ public class UserRepositoryImpl implements UserRepository{
             return false;
         }
     }
- 
+
     @Override
     public boolean deleteUser(int id) {
         try {
             Session session = sessionFactory.getObject().getCurrentSession();
             User user = session.get(User.class, id);
             if (user != null) {
-                session.delete(user);
+                session.remove(user);
                 return true;
             }
             return false;
@@ -92,24 +73,17 @@ public class UserRepositoryImpl implements UserRepository{
             return false;
         }
     }
-    
+
     @Override
-    public boolean authenticate(String username, String password) {
-        User u = this.getUserByUsername(username);
-
-        return this.passwordEncoder.matches(password, u.getPassword());
-    }
-
-    @Override 
     public boolean isEmailExist(String email) {
         try {
             Session session = sessionFactory.getObject().getCurrentSession();
             Query<User> query = session.createQuery("FROM User WHERE email = :email", User.class);
             query.setParameter("email", email);
             User user = query.getSingleResult();
-            return user != null; // Nếu có kết quả trả về thì email đã tồn tại
+            return user != null; 
         } catch (NoResultException ex) {
-            return false; // Nếu không có kết quả, email chưa tồn tại
+            return false; 
         }
     }
 
@@ -120,9 +94,9 @@ public class UserRepositoryImpl implements UserRepository{
             Query<User> query = session.createQuery("FROM User WHERE id = :id", User.class);
             query.setParameter("id", userId);
             User user = query.getSingleResult();
-            return user.getEmail(); // Trả về email của người dùng
+            return user.getEmail();
         } catch (NoResultException ex) {
-            return null; // Nếu không tìm thấy người dùng, trả về null
+            return null; 
         }
     }
 
@@ -130,7 +104,7 @@ public class UserRepositoryImpl implements UserRepository{
     public List<String> getAllEmails() {
         Session session = sessionFactory.getObject().getCurrentSession();
         Query<String> query = session.createQuery("SELECT email FROM User", String.class);
-        return query.getResultList(); // Trả về danh sách tất cả email
+        return query.getResultList(); 
     }
 
     @Override
@@ -139,9 +113,8 @@ public class UserRepositoryImpl implements UserRepository{
         Role roleEnum = Role.valueOf(role);
         Query<User> query = session.createQuery("FROM User WHERE role = :role", User.class);
         query.setParameter("role", roleEnum);
-        return query.getResultList(); // Trả về danh sách người dùng theo vai trò
+        return query.getResultList();
     }
-    
 
     @Override
     public User findByEmail(String email) {
@@ -165,5 +138,30 @@ public class UserRepositoryImpl implements UserRepository{
         return s.createQuery("FROM User WHERE identityNumber = :identityNumber", User.class)
                 .setParameter("identityNumber", identityNumber)
                 .uniqueResult();
+    }
+
+    @Override
+    public User getUserById(int id) {
+        Session session = sessionFactory.getObject().getCurrentSession();
+        return session.get(User.class, id);
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        Session session = sessionFactory.getObject().getCurrentSession();
+        Query<User> query = session.createQuery("FROM User", User.class);
+        return query.getResultList();
+    }
+
+    @Override
+    public User getUserByUsername(String username) {
+        try {
+            Session session = sessionFactory.getObject().getCurrentSession();
+            Query<User> query = session.createQuery("FROM User WHERE username = :uname", User.class);
+            query.setParameter("uname", username);
+            return query.getSingleResult();
+        } catch (NoResultException ex) {
+            return null;
+        }
     }
 }

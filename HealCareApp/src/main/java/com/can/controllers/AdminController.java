@@ -69,12 +69,12 @@ public class AdminController {
     @GetMapping("/admins")
     public String admins(Model model, @RequestParam Map<String, String> params) {
         int page = Math.max(1, Integer.parseInt(params.getOrDefault("page", "1"))) - 1;
-        List<User> admins = userService.getUsersByRole("ADMIN"); // Sử dụng getUsersByRole
-        long totalAdmins = admins.size(); // Tổng số admin, có thể tối ưu bằng count riêng nếu cần
+        List<User> admins = userService.getUsersByRole("ADMIN"); 
+        long totalAdmins = admins.size(); 
         int totalPages = (int) Math.ceil((double) totalAdmins / 10);
 
         model.addAttribute("admins", admins);
-        model.addAttribute("currentPage", page + 1); // Chuyển về 1-based index cho giao diện
+        model.addAttribute("currentPage", page + 1); 
         model.addAttribute("totalPages", totalPages);
         return "admins/admins";
     }

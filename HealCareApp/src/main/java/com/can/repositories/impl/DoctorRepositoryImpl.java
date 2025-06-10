@@ -13,7 +13,6 @@ import com.can.repositories.DoctorRepository;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -56,9 +55,9 @@ public class DoctorRepositoryImpl implements DoctorRepository {
         if (params != null) {
             List<Predicate> predicates = new ArrayList<>();
 
-            //Lọc theo tên bác sĩ
             String doctorName = params.get("doctorName");
             if (doctorName != null && !doctorName.isEmpty()) {
+                // Splits doctor name into parts and builds predicates for flexible name search
                 String[] nameParts = doctorName.trim().toLowerCase().split("\\s+");
 
                 List<Predicate> namePredicates = new ArrayList<>();
@@ -74,7 +73,6 @@ public class DoctorRepositoryImpl implements DoctorRepository {
                 predicates.add(b.and(namePredicates.toArray(Predicate[]::new)));
             }
 
-            //Lọc theo chuyên khoa
             String specialization = params.get("specialization");
             if (specialization != null && !specialization.isEmpty()) {
                 predicates.add(b.equal(
@@ -83,7 +81,7 @@ public class DoctorRepositoryImpl implements DoctorRepository {
                 ));
             }
 
-            //Lọc theo bệnh viện
+
             String hospital = params.get("hospital");
             if (hospital != null && !hospital.isEmpty()) {
                 predicates.add(b.equal(
@@ -92,7 +90,6 @@ public class DoctorRepositoryImpl implements DoctorRepository {
                 ));
             }
 
-            // Áp dụng các điều kiện lọc
             q.where(predicates.toArray(Predicate[]::new));
         }
 
@@ -133,12 +130,10 @@ public class DoctorRepositoryImpl implements DoctorRepository {
 
     @Override
     public Doctor addDoctor(Doctor doctor) {
-//        Transaction transaction = null;
         Session s = this.factory.getObject().getCurrentSession();
-//        transaction = s.beginTransaction();
 
         if (doctor.getUser() == null) {
-            throw new RuntimeException("Thông tin user cần thiết cho một Bác sĩ");
+            throw new RuntimeException("User information is required for a Doctor");
         }
 
         if (doctor.getUser().getId() == 0) {
@@ -149,7 +144,6 @@ public class DoctorRepositoryImpl implements DoctorRepository {
         doctor.setId(doctor.getUser().getId());
 
         s.persist(doctor);
-//        transaction.commit();
         return doctor;
 
     }
@@ -163,15 +157,15 @@ public class DoctorRepositoryImpl implements DoctorRepository {
                 throw new RuntimeException("Doctor with ID " + doctor.getId() + " not found");
             }
             if (doctor.getUser() == null) {
-                throw new RuntimeException("Thông tin user cần thiết cho một Bác sĩ");
+                throw new RuntimeException("User information is required for a Doctor");
             }
             if (doctor.getUser().getId() != doctor.getId()) {
-                throw new RuntimeException("Id User và Id bác sĩ không trùng khớp");
+                throw new RuntimeException("User ID and Doctor ID do not match");
             }
             if (doctor.getHospital() == null || doctor.getSpecialization() == null) {
-                throw new RuntimeException("Bệnh viện và chuyên khoa là bắt buộc");
+                throw new RuntimeException("Hospital and Specialization are required");
             }
-            // Giữ nguyên verificationStatus nếu không được cung cấp
+            // Retains existing verification status if not provided
             if (doctor.getVerificationStatus() == null) {
                 doctor.setVerificationStatus(existingDoctor.getVerificationStatus());
             }
@@ -180,7 +174,7 @@ public class DoctorRepositoryImpl implements DoctorRepository {
             s.flush();
             return updatedDoctor;
         } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi cập nhật bác sĩ: " + e.getMessage(), e);
+            throw new RuntimeException("Error updating doctor: " + e.getMessage(), e);
         }
     }
 
@@ -190,7 +184,7 @@ public class DoctorRepositoryImpl implements DoctorRepository {
 
         Doctor doctor = s.get(Doctor.class, id);
         if (doctor == null) {
-            throw new RuntimeException("Doctor with ID" + id + "not found");
+            throw new RuntimeException("Doctor with ID" + id + " not found");
         }
 
         if (doctor.getUser() != null) {
@@ -233,14 +227,14 @@ public class DoctorRepositoryImpl implements DoctorRepository {
         }
 
         if (doctor.isIsVerified()) {
-            throw new RuntimeException("Doctor with ID " + doctorId + " đã được chứng nhận rồi");
+            throw new RuntimeException("Doctor with ID " + doctorId + " is already verified");
         }
 
         if (doctor.getLicenseNumber() == null || doctor.getLicenseNumber().trim().isEmpty()) {
-            throw new RuntimeException("Doctor with ID " + doctorId + " chưa cấp giấy phép");
+            throw new RuntimeException("Doctor with ID " + doctorId + " has not provided a license number");
         }
 
-        // Cập nhật cả isVerified và verificationStatus
+        // Updates both isVerified and verificationStatus
         doctor.setIsVerified(true);
         doctor.setVerificationStatus(VerificationStatus.APPROVED); // Cập nhật thành Approved
 
@@ -253,7 +247,7 @@ public class DoctorRepositoryImpl implements DoctorRepository {
         Doctor doctor = s.get(Doctor.class,
                 doctorId);
         if (doctor == null) {
-            throw new RuntimeException("Doctor with ID" + doctorId + "not found");
+            throw new RuntimeException("Doctor with ID" + doctorId + " not found");
         }
 
         return doctor.isIsVerified();
@@ -272,11 +266,11 @@ public class DoctorRepositoryImpl implements DoctorRepository {
 
         Doctor doctor = s.get(Doctor.class, doctorId);
         if (doctor == null) {
-            throw new RuntimeException("Doctor with ID" + doctorId + "not found");
+            throw new RuntimeException("Doctor with ID" + doctorId + " not found");
         }
 
         if (licenseNumber == null || licenseNumber.trim().isEmpty()) {
-            throw new RuntimeException("Chưa nhập giấy phép hành nghề kìa");
+            throw new RuntimeException("License number is required");
         }
 
         doctor.setLicenseNumber(licenseNumber);

@@ -47,7 +47,7 @@ public class SpecializationRepositoryImpl implements SpecializationRepository{
             query.setParameter("name", name);
             return query.getSingleResult();
         } catch (NoResultException ex) {
-            return null; // hoặc throw nếu bạn muốn
+            return null; 
         }
     }
 

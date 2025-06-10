@@ -23,7 +23,7 @@ public class ApiDoctorProfileController {
     @Autowired
     private DoctorService doctorService;
     
-    // Lấy thông tin profile của bác sĩ hiện tại
+    
     @GetMapping("/profile")
     public ResponseEntity<?> getDoctorProfile() {
         try {
@@ -32,16 +32,13 @@ public class ApiDoctorProfileController {
             
             Doctor doctor = doctorService.getCurrentDoctorProfile(username);
             
-            // Tạo đối tượng phản hồi
             Map<String, Object> response = new HashMap<>();
             response.put("doctor", doctor);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            // Log lỗi để debug
             e.printStackTrace();
 
-            // Tạo response lỗi chi tiết
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("message", "Không thể tải thông tin hồ sơ");
             errorResponse.put("error", e.getMessage());
@@ -53,7 +50,6 @@ public class ApiDoctorProfileController {
         }
     }
 
-    // Cập nhật thông tin cá nhân
     @PutMapping("/profile")
     public ResponseEntity<?> updateDoctorProfile(@RequestBody Doctor doctor) {
         try {

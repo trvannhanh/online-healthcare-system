@@ -42,7 +42,7 @@ public class ApiUserController {
     public ResponseEntity<?> create(@RequestParam Map<String, String> params, 
                                    @RequestParam(value = "avatar") MultipartFile avatar) {
         try {
-            // Kiểm tra cơ bản trong controller
+
             if (params.get("firstName") == null || params.get("firstName").isBlank()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Họ không được để trống");
             }
@@ -105,7 +105,6 @@ public class ApiUserController {
         return new ResponseEntity<>(this.userService.getUserByUsername(principal.getName()), HttpStatus.OK);
     }
 
-    // Cập nhật avatar
     @PostMapping("/secure/avatar")
     public ResponseEntity<?> updateAvatar(@RequestParam("avatar") MultipartFile avatar) {
         try {
@@ -131,7 +130,6 @@ public class ApiUserController {
         }
     }
 
-    // Đổi mật khẩu
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(
             @RequestParam("currentPassword") String currentPassword,

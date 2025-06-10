@@ -10,13 +10,10 @@ import com.can.repositories.UserRepository;
 import com.can.services.HealthRecordService;
 import java.nio.file.AccessDeniedException;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 /**
  *
  * @author DELL
@@ -36,54 +33,47 @@ public class HealthRecordServiceImpl implements HealthRecordService {
 
     @Override
     public HealthRecord createHealthRecord(Integer appointmentId, String medicalHistory, String examinationResults, String diseaseType, String username) {
-        // Lấy user
         User user = userRepository.getUserByUsername(username);
         if (user == null) {
-            System.out.println("User not found: " + username);
-            throw new RuntimeException("User not found");
+            System.out.println("Người dùng không tìm thấy: " + username);
+            throw new RuntimeException("Người dùng không tìm thấy");
         }
 
-        // Kiểm tra vai trò
         if (!"ROLE_DOCTOR".equalsIgnoreCase(user.getRole().name())) {
-            System.out.println("Access denied: Only doctors can create health records");
+            System.out.println("Chỉ bác sĩ mới có thể tạo kết quả khám");
             try {
-                throw new AccessDeniedException("Only doctors can create health records");
+                throw new AccessDeniedException("Chỉ bác sĩ mới có thể tạo kết quả khám");
             } catch (AccessDeniedException ex) {
                 Logger.getLogger(HealthRecordServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
-        // Lấy lịch hẹn
         Appointment appointment = appointmentRepository.getAppointmentById(appointmentId);
         if (appointment == null) {
-            System.out.println("Appointment not found for ID: " + appointmentId);
-            throw new RuntimeException("Appointment not found");
+            System.out.println("Lịch hẹn không tìm thấy: " + appointmentId);
+            throw new RuntimeException("Lịch hẹn không tìm thấy");
         }
 
-        // Kiểm tra bác sĩ sở hữu
         if (!user.getId().equals(appointment.getDoctor().getId())) {
-            System.out.println("Access denied: User ID " + user.getId() + " cannot create health record for appointment ID " + appointmentId);
+            System.out.println(" Người dùng với ID " + user.getId() + " không thể tạo kết quả khám cho lịch hẹn " + appointmentId);
             try {
-                throw new AccessDeniedException("You do not have permission to create health record for this appointment");
+                throw new AccessDeniedException("Bạn không có quyền tạo kết quả khám cho lịch hẹn");
             } catch (AccessDeniedException ex) {
                 Logger.getLogger(HealthRecordServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
-        // Kiểm tra trạng thái lịch hẹn
         if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
-            System.out.println("Appointment ID " + appointmentId + " is already completed");
-            throw new RuntimeException("Appointment is already completed");
+            System.out.println("Lịch hẹn với ID " + appointmentId + " đã được hoàn thành");
+            throw new RuntimeException("Lịch hẹn đã được hoàn thành");
         }
 
-        // Kiểm tra HealthRecord tồn tại
         HealthRecord existingRecord = healthRecordRepository.getHealthRecordByAppointmentId(appointmentId);
         if (existingRecord != null) {
-            System.out.println("Health record already exists for appointment ID: " + appointmentId);
-            throw new RuntimeException("Health record already exists");
+            System.out.println("Kết quả khám đã tồn tại cho lịch hẹn: " + appointmentId);
+            throw new RuntimeException("Kết quả khám đã tồn tại");
         }
 
-        // Tạo HealthRecord
         HealthRecord healthRecord = new HealthRecord();
         healthRecord.setMedicalHistory(medicalHistory);
         healthRecord.setExaminationResults(examinationResults);
@@ -91,11 +81,9 @@ public class HealthRecordServiceImpl implements HealthRecordService {
         healthRecord.setAppointment(appointment);
         healthRecord.setCreatedDate(new Date());
 
-        // Cập nhật trạng thái lịch hẹn
         appointment.setStatus(AppointmentStatus.COMPLETED);
         appointmentRepository.updateAppointment(appointment);
 
-        // Lưu HealthRecord
         HealthRecord savedRecord = healthRecordRepository.createHealthRecord(healthRecord);
 
         return savedRecord;

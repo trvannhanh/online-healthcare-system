@@ -53,7 +53,6 @@ const ChatRoom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // Kiểm tra script Jitsi đã tải chưa
   useEffect(() => {
     const checkJitsiScript = () => {
       if (window.JitsiMeetExternalAPI) {
@@ -78,7 +77,7 @@ const ChatRoom = () => {
     };
   }, []);
 
-  // Gọi initializeJitsi khi modal mở và script đã tải
+
   useEffect(() => {
     if (showVideoCall && jitsiScriptLoaded && !jitsiApi) {
       if (!jitsiContainerRef.current) {
@@ -94,7 +93,7 @@ const ChatRoom = () => {
     }
   }, [showVideoCall, jitsiScriptLoaded, jitsiApi]);
 
-  // Lấy thông tin người dùng khác
+
   useEffect(() => {
     const fetchOtherUser = async () => {
       if (!otherUserId || !user) {
@@ -124,7 +123,6 @@ const ChatRoom = () => {
     fetchOtherUser();
   }, [otherUserId, user, navigate]);
 
-  // Lắng nghe tin nhắn từ Firebase Realtime Database
   useEffect(() => {
     if (!user?.id || !otherUserId) return;
 
@@ -149,12 +147,10 @@ const ChatRoom = () => {
     return () => off(messagesRef, "value", unsubscribe);
   }, [user, otherUserId]);
 
-  // Tự động cuộn xuống tin nhắn mới nhất
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Xử lý chọn file
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -167,7 +163,6 @@ const ChatRoom = () => {
     }
   };
 
-  // Xử lý chọn ảnh
   const handleImageChange = (e) => {
     const selectedImage = e.target.files[0];
     if (selectedImage) {
@@ -180,7 +175,6 @@ const ChatRoom = () => {
     }
   };
 
-  // Gửi tin nhắn
   const onSend = useCallback(async () => {
     if (!user?.id || !otherUserId) return;
     if (!newMessage.trim() && !file && !image) return;
@@ -219,7 +213,6 @@ const ChatRoom = () => {
     }
   }, [user, otherUserId, newMessage, file, image, navigate]);
 
-  // Xóa tin nhắn
   const onDelete = useCallback(async (messageId) => {
     try {
       await axios.delete(`${endpoints.chat}/messages/${messageId}`, {
@@ -242,7 +235,6 @@ const ChatRoom = () => {
     imageInputRef.current?.click();
   };
 
-  // Xử lý mở video call
   const handleVideoCall = () => {
     setShowVideoCall(true);
   };
@@ -255,7 +247,6 @@ const ChatRoom = () => {
     setJitsiApi(null);
   };
 
-  // Khởi tạo Jitsi Meet API
   const initializeJitsi = () => {
     if (!jitsiContainerRef.current) {
       console.error("Jitsi container is missing during initialization.");
@@ -282,7 +273,7 @@ const ChatRoom = () => {
       parentNode: jitsiContainerRef.current,
       userInfo: {
         displayName: user?.firstName || user?.username || "Người dùng",
-        email: user?.email || "", // Truyền email từ thông tin đăng nhập
+        email: user?.email || "", 
       },
       configOverwrite: {
         startWithAudioMuted: true,

@@ -33,7 +33,6 @@ const Payment = () => {
         if (appointmentId) loadPayment();
     }, [appointmentId]);
 
-    // Tạo hóa đơn
     const handleCreatePayment = async (e) => {
         e.preventDefault();
         if (!amount || amount <= 0) {
@@ -54,7 +53,6 @@ const Payment = () => {
         }
     };
 
-    // Xử lý thanh toán
     const handleProcessPayment = async () => {
         if (!payment) {
             setError('Hóa đơn chưa được tạo.');
@@ -73,7 +71,6 @@ const Payment = () => {
         }
     };
 
-    // Xử lý callback từ cổng thanh toán
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('orderId')) {

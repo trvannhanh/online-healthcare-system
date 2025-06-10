@@ -463,6 +463,27 @@ const Appointment = () => {
                             Hồ Sơ Sức Khỏe
                           </Button>
                         )}
+
+                        {user.role === "DOCTOR" && (appt.status === "PENDING" || appt.status === "CONFIRMED") && (
+                          <Button
+                            as={Link}
+                            to={`/health-record/create/${appt.id}`}
+                            variant="info"
+                            size="sm"
+                            className="rounded-pill px-3"
+                            style={{
+                              backgroundColor: '#17a2b8',
+                              borderColor: '#17a2b8',
+                              color: '#fff',
+                              transition: 'transform 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                          >
+                            Tạo Kết Quả Khám
+                          </Button>
+                        )}
+                        
                         {user.role === 'DOCTOR' && appt.status === 'COMPLETED' && !appt.payment && (
                           <Button
                             as={Link}

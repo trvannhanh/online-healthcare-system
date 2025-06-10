@@ -12,7 +12,6 @@ const Notifications = () => {
     const { user } = useMyUser();
     const navigate = useNavigate();
 
-    // Hàm để load toàn bộ thông báo của người dùng
     const loadAllNotifications = useCallback(async () => {
         if (!user) return;
 
@@ -36,7 +35,7 @@ const Notifications = () => {
         }
     }, [user, loadAllNotifications, navigate]);
 
-    // Hàm đánh dấu đã đọc
+
     const markAsRead = async (notificationId) => {
         try {
             await authApis().patch(`/secure/notifications/${notificationId}/mark-read`);
@@ -55,7 +54,6 @@ const Notifications = () => {
         }
     };
 
-    // Thêm icon cho mỗi loại thông báo
     const getNotificationIcon = (type) => {
         switch (type) {
             case 'APPOINTMENT':
@@ -69,7 +67,6 @@ const Notifications = () => {
         }
     };
 
-    // Format ngày 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('vi-VN', {
@@ -81,7 +78,6 @@ const Notifications = () => {
         });
     };
 
-    // Đếm số lượng thông báo chưa đọc
     const unreadCount = notifications.filter(notification => !notification.isRead).length;
 
     if (!user) {

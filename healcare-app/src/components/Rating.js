@@ -18,13 +18,11 @@ const Rating = () => {
     const [canRate, setCanRate] = useState(false);
     const [existingRating, setExistingRating] = useState(null);
 
-    // Form data
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState('');
-    const [ratingDate, setRatingDate] = useState(null); // Thêm state ratingDate
+    const [ratingDate, setRatingDate] = useState(null); 
 
-    // Fetch appointment data and check if user can rate
     useEffect(() => {
         const fetchData = async () => {
             if (!user || !appointmentId) {
@@ -34,17 +32,13 @@ const Rating = () => {
             }
 
             try {
-                // Lấy thông tin cuộc hẹn
-                // Cách đúng - sử dụng hàm endpoints['appointmentDetail'] với tham số
                 const appointmentRes = await authApis().get(endpoints['appointmentDetail'](appointmentId));
                 setAppointment(appointmentRes.data);
 
-                // Kiểm tra nếu cuộc hẹn đã hoàn thành
                 if (appointmentRes.data.status === 'COMPLETED') {
                     setCanRate(true);
                 }
 
-                // Kiểm tra xem đã có đánh giá chưa
                 try {
                     const ratingsRes = await authApis().get(endpoints['appointmentRating'](appointmentId));
                     if (ratingsRes.data) {
@@ -88,14 +82,12 @@ const Rating = () => {
 
         try {
             if (existingRating) {
-                // Cập nhật đánh giá hiện có - GIỮ NGUYÊN TẤT CẢ DỮ LIỆU GỐC
                 const updatedRating = {
-                    ...existingRating,  // giữ tất cả thuộc tính gốc
-                    rating: rating,      // chỉ cập nhật rating và comment
+                    ...existingRating,  
+                    rating: rating,      
                     comment: comment
                 };
 
-                // Log rõ dữ liệu gửi đi để debug
                 console.log("Dữ liệu cập nhật đánh giá:", JSON.stringify(updatedRating, null, 2));
 
                 const response = await authApis().put(
@@ -132,7 +124,6 @@ const Rating = () => {
         }
     };
 
-    // Hiển thị các sao để chọn đánh giá
     const renderStarRating = () => {
         return [1, 2, 3, 4, 5].map((star) => (
             <span

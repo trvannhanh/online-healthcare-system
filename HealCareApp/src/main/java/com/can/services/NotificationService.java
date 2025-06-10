@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import com.can.pojo.Appointment;
 import com.can.pojo.Notifications;
 
 /**

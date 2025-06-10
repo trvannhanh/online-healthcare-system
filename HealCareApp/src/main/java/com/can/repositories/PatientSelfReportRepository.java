@@ -1,7 +1,6 @@
 package com.can.repositories;
 
 import com.can.pojo.PatientSelfReport;
-import java.util.List;
 
 public interface PatientSelfReportRepository {
     PatientSelfReport getPatientSelfReportById(int id);

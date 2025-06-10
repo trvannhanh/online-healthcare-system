@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 @Transactional
-public class ChatAttachmentRepositoryImpl implements ChatAttachmentRepository{
+public class ChatAttachmentRepositoryImpl implements ChatAttachmentRepository {
     @Autowired
     private LocalSessionFactoryBean sessionFactory;
 
@@ -35,12 +35,14 @@ public class ChatAttachmentRepositoryImpl implements ChatAttachmentRepository{
     public ChatAttachment getChatAttachmentByMessageId(String messageId) {
         try {
             Session session = sessionFactory.getObject().getCurrentSession();
+            // Queries for a chat attachment by its associated message ID
             Query<ChatAttachment> query = session.createQuery(
                 "FROM ChatAttachment WHERE messageId = :messageId", ChatAttachment.class
             );
             query.setParameter("messageId", messageId);
             return query.getSingleResult();
         } catch (NoResultException ex) {
+            // Returns null if no attachment is found for the given message ID
             return null;
         }
     }
@@ -58,11 +60,13 @@ public class ChatAttachmentRepositoryImpl implements ChatAttachmentRepository{
             Session session = sessionFactory.getObject().getCurrentSession();
             ChatAttachment attachment = session.get(ChatAttachment.class, id);
             if (attachment != null) {
-                session.delete(attachment);
+                session.remove(attachment);
                 return true;
             }
+            // Returns false if no attachment is found for the given ID
             return false;
         } catch (Exception ex) {
+            // Logs any unexpected errors during deletion
             ex.printStackTrace();
             return false;
         }

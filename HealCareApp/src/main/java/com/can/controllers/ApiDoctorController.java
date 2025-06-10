@@ -40,7 +40,6 @@ public class ApiDoctorController {
     @Autowired
     private AppointmentService appointmentService;
 
-    // API tìm kiếm bác sĩ
     @GetMapping("/doctors")
     public ResponseEntity<List<Doctor>> searchDoctors(@RequestParam Map<String, String> params) {
         try {
@@ -54,12 +53,8 @@ public class ApiDoctorController {
         }
     }
     
-    // API lấy khung giờ trống
     @GetMapping("/doctors/{doctorId}/available-slots")
-    @CrossOrigin
-    public ResponseEntity<?> getAvailableSlots(
-            @PathVariable("doctorId") int doctorId,
-            @RequestParam("date") String date) {
+    public ResponseEntity<?> getAvailableSlots(@PathVariable("doctorId") int doctorId, @RequestParam("date") String date) {
         try {
             List<String> availableSlots = appointmentService.getAvailableSlots(doctorId, date);
             return new ResponseEntity<>(availableSlots, HttpStatus.OK);
@@ -74,7 +69,18 @@ public class ApiDoctorController {
         }
     }
     
-    // API mới: Lấy thông tin chi tiết bác sĩ
+    @PostMapping("/admin/verify-doctor/{doctorId}")
+    public ResponseEntity<String> verifyDoctor(@PathVariable("doctorId") int doctorId) {
+        try {
+            doctorService.verifyDoctor(doctorId);
+            return new ResponseEntity<>("Xác nhận giấy phép thành công!", HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>("Lỗi khi xác nhận giấy phép: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
     @GetMapping("/doctors/{id}")
     public ResponseEntity<Doctor> getDoctorById(@PathVariable("id") int id) {
         try {
@@ -88,16 +94,5 @@ public class ApiDoctorController {
         }
     }
     
-    // API mới: Xác nhận giấy phép bác sĩ bởi quản trị viên
-    @PostMapping("/admin/verify-doctor/{doctorId}")
-    public ResponseEntity<String> verifyDoctor(@PathVariable("doctorId") int doctorId) {
-        try {
-            doctorService.verifyDoctor(doctorId);
-            return new ResponseEntity<>("Xác nhận giấy phép thành công!", HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>("Lỗi khi xác nhận giấy phép: " + e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Lỗi hệ thống: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+    
 }

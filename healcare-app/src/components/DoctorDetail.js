@@ -23,7 +23,6 @@ const DoctorDetail = () => {
     const [doctorRatings, setDoctorRatings] = useState([]);
     const [loadingDoctorRatings, setLoadingDoctorRatings] = useState(false);
 
-    // Lấy thông tin chi tiết bác sĩ
     const loadDoctor = async () => {
         try {
             setLoading(true);
@@ -40,7 +39,6 @@ const DoctorDetail = () => {
         }
     };
 
-    // Lấy lịch trống của bác sĩ
     const loadAvailableSlots = async () => {
         try {
             setSlotsLoading(true);
@@ -61,7 +59,6 @@ const DoctorDetail = () => {
         }
     };
 
-    // Đặt lịch hẹn
     const bookAppointment = async () => {
         if (!user) {
             setError('Bạn cần đăng nhập để đặt lịch hẹn.');
@@ -72,7 +69,6 @@ const DoctorDetail = () => {
             return;
         }
 
-        // Xác nhận trước khi đặt lịch
         if (!window.confirm(`Xác nhận đặt lịch hẹn với BS. ${doctor.user.firstName} ${doctor.user.lastName} vào ${selectedDate} lúc ${selectedSlot}?`)) {
             return;
         }
@@ -102,16 +98,15 @@ const DoctorDetail = () => {
             } else if (ex.response?.status === 403) {
                 errorMessage = 'Bạn không có quyền đặt lịch hẹn.';
             } else if (ex.response?.status === 400) {
-                errorMessage = ex.response.data; // Hiển thị lỗi từ backend (ví dụ: "Thời gian đặt lịch phải trong tương lai")
+                errorMessage = ex.response.data; 
             }
             setError(errorMessage);
-            setTimeout(() => setError(null), 5000); // Tự xóa lỗi sau 5 giây
+            setTimeout(() => setError(null), 5000); 
         } finally {
             setLoading(false);
         }
     };
 
-    // Lấy rating trung bình của bác sĩ
     const fetchDoctorRatingAverage = async (doctorId) => {
         try {
             setLoadingRating(true);
@@ -119,21 +114,17 @@ const DoctorDetail = () => {
             setRating(response.data);
         } catch (error) {
             console.error("Error fetching doctor rating:", error);
-            // Không hiển thị lỗi cho người dùng để tránh phiền nhiễu
         } finally {
             setLoadingRating(false);
         }
     };
 
-    //Lấy tất cả đánh giá về bác sĩ
     const fetchDoctorRatings = async (doctorId) => {
         try {
             setLoadingDoctorRatings(true);
             const response = await Apis.get(endpoints['ratingForDoctor'](doctorId));
             const processedData = response.data.map(item => {
-                // Nếu item không có cấu trúc phù hợp, tạo cấu trúc mới
                 if (typeof item === 'object' && item !== null) {
-                    // Kiểm tra xem item có phải là RatingResponse với rating property
                     if (item.rating && typeof item.rating === 'object') {
                         return {
                             id: item.rating.id || item.id,
@@ -178,17 +169,17 @@ const DoctorDetail = () => {
         const fullStars = Math.floor(rating);
         const hasHalfStar = rating % 1 >= 0.5;
 
-        // Thêm các sao đầy đủ
+  
         for (let i = 0; i < fullStars; i++) {
             stars.push(<FaStar key={`full-${i}`} className="me-1" style={{ color: '#f1c40f' }} />);
         }
 
-        // Thêm nửa sao nếu có
+      
         if (hasHalfStar) {
             stars.push(<FaStarHalfAlt key="half" className="me-1" style={{ color: '#f1c40f' }} />);
         }
 
-        // Thêm các sao rỗng còn lại
+   
         const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
         for (let i = 0; i < emptyStars; i++) {
             stars.push(<FaRegStar key={`empty-${i}`} className="me-1" style={{ color: '#f1c40f' }} />);
@@ -197,7 +188,7 @@ const DoctorDetail = () => {
         return stars;
 
     };
-    // Xử lý khi chọn slot (kiểm tra đăng nhập)
+
     const handleSelectSlot = (slot) => {
         if (!user) {
             setError('Bạn cần đăng nhập để chọn khung giờ.');
@@ -217,7 +208,7 @@ const DoctorDetail = () => {
         }
     }, [doctor, selectedDate]);
 
-    // Xử lý trường hợp đang tải
+
     if (loading && !doctor) {
         return (
             <Container className="my-5 text-center">
@@ -233,7 +224,7 @@ const DoctorDetail = () => {
         );
     }
 
-    // Xử lý trường hợp lỗi
+
     if (error && !doctor) {
         return (
             <Container className="my-5">
@@ -249,7 +240,7 @@ const DoctorDetail = () => {
         );
     }
 
-    // Xử lý trường hợp không tìm thấy bác sĩ
+
     if (!doctor) {
         return (
             <Container className="my-5">
@@ -265,7 +256,7 @@ const DoctorDetail = () => {
 
     return (
         <Container className="my-5 py-4">
-            {/* Thông báo */}
+ 
             {error && (
                 <Alert
                     variant="danger"
@@ -287,7 +278,7 @@ const DoctorDetail = () => {
                 </Alert>
             )}
 
-            {/* Phần thông tin bác sĩ */}
+
             <Row
                 className="align-items-center mb-5 shadow-lg p-4"
                 style={{
@@ -339,7 +330,6 @@ const DoctorDetail = () => {
                         <FaHospital className="me-2 text-primary" /> {doctor.hospital.name}
                     </p>
                     <div className="d-flex align-items-center mb-3">
-                        {/* Trung bình đánh giá của bác sĩ */}
                         {renderStars(rating)}
                         <span className="fw-semibold ms-2" style={{ color: '#333' }}>
                             {rating ? rating.toFixed(1) : "N/A"} ({doctor?.experienceYears} năm kinh nghiệm)
@@ -349,7 +339,6 @@ const DoctorDetail = () => {
                 </Col>
             </Row>
 
-            {/* Phần thông tin chi tiết và lịch trống */}
             <Row className="g-4">
                 <Col md={6}>
                     <h3

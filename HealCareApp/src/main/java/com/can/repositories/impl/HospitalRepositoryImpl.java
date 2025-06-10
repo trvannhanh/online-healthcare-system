@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
-
 /**
  *
  * @author Giidavibe
@@ -23,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional
 public class HospitalRepositoryImpl implements HospitalRepository{
+    
     @Autowired
     private LocalSessionFactoryBean sessionFactory;
 
@@ -43,11 +42,13 @@ public class HospitalRepositoryImpl implements HospitalRepository{
     public Hospital getHospitalByName(String name) {
         try {
             Session session = sessionFactory.getObject().getCurrentSession();
-        Query<Hospital> query = session.createQuery("FROM Hospital WHERE name = :name", Hospital.class);
+            // Queries for a hospital by its name
+            Query<Hospital> query = session.createQuery("FROM Hospital WHERE name = :name", Hospital.class);
             query.setParameter("name", name);
             return query.getSingleResult();
         } catch (NoResultException ex) {
-            return null; // hoặc throw nếu bạn muốn
+            // Returns null if no hospital is found with the given name
+            return null;
         }
     }
 
@@ -65,6 +66,7 @@ public class HospitalRepositoryImpl implements HospitalRepository{
             session.merge(hospital);
             return true;
         } catch (Exception ex) {
+            // Logs any unexpected errors during update
             ex.printStackTrace();
             return false;
         }
@@ -76,11 +78,13 @@ public class HospitalRepositoryImpl implements HospitalRepository{
             Session session = sessionFactory.getObject().getCurrentSession();
             Hospital hospital = session.get(Hospital.class, id);
             if (hospital != null) {
-                session.delete(hospital);
+                session.remove(hospital);
                 return true;
             }
+            // Returns false if no hospital is found for the given ID
             return false;
         } catch (Exception ex) {
+            // Logs any unexpected errors during deletion
             ex.printStackTrace();
             return false;
         }

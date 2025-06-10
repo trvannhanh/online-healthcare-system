@@ -17,32 +17,22 @@ const PushNotification = () => {
             const response = await authApis().get(endpoints['upcomingNotifications']);
             const notifications = response.data;
 
-            // Lấy thời gian hiện tại
             const now = new Date();
 
-            // Lọc ra các thông báo:
             const validNotifications = notifications.filter(n => {
-                // 1. Ưu tiên kiểm tra thời gian trước
                 const sentDate = new Date(n.sentAt || n.createdAt);
                 const now = new Date();
 
-                // Chỉ lấy thông báo đã đến thời gian gửi
                 if (sentDate > now) return false;
 
-                // Tính thời gian đã trôi qua (giờ)
                 const timeDiff = now - sentDate;
                 const hoursPassed = timeDiff / (1000 * 60 * 60);
 
-                // Loại bỏ thông báo quá cũ (> 24 giờ)
                 if (hoursPassed > 24) return false;
 
-                // 2. Sau đó mới kiểm tra trạng thái đọc
                 return !n.isRead;
             });
-            // Cập nhật state thông báo
             setUpcomingNotifications(validNotifications);
-
-            // Đặt tất cả thông báo mới là hiển thị (visible)
             const newVisibleState = {};
             validNotifications.forEach(n => {
                 newVisibleState[n.id] = true;
@@ -61,7 +51,6 @@ const PushNotification = () => {
         }
     }, [fetchUpcomingNotifications, user]);
 
-    // Thêm icon cho mỗi loại thông báo
     const getIcon = (type) => {
         switch (type) {
             case 'APPOINTMENT': return <FaCalendarAlt className="me-2" />;
@@ -71,24 +60,20 @@ const PushNotification = () => {
         }
     };
 
-    // Đánh dấu thông báo đã được đọc
     const markAsRead = async (notificationId) => {
         try {
             await authApis().patch(`/secure/notifications/${notificationId}/mark-read`);
 
-            // Cập nhật state để loại bỏ thông báo đã đọc
             setUpcomingNotifications(prev =>
                 prev.filter(notification => notification.id !== notificationId)
             );
 
-            // Kích hoạt sự kiện cập nhật số lượng thông báo ở Header
             window.dispatchEvent(new Event('notification-read'));
         } catch (error) {
             console.error("Error marking notification as read:", error);
         }
     };
 
-    // Chỉ ẩn thông báo tạm thời mà không đánh dấu là đã đọc
     const hideNotification = (notificationId) => {
         setVisibleNotifications(prev => ({
             ...prev,

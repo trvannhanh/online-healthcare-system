@@ -3,7 +3,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.can.repositories.impl;
-
 /**
  *
  * @author Giidavibe
@@ -24,7 +23,6 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
@@ -38,9 +36,9 @@ public class PatientRepositoryImpl implements PatientRepository {
     private LocalSessionFactoryBean factory;
     private static final int PAGE_SIZE = 10;
 
-    // Kiểm tra xem username đã tồn tại hay chưa
     @Override
     public boolean isUsernameExists(Session session, String username) {
+        // Checks if a username already exists in the database
         CriteriaBuilder b = session.getCriteriaBuilder();
         CriteriaQuery<Long> q = b.createQuery(Long.class);
         Root<User> root = q.from(User.class);
@@ -50,7 +48,6 @@ public class PatientRepositoryImpl implements PatientRepository {
         return count > 0;
     }
 
-    // Lấy danh sách bệnh nhân với bộ lọc
     @Override
     public List<Patient> getPatients(Map<String, String> params) {
         Session s = this.factory.getObject().getCurrentSession();
@@ -64,7 +61,6 @@ public class PatientRepositoryImpl implements PatientRepository {
         if (params != null) {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Lọc theo tên bệnh nhân
             String patientName = params.get("patientName");
             if (patientName != null && !patientName.isEmpty()) {
                 String searchPattern = String.format("%%%s%%", patientName.toLowerCase());
@@ -79,7 +75,6 @@ public class PatientRepositoryImpl implements PatientRepository {
                 predicates.add(b.or(firstNamePredicate, lastNamePredicate));
             }
 
-            // Lọc theo số bảo hiểm
             String insuranceNumber = params.get("insuranceNumber");
             if (insuranceNumber != null && !insuranceNumber.isEmpty()) {
                 predicates.add(b.equal(
@@ -88,14 +83,13 @@ public class PatientRepositoryImpl implements PatientRepository {
                 ));
             }
 
-            // Lọc theo ngày sinh
             String dateOfBirth = params.get("dateOfBirth");
             if (dateOfBirth != null && !dateOfBirth.isEmpty()) {
                 try {
                     Date dob = new SimpleDateFormat("yyyy-MM-dd").parse(dateOfBirth);
                     predicates.add(b.equal(root.get("dateOfBirth"), dob));
                 } catch (Exception e) {
-                    throw new RuntimeException("Invalid date format for dateOfBirth: " + e.getMessage(), e);
+                    throw new RuntimeException("Invalid date format: " + e.getMessage(), e);
                 }
             }
 
@@ -116,20 +110,16 @@ public class PatientRepositoryImpl implements PatientRepository {
         return query.getResultList();
     }
 
-    // Lấy tất cả bệnh nhân
     public List<Patient> getAllPatients() {
         return getPatients(null);
     }
 
-    // Lấy bệnh nhân theo ID
     @Override
     public Patient getPatientById(Integer id) {
         Session s = this.factory.getObject().getCurrentSession();
         CriteriaBuilder b = s.getCriteriaBuilder();
-        CriteriaQuery<Patient> q = b.createQuery(Patient.class
-        );
-        Root<Patient> root = q.from(Patient.class
-        );
+        CriteriaQuery<Patient> q = b.createQuery(Patient.class);
+        Root<Patient> root = q.from(Patient.class);
 
         Join<Patient, User> userJoin = root.join("user");
 
@@ -137,35 +127,15 @@ public class PatientRepositoryImpl implements PatientRepository {
 
         Query query = s.createQuery(q);
         return (Patient) query.getSingleResult();
-
     }
 
-    // Thêm bệnh nhân mới
     @Override
     public Patient addPatient(Patient patient) {
-
         Session s = this.factory.getObject().getCurrentSession();
-
-//        if (patient.getUser() == null) {
-//            throw new RuntimeException("User information is required for a Patient");
-//        }
-//
-//        // Kiểm tra username đã tồn tại hay chưa
-//        if (isUsernameExists(s, patient.getUser().getUsername())) {
-//            throw new RuntimeException("Username '" + patient.getUser().getUsername() + "' already exists");
-//        }
-//
-//        if (patient.getUser().getId() == 0) {
-//            s.persist(patient.getUser());
-//            s.flush(); // Đảm bảo User được lưu và có ID
-//        }
-
         s.persist(patient);
         return patient;
-
     }
 
-    // Cập nhật thông tin bệnh nhân
     @Override
     public Patient updatePatient(Patient patient) {
         Transaction transaction = null;
@@ -177,15 +147,15 @@ public class PatientRepositoryImpl implements PatientRepository {
         }
 
         if (patient.getUser() == null) {
-            throw new RuntimeException("User information is required for a Patient");
+            throw new RuntimeException("User information is required");
         }
 
         if (patient.getUser().getId() != patient.getId()) {
-            throw new RuntimeException("User ID must match Patient ID due to @MapsId mapping");
+            throw new RuntimeException("User ID must match patient ID");
         }
 
-        // Kiểm tra username nếu có thay đổi
         User existingUser = s.get(User.class, patient.getUser().getId());
+        // Verifies if the new username is already taken by another user
         if (!existingUser.getUsername().equals(patient.getUser().getUsername()) && isUsernameExists(s, patient.getUser().getUsername())) {
             throw new RuntimeException("Username '" + patient.getUser().getUsername() + "' already exists");
         }
@@ -195,10 +165,8 @@ public class PatientRepositoryImpl implements PatientRepository {
 
         Patient updatedPatient = (Patient) s.merge(patient);
         return updatedPatient;
-
     }
 
-    // Xóa bệnh nhân
     @Override
     public void deletePatient(Integer id) {
         Transaction transaction = null;
@@ -216,7 +184,5 @@ public class PatientRepositoryImpl implements PatientRepository {
 
         s.remove(patient);
         transaction.commit();
-
     }
-
 }

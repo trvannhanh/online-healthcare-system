@@ -19,7 +19,6 @@ const AppointmentForm = () => {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
-    // Lấy thông tin bác sĩ
     const loadDoctor = async () => {
         try {
             let res = await Apis.get(`${endpoints['doctors']}/${doctorId}`);
@@ -32,7 +31,6 @@ const AppointmentForm = () => {
         }
     };
 
-    // Lấy khung giờ trống
     const loadAvailableSlots = async () => {
         try {
             setSlotsLoading(true);
@@ -47,7 +45,6 @@ const AppointmentForm = () => {
         }
     };
 
-    // Tạo lịch hẹn
     const createAppointment = async (e) => {
         e.preventDefault();
         if (!user) {

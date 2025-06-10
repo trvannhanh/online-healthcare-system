@@ -1,34 +1,24 @@
 package com.can.services.impl;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-
 import com.can.pojo.Appointment;
 import com.can.pojo.AppointmentStatus;
 import com.can.pojo.Doctor;
 import com.can.pojo.User;
 import com.can.pojo.Patient;
 import com.can.pojo.Payment;
-import com.can.pojo.PaymentStatus;
 import com.can.repositories.PatientRepository;
 import com.can.services.EmailService;
-import static com.mysql.cj.conf.PropertyKey.logger;
-
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import java.util.logging.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 
@@ -113,7 +103,7 @@ public class EmailServiceImpl implements EmailService {
         try {
             sendHtmlEmail(user.getEmail(), "Xác Nhận Lịch Hẹn Khám Bệnh", htmlContent);
         } catch (Exception e) {
-            System.out.println("Failed to send confirmation email for appointment ID " + appointment.getId() + ": " + e.getMessage());
+            System.out.println("Lỗi gửi email xác nhận cho lịch hẹn " + appointment.getId() + ": " + e.getMessage());
             throw e;
         }
     }
@@ -169,18 +159,14 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendAppointmentNotificationEmail(Appointment appointment) {
-        // Kiểm tra trạng thái lịch hẹn
-        // Nếu không phải là lịch hẹn đã xác nhận thì không gửi email
         if (appointment.getStatus() != AppointmentStatus.CONFIRMED) {
             return;
         }
-        // Tính số ngày còn lại
         Date now = new Date();
         Date appointmentDate = appointment.getAppointmentDate();
         long diffInMillis = appointmentDate.getTime() - now.getTime();
         long diffInDays = diffInMillis / (1000 * 60 * 60 * 24);
 
-        // Chỉ gửi email nếu cách lịch hẹn 1 đến 2 ngày
         if (diffInDays < 1 || diffInDays > 2) {
             return;
         }
@@ -199,7 +185,6 @@ public class EmailServiceImpl implements EmailService {
                 user.getFullName(),
                 appointment.getPatient().getUser().getFullName(),
                 formattedDate);
-        // Gửi email
         sendEmail(to, subject, content);
     }
     
@@ -229,18 +214,15 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    // Gửi email khuyến mãi đến tất cả bệnh nhân
     @Override
     public void sendPromotionalEmailToPatients(String promoContent) {
         Map<String, String> params = new HashMap<>();
         List<Patient> patients = patientRepository.getPatients(params);
         for (Patient patient : patients) {
-            // Lấy email của bệnh nhân
             User user = patient.getUser();
             String to = user.getEmail();
             String subject = "Ưu đãi đặc biệt từ phòng khám XYZ";
 
-            // Cấu trúc nội dung email
             String content = String.format(
                     "Chào %s,\n\n"
                     + "Chúng tôi xin thông báo về ưu đãi đặc biệt mà bạn có thể tham gia ngay hôm nay!\n\n"
@@ -249,72 +231,8 @@ public class EmailServiceImpl implements EmailService {
                     user.getFullName(),
                     promoContent);
 
-            // Gửi email
             sendEmail(to, subject, content);
         }
     }
 
-//    @Override
-//    public void sendInvoiceEmail(Payment payment) {
-//        // Kiểm tra trạng thái thanh toán
-//        if (payment.getPaymentStatus() != PaymentStatus.SUCCESSFUL) {
-//            return; // Chỉ gửi khi thanh toán thành công
-//        }
-//
-//        Patient patient = payment.getAppointment().getPatient();
-//        User user = patient.getUser();
-//        String to = user.getEmail();
-//        String subject = "Hóa đơn thanh toán - HealCare";
-//
-//        // Tạo nội dung HTML với chi tiết hóa đơn
-//        String htmlContent = String.format(
-//                "<html>"
-//                + "<head>"
-//                + "  <style>"
-//                + "    body { font-family: Arial, sans-serif; line-height: 1.6; }"
-//                + "    .invoice { max-width: 800px; margin: 0 auto; padding: 20px; border: 1px solid #eee; }"
-//                + "    .header { text-align: center; margin-bottom: 20px; }"
-//                + "    .details { margin-bottom: 20px; }"
-//                + "    .details table { width: 100%; border-collapse: collapse; }"
-//                + "    .details th, .details td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }"
-//                + "    .total { font-weight: bold; font-size: 18px; text-align: right; }"
-//                + "  </style>"
-//                + "</head>"
-//                + "<body>"
-//                + "  <div class='invoice'>"
-//                + "    <div class='header'>"
-//                + "      <h2>HÓA ĐƠN THANH TOÁN</h2>"
-//                + "      <p>Mã giao dịch: %s</p>"
-//                + "    </div>"
-//                + "    <div class='details'>"
-//                + "      <p><strong>Khách hàng:</strong> %s</p>"
-//                + "      <p><strong>Bác sĩ:</strong> %s</p>"
-//                + "      <p><strong>Ngày khám:</strong> %s</p>"
-//                + "      <p><strong>Phương thức thanh toán:</strong> %s</p>"
-//                + "      <table>"
-//                + "        <tr><th>Dịch vụ</th><th>Số tiền</th></tr>"
-//                + "        <tr><td>Phí khám bệnh</td><td>%s VND</td></tr>"
-//                + "      </table>"
-//                + "    </div>"
-//                + "    <div class='total'>"
-//                + "      <p>Tổng cộng: %s VND</p>"
-//                + "    </div>"
-//                + "    <div class='footer'>"
-//                + "      <p>Cảm ơn bạn đã sử dụng dịch vụ của HealCare!</p>"
-//                + "    </div>"
-//                + "  </div>"
-//                + "</body>"
-//                + "</html>",
-//                payment.getTransactionId(),
-//                user.getFirstName() + " " + user.getLastName(),
-//                payment.getAppointment().getDoctor().getUser().getFirstName() + " "
-//                + payment.getAppointment().getDoctor().getUser().getLastName(),
-//                new SimpleDateFormat("dd/MM/yyyy HH:mm").format(payment.getAppointment().getAppointmentDate()),
-//                payment.getPaymentMethod().toString(),
-//                String.format("%,.0f", payment.getAmount()),
-//                String.format("%,.0f", payment.getAmount()));
-//
-//        // Gửi email HTML
-//        sendHtmlEmail(to, subject, htmlContent);
-//    }
 }

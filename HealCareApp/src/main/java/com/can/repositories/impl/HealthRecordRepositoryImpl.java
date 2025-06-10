@@ -5,28 +5,15 @@
 package com.can.repositories.impl;
 
 import com.can.pojo.HealthRecord;
-import com.can.pojo.Patient;
-import com.can.pojo.User;
 import com.can.repositories.HealthRecordRepository;
-import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
 /**
  *
  * @author DELL
@@ -38,12 +25,12 @@ public class HealthRecordRepositoryImpl implements HealthRecordRepository {
     @Autowired
     private LocalSessionFactoryBean factory;
     
-    
     @Override
     public HealthRecord createHealthRecord(HealthRecord healthRecord) {
         Session s = this.factory.getObject().getCurrentSession();
         s.persist(healthRecord);
-        System.out.println("Health record saved with ID: " + healthRecord.getId());
+        // Logs the creation of a health record with its ID
+        System.out.println("Health record created with ID: " + healthRecord.getId());
         return healthRecord;
     }
 
@@ -55,9 +42,8 @@ public class HealthRecordRepositoryImpl implements HealthRecordRepository {
         Root<HealthRecord> root = query.from(HealthRecord.class);
         query.select(root).where(builder.equal(root.get("appointment").get("id"), appointmentId));
         HealthRecord result = s.createQuery(query).uniqueResult();
-        System.out.println("Queried health record for appointment ID: " + appointmentId + ", found: " + (result != null));
+        // Logs the query result for the health record by appointment ID
+        System.out.println("Queried health record for appointment: " + appointmentId + ", found: " + (result != null));
         return result;
     }
-    
-
 }
