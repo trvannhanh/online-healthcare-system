@@ -122,7 +122,7 @@ public class StatisticRepositoryImpl implements StatisticRepository {
             return monthlyData;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Lỗi khi lấy dữ liệu thống kê");
+            throw new RuntimeException("Get statics data Error");
         }
     }
 
@@ -136,7 +136,7 @@ public class StatisticRepositoryImpl implements StatisticRepository {
             return quarterlyData;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Lỗi khi lấy dữ liệu thống kê");
+            throw new RuntimeException("Get statics data Error");
         }
     }
 
@@ -212,7 +212,7 @@ public class StatisticRepositoryImpl implements StatisticRepository {
             return monthlyData;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Lỗi khi lấy dữ liệu thống kê");
+            throw new RuntimeException("Get statics data Error");
         }
     }
 
@@ -226,7 +226,7 @@ public class StatisticRepositoryImpl implements StatisticRepository {
             return quarterlyData;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Lỗi khi lấy dữ liệu thống kê");
+            throw new RuntimeException("Get statics data Error");
         }
     }
 
