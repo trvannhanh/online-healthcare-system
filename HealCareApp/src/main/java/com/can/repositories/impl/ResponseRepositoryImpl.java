@@ -33,11 +33,11 @@ public class ResponseRepositoryImpl implements ResponseRepository {
         Session session = this.factory.getObject().getCurrentSession();
 
         if (response.getRating() == null) {
-            throw new RuntimeException("Phải có đánh giá mới phản hồi được");
+            throw new RuntimeException("Rating is required");
         }
         Rating rating = session.get(Rating.class, response.getRating().getId());
         if (rating == null) {
-            throw new RuntimeException("Đánh giá với id " + response.getRating().getId() + " không tìm thấy");
+            throw new RuntimeException("Rating with id " + response.getRating().getId() + " not found");
         }
 
         session.persist(response);
