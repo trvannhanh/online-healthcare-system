@@ -8,7 +8,7 @@
 </h1>
 
 <h4 align="center">
-  Ứng dụng web đặt lịch khám sức khỏe trực tuyến được phát triển với SpringMVC, Hibernate, MySQL, Thymeleaf, ReactJS và Bootstrap. Hệ thống hỗ trợ quản lý hồ sơ bệnh nhân, đặt lịch khám, tư vấn trực tuyến, thanh toán dịch vụ và nhắc nhở tự động qua email/notification.
+  Ứng dụng web đặt lịch khám sức khỏe trực tuyến, cho phép bệnh nhân đặt lịch khám với bác sĩ, tư vấn trực tuyến, thanh toán online và theo dõi hồ sơ sức khỏe.
 </h4>
 
 <p align="center">
@@ -26,8 +26,8 @@
 - 🔑 **Xác thực & phân quyền**: đăng nhập/đăng ký (bệnh nhân, bác sĩ, quản trị viên).  
 - 📋 **Quản lý hồ sơ sức khỏe**: lưu trữ kết quả khám, đơn thuốc, bệnh án.  
 - 🗓️ **Đặt lịch khám**: chọn bác sĩ, chuyên khoa, bệnh viện; nhận email xác nhận.  
-- 🎥 **Tư vấn trực tuyến**: tích hợp video call qua WebRTC/Jitsi.  
-- 💳 **Thanh toán dịch vụ**: hỗ trợ VNPay, MoMo, Stripe.  
+- 🎥 **Tư vấn trực tuyến**: tích hợp video call qua Jitsi.  
+- 💳 **Thanh toán dịch vụ**: hỗ trợ VNPay, MoMo.  
 - ⭐ **Đánh giá & phản hồi**: bệnh nhân có thể đánh giá bác sĩ và dịch vụ.  
 - 📊 **Thống kê & báo cáo**: quản trị xem số lượng khám, doanh thu, phản hồi.  
 - 🔔 **Nhắc nhở & thông báo**: gửi email/push notification.  
@@ -72,18 +72,18 @@ Từ command line:
 
 ```bash
 # Clone this repository
-$ git clone https://github.com/your-username/wordsoul
+$ git clone https://github.com/trvannhanh/online-healthcare-system
 
 # Go into the repository
 $ cd wordsoul
 
 # Backend
-$ cd wordsoulapi
+$ cd HealCareApp
 $ mvn clean install
 $ mvn spring-boot:run
 
 # Frontend
-$ cd wordsoul-app
+$ cd healcare-app
 $ npm install
 $ npm start
 ```
