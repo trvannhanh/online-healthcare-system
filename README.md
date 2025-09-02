@@ -1,9 +1,9 @@
 
 <h1 align="center">
   <br>
-  <a href="https://github.com/your-username/wordsoul"><img src="https://res.cloudinary.com/dqpkxxzaf/image/upload/v1756790148/healcarelogo_jfh3x6.png" alt="HealCare" width="200"></a>
+  <a href="https://github.com/trvannhanh/online-healthcare-system"><img src="https://res.cloudinary.com/dqpkxxzaf/image/upload/v1756790148/healcarelogo_jfh3x6.png" alt="HealCare" width="200"></a>
   <br>
-  WordSoul
+  HealCare
   <br>
 </h1>
 
